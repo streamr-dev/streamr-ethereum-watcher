@@ -6,6 +6,9 @@
     <file type="Python" url="file://$PROJECT_DIR$/node_modules/sha3/test/generate_tests.py" />
     <file type="Python" url="file://$PROJECT_DIR$/node_modules/websocket/build/gyp-mac-tool" />
   </component>
+  <component name="JavaScriptSettings">
+    <option name="languageLevel" value="ES6" />
+  </component>
   <component name="MarkdownProjectSettings">
     <PreviewSettings splitEditorLayout="SPLIT" splitEditorPreview="PREVIEW" useGrayscaleRendering="false" zoomFactor="1.0" maxImageWidth="0" showGitHubPageIfSynced="false" allowBrowsingInPreview="false" synchronizePreviewPosition="true" highlightPreviewType="NONE" highlightFadeOut="5" highlightOnTyping="true" synchronizeSourcePosition="true" verticallyAlignSourceAndPreviewSyncPosition="true" showSearchHighlightsInPreview="false" showSelectionInPreview="true" openRemoteLinks="true">
       <PanelProvider>

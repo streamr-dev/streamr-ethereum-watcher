@@ -1,0 +1,6 @@
+[submodule "lib/streamr-ethereum-watcher"]
+	path = lib/streamr-ethereum-watcher
+	url = git@github.com:streamr-dev/streamr-ethereum-watcher.git
+[submodule "lib/marketplace-contracts"]
+	path = lib/marketplace-contracts
+	url = git@github.com:streamr-dev/marketplace-contracts.git
