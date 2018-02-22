@@ -1,0 +1,9 @@
+# npm
+node_modules
+
+# IntelliJ IDEA
+.idea/workspace.xml
+.idea/tasks.xml
+.idea/dictionaries
+.idea/httpRequests
+*.iml
