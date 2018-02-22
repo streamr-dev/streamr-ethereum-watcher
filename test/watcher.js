@@ -5,12 +5,12 @@ const web3 = new Web3(testrpc.provider({
     total_accounts: 10
 }))
 
-require("deploy_marketplace")(web3)
+const marketplace = require("deploy_marketplace")(web3)
 
 const watcher = require("../src/watcher")
 
 describe("Watcher", () => {
     it("starts successfully", () => {
-
+        
     })
 })
