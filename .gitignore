@@ -6,4 +6,3 @@ node_modules
 .idea/tasks.xml
 .idea/dictionaries
 .idea/httpRequests
-*.iml
