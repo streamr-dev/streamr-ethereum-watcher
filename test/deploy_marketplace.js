@@ -2,16 +2,29 @@ const Marketplace = require("../lib/marketplace-contracts/build/contracts/Market
 const Token = require("../lib/marketplace-contracts/build/contracts/MintableToken.json")
 
 module.exports = async web3 => {
-    const token = await new web3.eth.Contract(Token.abi).deploy({
-        data: token.bytecode
-    }).send()
+    const accounts = await web3.eth.getAccounts()
+
+    const tokenContract = new web3.eth.Contract(Token.abi)
+    const tokenCons = tokenContract.deploy({
+        data: Token.bytecode
+    })
+
+    console.log(await tokenCons.estimateGas())
+
+    const token = await tokenCons.send({
+        from: accounts[0]
+    })
+
+    return token
 
     const marketplace = await new web3.eth.Contract(Marketplace.abi).deploy({
-        data: marketplace.bytecode,
+        data: Marketplace.bytecode,
         arguments: [
             token.address
         ]
-    }).send()
+    }).send({
+        from: accounts[0]
+    })
 
     return marketplace
 }
