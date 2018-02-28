@@ -4,27 +4,27 @@ const Token = require("../lib/marketplace-contracts/build/contracts/MintableToke
 module.exports = async web3 => {
     const accounts = await web3.eth.getAccounts()
 
-    const tokenContract = new web3.eth.Contract(Token.abi)
-    const tokenCons = tokenContract.deploy({
-        data: Token.bytecode
-    })
+    /**
+     * Deploy helper. VERY surprisingly and unlike pre-1.0, web3 doesn't seem to automagically calculate the gas limit
+     * @param abi
+     * @param data
+     * @param arguments (optional)
+     * @returns {Promise<Contract>}
+     */
+    async function deploy(abi, data, arguments) {
+        const contract = new web3.eth.Contract(abi)
+        const deployTx = contract.deploy({ data, arguments })
+        return deployTx.send({
+            from: accounts[0],
+            gas: await deployTx.estimateGas()
+        })
+    }
 
-    console.log(await tokenCons.estimateGas())
+    const token = deploy(Token.abi, Token.bytecode, [])
+    const marketplace = deploy(Marketplace.abi, Marketplace.bytecode, [
+        token.address,
+        accounts[0]     // currencyUpdateAgent
+    ])
 
-    const token = await tokenCons.send({
-        from: accounts[0]
-    })
-
-    return token
-
-    const marketplace = await new web3.eth.Contract(Marketplace.abi).deploy({
-        data: Marketplace.bytecode,
-        arguments: [
-            token.address
-        ]
-    }).send({
-        from: accounts[0]
-    })
-
-    return marketplace
+    return {token, marketplace}
 }
