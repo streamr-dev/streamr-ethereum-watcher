@@ -8,7 +8,7 @@ module.exports = rpc => {
     }
 
     // otherwise run testrpc
-    const testrpc = require("ethereumjs-testrpc")
+    const testrpc = require("ganache-cli")
     return new Web3(testrpc.provider({
         mnemonic: "we make your streams come true",
         total_accounts: 10,

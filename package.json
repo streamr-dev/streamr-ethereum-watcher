@@ -18,7 +18,9 @@
     "yargs": "11.0.0"
   },
   "devDependencies": {
-    "ethereumjs-testrpc": "^6.0.3",
-    "mocha": "^5.0.1"
+    "ganache-cli": "^6.1.0-beta.4",
+    "mocha": "^5.0.1",
+    "sinon": "^4.4.2",
+    "timeout-as-promise": "^1.0.0"
   }
 }
