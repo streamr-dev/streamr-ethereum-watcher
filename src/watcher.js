@@ -18,6 +18,11 @@ class Watcher extends EventEmitter {
      * Start watching incoming blocks
      */
     start() {
+        if (this.isRunning) {
+            throw new Error("Already started!")
+        }
+        this.isRunning = true
+
         const self = this
         /*
         // product events
@@ -39,16 +44,17 @@ class Watcher extends EventEmitter {
         */
         this.market.events.ProductCreated({}, onDeployEvent)
         this.market.events.ProductRedeployed({}, onDeployEvent)
-        this.market.events.ProductDeleted({}, event => {
-            self.emit("productUndeployed", event.returnValues.productId, {})
-        })
+        this.market.events.ProductDeleted({}, onUndeployEvent)
+
+        function getProductId(event) { return Web3utils.hexToString(event.returnValues.id) }
 
         function onDeployEvent(error, event) {
             if (error) {
                 throw error
             }
-            event.productId = Web3utils.hexToString(event.returnValues.id)
+            event.productId = getProductId(event)
             if (event.removed) {
+                // TODO: how to react? Fire a productUndeployed?
                 console.warn("Blockchain reorg may have dropped an event: " + JSON.stringify(event))
                 return
             }
@@ -62,6 +68,18 @@ class Watcher extends EventEmitter {
                 minimumSubscriptionInSeconds: event.returnValues.minimumSubscriptionSeconds
             })
         }
+        function onUndeployEvent(error, event) {
+            if (error) {
+                throw error
+            }
+            event.productId = getProductId(event)
+            if (event.removed) {
+                // TODO: how to react? Fire a productDeployed?
+                console.warn("Blockchain reorg may have dropped an event: " + JSON.stringify(event))
+                return
+            }
+            self.emit("productUndeployed", event.productId, {})
+        }
 
         this.market.events.allEvents()
             .on("data", event => {
@@ -74,8 +92,6 @@ class Watcher extends EventEmitter {
                 self.emit("error", error)
             })
     }
-
-
 }
 
 module.exports = Watcher
