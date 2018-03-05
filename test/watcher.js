@@ -36,10 +36,9 @@ describe("Watcher", () => {
     })
 
     it("catches product deletion", async () => {
-        const productId = "test"
         const cb = sinon.spy()
         watcher.on("productUndeployed", cb)
-        const res = await sendFrom(accounts[0], marketplace.methods.deleteProduct(productIdHex))
+        await sendFrom(accounts[0], marketplace.methods.deleteProduct(productIdHex))
         assert.equal(cb.callCount, 1)
         assert.equal(cb.args[0][0], productId)
     })
