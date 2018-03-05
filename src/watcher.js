@@ -1,4 +1,5 @@
 const EventEmitter = require("events")
+const Web3utils = require("web3-utils")
 
 const Marketplace = require("../lib/marketplace-contracts/build/contracts/Marketplace.json")
 
@@ -17,6 +18,7 @@ class Watcher extends EventEmitter {
      * Start watching incoming blocks
      */
     start() {
+        const self = this
         /*
         // product events
         event ProductCreated(address indexed owner, bytes32 indexed id, string name, address beneficiary, uint pricePerSecond, Currency currency, uint minimumSubscriptionSeconds);
@@ -38,18 +40,19 @@ class Watcher extends EventEmitter {
         this.market.events.ProductCreated({}, onDeployEvent)
         this.market.events.ProductRedeployed({}, onDeployEvent)
         this.market.events.ProductDeleted({}, event => {
-            this.emit("productUndeployed", event.returnValues.productId, {})
+            self.emit("productUndeployed", event.returnValues.productId, {})
         })
 
         function onDeployEvent(error, event) {
             if (error) {
                 throw error
             }
+            event.productId = Web3utils.hexToString(event.returnValues.id)
             if (event.removed) {
                 console.warn("Blockchain reorg may have dropped an event: " + JSON.stringify(event))
                 return
             }
-            this.emit("productDeployed", event.returnValues.productId, {
+            self.emit("productDeployed", event.productId, {
                 blockNumber: event.blockNumber,
                 blockIndex: event.transactionIndex,
                 ownerAddress: event.returnValues.owner,
@@ -62,13 +65,13 @@ class Watcher extends EventEmitter {
 
         this.market.events.allEvents()
             .on("data", event => {
-                this.emit("event", event)
+                self.emit("event", event)
             })
             .on("changed", event => {
                 log.warn("Blockchain reorg may have dropped an event: " + JSON.stringify(event))
             })
             .on("error", error => {
-                this.emit("error", error)
+                self.emit("error", error)
             })
     }
 
