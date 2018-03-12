@@ -13,7 +13,9 @@
   "author": "Streamr AG",
   "license": "AGPL",
   "dependencies": {
+    "mz": "^2.7.0",
     "node-fetch": "2.0.0",
+    "promise-events": "^0.1.4",
     "web3": "1.0.0-beta.30",
     "yargs": "11.0.0"
   },

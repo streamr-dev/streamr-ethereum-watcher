@@ -1,4 +1,4 @@
-const EventEmitter = require("events")
+const EventEmitter = require("promise-events")
 const Web3utils = require("web3-utils")
 
 const Marketplace = require("../lib/marketplace-contracts/build/contracts/Marketplace.json")
@@ -8,11 +8,38 @@ const currencySymbol = [
     "USD"
 ]
 
+// get productId string from event return value (bytes32 hex string)
+function getProductId(event) {
+    return Web3utils.hexToString(event.returnValues.id)
+}
+
+/**
+ * Watcher generates Node events when Marketplace contract events show up in Ethereum blocks
+ */
 class Watcher extends EventEmitter {
     constructor(web3, marketplaceAddress) {
         super()
         this.market = new web3.eth.Contract(Marketplace.abi, marketplaceAddress)
     }
+
+    /*
+    // product events
+    event ProductCreated(address indexed owner, bytes32 indexed id, string name, address beneficiary, uint pricePerSecond, Currency currency, uint minimumSubscriptionSeconds);
+    event ProductUpdated(address indexed owner, bytes32 indexed id, string name, address beneficiary, uint pricePerSecond, Currency currency, uint minimumSubscriptionSeconds);
+    event ProductDeleted(address indexed owner, bytes32 indexed id);
+    event ProductRedeployed(address indexed owner, bytes32 indexed id);
+    event ProductOwnershipOffered(address indexed owner, bytes32 indexed id, address indexed to);
+    event ProductOwnershipChanged(address indexed newOwner, bytes32 indexed id, address indexed oldOwner);
+
+    // subscription events
+    event Subscribed(bytes32 indexed productId, address indexed subscriber, uint endTimestamp);
+    event NewSubscription(bytes32 indexed productId, address indexed subscriber, uint endTimestamp);
+    event SubscriptionExtended(bytes32 indexed productId, address indexed subscriber, uint endTimestamp);
+    event SubscriptionTransferred(bytes32 indexed productId, address indexed from, address indexed to, uint secondsTransferred, uint datacoinTransferred);
+
+    // currency events
+    event ExchangeRatesUpdated(uint timestamp, uint dataInUsd);
+    */
 
     /**
      * Start watching incoming blocks
@@ -23,64 +50,11 @@ class Watcher extends EventEmitter {
         }
         this.isRunning = true
 
+        this.market.events.ProductCreated({}, this.onDeployEvent.bind(this))
+        this.market.events.ProductRedeployed({}, this.onDeployEvent.bind(this))
+        this.market.events.ProductDeleted({}, this.onUndeployEvent.bind(this))
+
         const self = this
-        /*
-        // product events
-        event ProductCreated(address indexed owner, bytes32 indexed id, string name, address beneficiary, uint pricePerSecond, Currency currency, uint minimumSubscriptionSeconds);
-        event ProductUpdated(address indexed owner, bytes32 indexed id, string name, address beneficiary, uint pricePerSecond, Currency currency, uint minimumSubscriptionSeconds);
-        event ProductDeleted(address indexed owner, bytes32 indexed id);
-        event ProductRedeployed(address indexed owner, bytes32 indexed id);
-        event ProductOwnershipOffered(address indexed owner, bytes32 indexed id, address indexed to);
-        event ProductOwnershipChanged(address indexed newOwner, bytes32 indexed id, address indexed oldOwner);
-
-        // subscription events
-        event Subscribed(bytes32 indexed productId, address indexed subscriber, uint endTimestamp);
-        event NewSubscription(bytes32 indexed productId, address indexed subscriber, uint endTimestamp);
-        event SubscriptionExtended(bytes32 indexed productId, address indexed subscriber, uint endTimestamp);
-        event SubscriptionTransferred(bytes32 indexed productId, address indexed from, address indexed to, uint secondsTransferred, uint datacoinTransferred);
-
-        // currency events
-        event ExchangeRatesUpdated(uint timestamp, uint dataInUsd);
-        */
-        this.market.events.ProductCreated({}, onDeployEvent)
-        this.market.events.ProductRedeployed({}, onDeployEvent)
-        this.market.events.ProductDeleted({}, onUndeployEvent)
-
-        function getProductId(event) { return Web3utils.hexToString(event.returnValues.id) }
-
-        function onDeployEvent(error, event) {
-            if (error) {
-                throw error
-            }
-            event.productId = getProductId(event)
-            if (event.removed) {
-                // TODO: how to react? Fire a productUndeployed?
-                console.warn("Blockchain reorg may have dropped an event: " + JSON.stringify(event))
-                return
-            }
-            self.emit("productDeployed", event.productId, {
-                blockNumber: event.blockNumber,
-                blockIndex: event.transactionIndex,
-                ownerAddress: event.returnValues.owner,
-                beneficiaryAddress: event.returnValues.beneficiary,
-                pricePerSecond: event.returnValues.pricePerSecond,
-                priceCurrency: currencySymbol[event.returnValues.currency],
-                minimumSubscriptionInSeconds: event.returnValues.minimumSubscriptionSeconds
-            })
-        }
-        function onUndeployEvent(error, event) {
-            if (error) {
-                throw error
-            }
-            event.productId = getProductId(event)
-            if (event.removed) {
-                // TODO: how to react? Fire a productDeployed?
-                console.warn("Blockchain reorg may have dropped an event: " + JSON.stringify(event))
-                return
-            }
-            self.emit("productUndeployed", event.productId, {})
-        }
-
         this.market.events.allEvents()
             .on("data", event => {
                 self.emit("event", event)
@@ -91,6 +65,52 @@ class Watcher extends EventEmitter {
             .on("error", error => {
                 self.emit("error", error)
             })
+    }
+
+    // SYNCHRONOUSLY play back events one by one. Wait for promise to return before sending the next one
+    async playback(fromBlock, toBlock) {
+        for (let e of await this.market.getPastEvents("allevents", {fromBlock, toBlock})) {
+            switch (e.event) {
+                case "ProductDeployed": await this.onDeployEvent(null, e); break;
+                case "ProductRedeployed": await this.onDeployEvent(null, e); break;
+                case "ProductDeleted": await this.onUndeployEvent(null, e); break;
+            }
+        }
+    }
+
+    onDeployEvent(error, event) {
+        if (error) {
+            throw error
+        }
+        event.productId = getProductId(event)
+        if (event.removed) {
+            // TODO: how to react? Fire a productUndeployed?
+            console.error("Blockchain reorg may have dropped an event: " + JSON.stringify(event))
+            return
+        }
+
+        return this.emit("productDeployed", event.productId, {
+            blockNumber: event.blockNumber,
+            blockIndex: event.transactionIndex,
+            ownerAddress: event.returnValues.owner,
+            beneficiaryAddress: event.returnValues.beneficiary,
+            pricePerSecond: event.returnValues.pricePerSecond,
+            priceCurrency: currencySymbol[event.returnValues.currency],
+            minimumSubscriptionInSeconds: event.returnValues.minimumSubscriptionSeconds
+        })
+    }
+
+    onUndeployEvent(error, event) {
+        if (error) {
+            throw error
+        }
+        event.productId = getProductId(event)
+        if (event.removed) {
+            // TODO: how to react? Fire a productDeployed?
+            console.error("Blockchain reorg may have dropped an event: " + JSON.stringify(event))
+            return
+        }
+        return this.emit("productUndeployed", event.productId, {})
     }
 }
 
