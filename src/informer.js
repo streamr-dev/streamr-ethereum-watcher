@@ -15,16 +15,21 @@ class Informer {
     }
 
     setDeployed(id, body) {
-        return this._doRequest(id, 'setDeployed', body)
+        const apiUrl = urlJoin(this.streamrUrl, `/products/${id}/setDeployed`)
+        return this._post(apiUrl, body)
     }
 
     setUndeployed(id, body) {
-        return this._doRequest(id, 'setUndeployed', body)
+        const apiUrl = urlJoin(this.streamrUrl, `/products/${id}/setUndeployed`)
+        return this._post(apiUrl, body)
     }
 
-    _doRequest(id, action, body) {
-        const apiUrl = urlJoin(this.streamrUrl, `api/v1/products/${id}/${action}`)
+    subscribe(body) {
+        const apiUrl = urlJoin(this.streamrUrl, `/subscriptions`)
+        return this._post(apiUrl, body)
+    }
 
+    _post(apiUrl, body) {
         if (this.logging) {
             console.info("POST", apiUrl, body ? '\n' + JSON.stringify(body, null, 4) : '')
         }

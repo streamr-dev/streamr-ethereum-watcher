@@ -49,6 +49,7 @@ class Watcher extends EventEmitter {
         this.market.events.ProductCreated({}, (error, event) => self.onDeployEvent(error, event).then(self.logger))
         this.market.events.ProductRedeployed({}, (error, event) => self.onDeployEvent(error, event).then(self.logger))
         this.market.events.ProductDeleted({}, (error, event) => self.onUndeployEvent(error, event).then(self.logger))
+        this.market.events.Subscribed({}, (error, event) => self.onSubscribeEvent(error, event).then(self.logger))
 
         this.market.events.allEvents()
             .on("data", event => {
@@ -68,11 +69,12 @@ class Watcher extends EventEmitter {
 
     // SYNCHRONOUSLY play back events one by one. Wait for promise to return before sending the next one
     async playback(fromBlock, toBlock) {
-        for (let e of await this.market.getPastEvents("allevents", {fromBlock, toBlock})) {
-            switch (e.event) {
-                case "ProductDeployed": await this.onDeployEvent(null, e); break;
-                case "ProductRedeployed": await this.onDeployEvent(null, e); break;
-                case "ProductDeleted": await this.onUndeployEvent(null, e); break;
+        for (let ev of await this.market.getPastEvents("allevents", {fromBlock, toBlock})) {
+            switch (ev.event) {
+                case "ProductDeployed": await this.onDeployEvent(null, ev); break;
+                case "ProductRedeployed": await this.onDeployEvent(null, ev); break;
+                case "ProductDeleted": await this.onUndeployEvent(null, ev); break;
+                case "Subscribed": await this.onSubscribeEvent(null, ev); break;
             }
         }
     }
@@ -112,6 +114,25 @@ class Watcher extends EventEmitter {
         return this.emit("productUndeployed", productId, {
             blockNumber: event.blockNumber,
             blockIndex: event.transactionIndex
+        })
+    }
+
+    onSubscribeEvent(error, event) {
+        if (error) {
+            throw error
+        }
+        if (event.removed) {
+            // TODO: how to react? Fire a productDeployed?
+            console.error("Blockchain reorg may have dropped an event: " + JSON.stringify(event))
+            return
+        }
+        const productId = event.returnValues.productId.slice(2)    // remove "0x" from beginning
+        return this.emit("subscribed", {
+            blockNumber: event.blockNumber,
+            blockIndex: event.transactionIndex,
+            product: productId,
+            address: event.returnValues.subscriber,
+            endsAt: event.returnValues.endTimestamp
         })
     }
 }
