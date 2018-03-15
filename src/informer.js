@@ -1,5 +1,5 @@
 const fetch = require('node-fetch')
-const url = require('url')
+const urlJoin = require('url-join')
 
 class Informer {
     constructor(streamrUrl, devOpsAccessToken) {
@@ -23,7 +23,7 @@ class Informer {
     }
 
     _doRequest(id, action, body) {
-        const apiUrl = url.resolve(this.streamrUrl, `products/${id}/${action}`)
+        const apiUrl = urlJoin(this.streamrUrl, `products/${id}/${action}`)
 
         if (this.logging) {
             console.info("POST", apiUrl, body ? '\n' + JSON.stringify(body, null, 4) : '')
