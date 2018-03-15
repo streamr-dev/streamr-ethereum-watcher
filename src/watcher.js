@@ -109,7 +109,10 @@ class Watcher extends EventEmitter {
             return
         }
         const productId = event.returnValues.id.slice(2)    // remove "0x" from beginning
-        return this.emit("productUndeployed", productId, {})
+        return this.emit("productUndeployed", productId, {
+            blockNumber: event.blockNumber,
+            blockIndex: event.transactionIndex
+        })
     }
 }
 
