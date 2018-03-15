@@ -13,6 +13,7 @@ describe("Watcher", () => {
 
     const productId = "test"
     const productIdHex = web3.utils.fromUtf8(productId)
+    const productIdBytes = productIdHex.slice(2).padEnd(64, "0")
 
     let token, marketplace, accounts
     before(async () => {
@@ -27,7 +28,7 @@ describe("Watcher", () => {
         watcher.on("productDeployed", cb)
         await sendFrom(accounts[0], marketplace.methods.createProduct(productIdHex, "test", accounts[0], 1, Currency.DATA, 1))
         assert.equal(cb.callCount, 1)
-        assert.equal(cb.args[0][0], productId)
+        assert.equal(cb.args[0][0], productIdBytes)
         assert.equal(cb.args[0][1].ownerAddress, accounts[0])
         assert.equal(cb.args[0][1].beneficiaryAddress, accounts[0])
         assert.equal(cb.args[0][1].minimumSubscriptionInSeconds, 1)
@@ -40,7 +41,7 @@ describe("Watcher", () => {
         watcher.on("productUndeployed", cb)
         await sendFrom(accounts[0], marketplace.methods.deleteProduct(productIdHex))
         assert.equal(cb.callCount, 1)
-        assert.equal(cb.args[0][0], productId)
+        assert.equal(cb.args[0][0], productIdBytes)
     })
 
     it("catches product re-deploy", async () => {
@@ -48,7 +49,7 @@ describe("Watcher", () => {
         watcher.on("productDeployed", cb)
         await sendFrom(accounts[0], marketplace.methods.redeployProduct(productIdHex))
         assert.equal(cb.callCount, 1)
-        assert.equal(cb.args[0][0], productId)
+        assert.equal(cb.args[0][0], productIdBytes)
         assert.equal(cb.args[0][1].ownerAddress, accounts[0])
         assert.equal(cb.args[0][1].beneficiaryAddress, accounts[0])
         assert.equal(cb.args[0][1].minimumSubscriptionInSeconds, 1)
