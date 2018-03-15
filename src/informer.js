@@ -23,7 +23,7 @@ class Informer {
     }
 
     _doRequest(id, action, body) {
-        const apiUrl = urlJoin(this.streamrUrl, `products/${id}/${action}`)
+        const apiUrl = urlJoin(this.streamrUrl, `api/v1/products/${id}/${action}`)
 
         if (this.logging) {
             console.info("POST", apiUrl, body ? '\n' + JSON.stringify(body, null, 4) : '')
