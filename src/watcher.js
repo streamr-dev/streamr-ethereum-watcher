@@ -8,11 +8,6 @@ const currencySymbol = [
     "USD"
 ]
 
-// get productId string from event return value (bytes32 hex string)
-function getProductId(event) {
-    return Web3utils.hexToString(event.returnValues.id)
-}
-
 /**
  * Watcher generates Node events when Marketplace contract events show up in Ethereum blocks
  */
@@ -50,21 +45,25 @@ class Watcher extends EventEmitter {
         }
         this.isRunning = true
 
-        this.market.events.ProductCreated({}, this.onDeployEvent.bind(this))
-        this.market.events.ProductRedeployed({}, this.onDeployEvent.bind(this))
-        this.market.events.ProductDeleted({}, this.onUndeployEvent.bind(this))
-
         const self = this
+        this.market.events.ProductCreated({}, (error, event) => self.onDeployEvent(error, event).then(self.logger))
+        this.market.events.ProductRedeployed({}, (error, event) => self.onDeployEvent(error, event).then(self.logger))
+        this.market.events.ProductDeleted({}, (error, event) => self.onUndeployEvent(error, event).then(self.logger))
+
         this.market.events.allEvents()
             .on("data", event => {
                 self.emit("event", event)
             })
             .on("changed", event => {
-                log.warn("Blockchain reorg may have dropped an event: " + JSON.stringify(event))
+                console.warn("Blockchain reorg may have dropped an event: " + JSON.stringify(event))
             })
             .on("error", error => {
                 self.emit("error", error)
             })
+    }
+
+    logger() {
+        // log nothing by default, allow override for logging
     }
 
     // SYNCHRONOUSLY play back events one by one. Wait for promise to return before sending the next one
@@ -82,14 +81,14 @@ class Watcher extends EventEmitter {
         if (error) {
             throw error
         }
-        event.productId = getProductId(event)
         if (event.removed) {
             // TODO: how to react? Fire a productUndeployed?
             console.error("Blockchain reorg may have dropped an event: " + JSON.stringify(event))
             return
         }
 
-        return this.emit("productDeployed", event.productId, {
+        const productId = event.returnValues.id.slice(2)    // remove "0x" from beginning
+        return this.emit("productDeployed", productId, {
             blockNumber: event.blockNumber,
             blockIndex: event.transactionIndex,
             ownerAddress: event.returnValues.owner,
@@ -104,13 +103,13 @@ class Watcher extends EventEmitter {
         if (error) {
             throw error
         }
-        event.productId = getProductId(event)
         if (event.removed) {
             // TODO: how to react? Fire a productDeployed?
             console.error("Blockchain reorg may have dropped an event: " + JSON.stringify(event))
             return
         }
-        return this.emit("productUndeployed", event.productId, {})
+        const productId = event.returnValues.id.slice(2)    // remove "0x" from beginning
+        return this.emit("productUndeployed", productId, {})
     }
 }
 

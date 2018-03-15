@@ -6,6 +6,7 @@ const {
     ethereumServerURL,
     streamrEngineURL,
     devopsKey,
+    verbose,
     logDir = "logs"
 } = argv
 
@@ -18,11 +19,19 @@ const watcher = new Watcher(web3, marketplaceAddress)
 const Informer = require("./src/informer")
 const informer = new Informer(streamrEngineURL, devopsKey)
 
+if (verbose) {
+    watcher.on("productDeployed", (id, body) => { console.log(`Product ${id} deployed ${JSON.stringify(body)}`) })
+    watcher.on("productUndeployed", (id, body) => { console.log(`Product ${id} UNdeployed ${JSON.stringify(body)}`) })
+    watcher.logger = console.log
+    informer.logging = true
+}
+
 async function start() {
     // set up reporting
-    watcher.on("productDeployed", informer.setDeployed)
-    watcher.on("productUndeployed", informer.setUndeployed)
+    watcher.on("productDeployed", informer.setDeployed.bind(informer))
+    watcher.on("productUndeployed", informer.setUndeployed.bind(informer))
 
+    /*
     // catch up the blocks that happened when we were gone
     let lastRecorded = await fs.readFile(logDir + "/lastBlock")
     let lastActual = await web3.getBlockNumber()
@@ -31,10 +40,10 @@ async function start() {
         await watcher.playback(lastRecorded + 1, lastActual)
         lastRecorded = lastActual
         lastActual = await web3.getBlockNumber()
-    }
+    }*/
 
     // report new blocks as they arrive
-    log.debug("Starting watcher...")
+    console.log("Starting watcher...")
     watcher.start()
 
     return "Done"
