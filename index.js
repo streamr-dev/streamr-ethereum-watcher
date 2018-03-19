@@ -39,7 +39,7 @@ async function start() {
     let lastActual = await web3.getBlockNumber()
     while (lastRecorded < lastActual) {
         log.debug(`Playing back blocks ${lastRecorded+1}...${lastActual} (inclusive)`)
-        await watcher.playback(lastRecorded + 1, lastActual) // TODO: unit test playback
+        await watcher.playback(lastRecorded + 1, lastActual)
         lastRecorded = lastActual
         lastActual = await web3.getBlockNumber()
     }*/

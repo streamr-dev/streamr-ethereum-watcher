@@ -8,7 +8,7 @@ module.exports = async web3 => {
 
     const token = await sendFrom(accounts[0], new web3.eth.Contract(Token.abi).deploy({ data: Token.bytecode, arguments: [] }))
     const marketplace = await sendFrom(accounts[0], new web3.eth.Contract(Marketplace.abi).deploy({ data: Marketplace.bytecode, arguments: [
-        token.address,
+        token.options.address,
         accounts[0]     // currencyUpdateAgent
     ]}))
 

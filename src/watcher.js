@@ -3,10 +3,7 @@ const Web3utils = require("web3-utils")
 
 const Marketplace = require("../lib/marketplace-contracts/build/contracts/Marketplace.json")
 
-const currencySymbol = [
-    "DATA",
-    "USD"
-]
+const { Marketplace: { currencySymbol } } = require("../lib/marketplace-contracts/src/contracts/enums")
 
 /**
  * Watcher generates Node events when Marketplace contract events show up in Ethereum blocks
@@ -71,7 +68,7 @@ class Watcher extends EventEmitter {
     async playback(fromBlock, toBlock) {
         for (let ev of await this.market.getPastEvents("allevents", {fromBlock, toBlock})) {
             switch (ev.event) {
-                case "ProductDeployed": await this.onDeployEvent(null, ev); break;
+                case "ProductCreated": await this.onDeployEvent(null, ev); break;
                 case "ProductRedeployed": await this.onDeployEvent(null, ev); break;
                 case "ProductDeleted": await this.onUndeployEvent(null, ev); break;
                 case "Subscribed": await this.onSubscribeEvent(null, ev); break;
