@@ -46,6 +46,7 @@ class Watcher extends EventEmitter {
         this.market.events.ProductCreated({}, (error, event) => self.onDeployEvent(error, event).then(self.logger))
         this.market.events.ProductRedeployed({}, (error, event) => self.onDeployEvent(error, event).then(self.logger))
         this.market.events.ProductDeleted({}, (error, event) => self.onUndeployEvent(error, event).then(self.logger))
+        this.market.events.ProductUpdated({}, (error, event) => self.onUpdateEvent(error, event).then(self.logger))
         this.market.events.Subscribed({}, (error, event) => self.onSubscribeEvent(error, event).then(self.logger))
 
         this.market.events.allEvents()
@@ -71,6 +72,7 @@ class Watcher extends EventEmitter {
                 case "ProductCreated": await this.onDeployEvent(null, ev); break;
                 case "ProductRedeployed": await this.onDeployEvent(null, ev); break;
                 case "ProductDeleted": await this.onUndeployEvent(null, ev); break;
+                case "ProductUpdated": await this.onUpdateEvent(null, ev); break;
                 case "Subscribed": await this.onSubscribeEvent(null, ev); break;
             }
         }
@@ -88,6 +90,28 @@ class Watcher extends EventEmitter {
 
         const productId = event.returnValues.id.slice(2)    // remove "0x" from beginning
         return this.emit("productDeployed", productId, {
+            blockNumber: event.blockNumber,
+            blockIndex: event.transactionIndex,
+            ownerAddress: event.returnValues.owner,
+            beneficiaryAddress: event.returnValues.beneficiary,
+            pricePerSecond: event.returnValues.pricePerSecond,
+            priceCurrency: currencySymbol[event.returnValues.currency],
+            minimumSubscriptionInSeconds: event.returnValues.minimumSubscriptionSeconds
+        })
+    }
+
+    onUpdateEvent(error, event) {
+        if (error) {
+            throw error
+        }
+        if (event.removed) {
+            // TODO: how to react? Fire a productUndeployed?
+            console.error("Blockchain reorg may have dropped an event: " + JSON.stringify(event))
+            return
+        }
+
+        const productId = event.returnValues.id.slice(2)    // remove "0x" from beginning
+        return this.emit("productUpdated", productId, {
             blockNumber: event.blockNumber,
             blockIndex: event.transactionIndex,
             ownerAddress: event.returnValues.owner,

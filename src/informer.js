@@ -24,18 +24,23 @@ class Informer {
         return this._post(apiUrl, body)
     }
 
+    productUpdated(id, body) {
+        const apiUrl = urlJoin(this.streamrUrl, `/products/${id}`)
+        return this._post(apiUrl, body, 'PUT')
+    }
+
     subscribe(body) {
         const apiUrl = urlJoin(this.streamrUrl, `/subscriptions`)
         return this._post(apiUrl, body)
     }
 
-    _post(apiUrl, body) {
+    _post(apiUrl, body, method='POST') {
         if (this.logging) {
-            console.info("POST", apiUrl, body ? '\n' + JSON.stringify(body, null, 4) : '')
+            console.info(method, apiUrl, body ? '\n' + JSON.stringify(body, null, 4) : '')
         }
 
         return fetch(apiUrl, {
-            method: 'POST',
+            method,
             body: JSON.stringify(body),
             headers: {
                 'Accept': 'application/json',
