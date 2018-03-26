@@ -1,4 +1,5 @@
 const Web3 = require("web3")
+const TestRpcProvider = require("ganache-core/lib/provider");
 
 module.exports = rpc => {
 
@@ -8,8 +9,7 @@ module.exports = rpc => {
     }
 
     // otherwise run testrpc
-    const testrpc = require("ganache-cli")
-    return new Web3(testrpc.provider({
+    return new Web3(new TestRpcProvider({
         mnemonic: "we make your streams come true",
         total_accounts: 10,
         gasLimit: 5000000
