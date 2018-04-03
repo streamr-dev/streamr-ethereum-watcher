@@ -73,6 +73,22 @@ describe("Watcher", () => {
             assert.equal(cb.args[0][1].minimumSubscriptionInSeconds, 10)
             assert.equal(cb.args[0][1].pricePerSecond, 2)
             assert.equal(cb.args[0][1].priceCurrency, "DATA")
+            watcher.removeListener("productUpdated", cb)
+        })
+
+        it("catches product ownership change", async () => {
+            const cb = sinon.spy()
+            watcher.on("productUpdated", cb)
+            await sendFrom(accounts[0], marketplace.methods.offerProductOwnership(productIdHex, accounts[1]))
+            await sendFrom(accounts[1], marketplace.methods.claimProductOwnership(productIdHex))
+            await marketplace.methods.getProduct(productIdHex).call()   // this line here just to make the thing wait until the callback is in fact called, TODO: find a better way
+            assert.equal(cb.callCount, 1)
+            assert.equal(cb.args[0][0], "0x" + productIdBytes)
+            assert.equal(cb.args[0][1].ownerAddress, accounts[1])
+            assert.equal(cb.args[0][1].beneficiaryAddress, accounts[4])
+            assert.equal(cb.args[0][1].minimumSubscriptionInSeconds, 10)
+            assert.equal(cb.args[0][1].pricePerSecond, 2)
+            assert.equal(cb.args[0][1].priceCurrency, "DATA")
         })
 
         it("catches subscription", async () => {

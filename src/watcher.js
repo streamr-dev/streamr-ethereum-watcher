@@ -47,6 +47,7 @@ class Watcher extends EventEmitter {
         this.market.events.ProductRedeployed({}, (error, event) => self.onDeployEvent(error, event).then(self.logger))
         this.market.events.ProductDeleted({}, (error, event) => self.onUndeployEvent(error, event).then(self.logger))
         this.market.events.ProductUpdated({}, (error, event) => self.onUpdateEvent(error, event).then(self.logger))
+        this.market.events.ProductOwnershipChanged({}, (error, event) => self.onOwnershipUpdateEvent(error, event).then(self.logger))
         this.market.events.Subscribed({}, (error, event) => self.onSubscribeEvent(error, event).then(self.logger))
 
         this.market.events.allEvents()
@@ -73,6 +74,7 @@ class Watcher extends EventEmitter {
                 case "ProductRedeployed": await this.onDeployEvent(null, ev); break;
                 case "ProductDeleted": await this.onUndeployEvent(null, ev); break;
                 case "ProductUpdated": await this.onUpdateEvent(null, ev); break;
+                case "ProductOwnershipChanged": await this.onOwnershipUpdateEvent(null, ev); break;
                 case "Subscribed": await this.onSubscribeEvent(null, ev); break;
             }
         }
@@ -105,7 +107,7 @@ class Watcher extends EventEmitter {
             throw error
         }
         if (event.removed) {
-            // TODO: how to react? Fire a productUndeployed?
+            // TODO: how to react? Send another Update event with old info?
             console.error("Blockchain reorg may have dropped an event: " + JSON.stringify(event))
             return
         }
@@ -142,11 +144,6 @@ class Watcher extends EventEmitter {
         if (error) {
             throw error
         }
-        if (event.removed) {
-            // TODO: how to react? Fire a productDeployed?
-            console.error("Blockchain reorg may have dropped an event: " + JSON.stringify(event))
-            return
-        }
         const productId = event.returnValues.productId.slice(2)    // remove "0x" from beginning
         return this.emit("subscribed", {
             blockNumber: event.blockNumber,
@@ -154,6 +151,30 @@ class Watcher extends EventEmitter {
             product: productId,
             address: event.returnValues.subscriber,
             endsAt: event.returnValues.endTimestamp
+        })
+    }
+
+    onOwnershipUpdateEvent(error, event) {
+        if (error) {
+            throw error
+        }
+        if (event.removed) {
+            // TODO: how to react? Send another Update event with old info?
+            console.error("Blockchain reorg may have dropped an event: " + JSON.stringify(event))
+            return
+        }
+        //const productId = event.returnValues.id.slice(2)    // remove "0x" from beginning
+        const productId = event.returnValues.id
+        return this.market.methods.getProduct(productId).call().then(p => {
+            return this.emit("productUpdated", productId, {
+                blockNumber: event.blockNumber,
+                blockIndex: event.transactionIndex,
+                ownerAddress: p.owner,
+                beneficiaryAddress: p.beneficiary,
+                pricePerSecond: p.pricePerSecond,
+                priceCurrency: currencySymbol[+p.currency],
+                minimumSubscriptionInSeconds: p.minimumSubscriptionSeconds
+            })
         })
     }
 }
