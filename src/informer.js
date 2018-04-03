@@ -25,8 +25,8 @@ class Informer {
     }
 
     productUpdated(id, body) {
-        const apiUrl = urlJoin(this.streamrUrl, `/products/${id}`)
-        return this._post(apiUrl, body, 'PUT')
+        const apiUrl = urlJoin(this.streamrUrl, `/products/${id}/setPricing`)
+        return this._post(apiUrl, body)
     }
 
     subscribe(body) {
