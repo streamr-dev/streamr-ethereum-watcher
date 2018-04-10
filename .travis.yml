@@ -1,0 +1,19 @@
+language: node_js
+sudo: required
+services:
+- docker
+branches:
+  only:
+  - master
+git:
+  submodules: false
+before_install:
+- sed -i 's/git@github.com:/https:\/\/github.com\//' .gitmodules
+- git submodule update --init --recursive
+jobs:
+  include:
+  - stage: Unit tests
+    script: "make unit-test"
+  - stage: Build docker
+    script: "make docker-lint docker-build docker-tag docker-push"
+    if: branch = master
