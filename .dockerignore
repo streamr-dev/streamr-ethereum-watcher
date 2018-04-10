@@ -4,4 +4,4 @@
 target
 out
 node_modules
-/lib/marketplace-contracts/*
+lib/marketplace-contracts/*
