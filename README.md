@@ -7,7 +7,7 @@ For redundancy, run multiple instances in parallel attached to different Ethereu
 ## Building
 Project uses npm for package management.
 
-- Pull all submodules `git submodule update —init`
+- Pull all submodules `git submodule update --init --recursive`
 - Start off by installing required dependencies with `npm install`
 - To run tests `npm test`
 
