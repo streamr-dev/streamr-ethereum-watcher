@@ -42,14 +42,16 @@ class Watcher extends EventEmitter {
         }
         this.isRunning = true
 
-        const self = this
-        this.market.events.ProductCreated({}, (error, event) => self.onDeployEvent(error, event).then(self.logger))
-        this.market.events.ProductRedeployed({}, (error, event) => self.onDeployEvent(error, event).then(self.logger))
-        this.market.events.ProductDeleted({}, (error, event) => self.onUndeployEvent(error, event).then(self.logger))
-        this.market.events.ProductUpdated({}, (error, event) => self.onUpdateEvent(error, event).then(self.logger))
-        this.market.events.ProductOwnershipChanged({}, (error, event) => self.onOwnershipUpdateEvent(error, event).then(self.logger))
-        this.market.events.Subscribed({}, (error, event) => self.onSubscribeEvent(error, event).then(self.logger))
+        // TODO: refactor ProductCreated activates onProductCreated (not onDeployEvent)
+        // TODO: autogenerate these bindings from a list maybe
+        this.market.events.ProductCreated({}, this.handleEvent.bind(this, this.onDeployEvent))
+        this.market.events.ProductRedeployed({}, this.handleEvent.bind(this, this.onDeployEvent))
+        this.market.events.ProductDeleted({}, this.handleEvent.bind(this, this.onUndeployEvent))
+        this.market.events.ProductUpdated({}, this.handleEvent.bind(this, this.onUpdateEvent))
+        this.market.events.ProductOwnershipChanged({}, this.handleEvent.bind(this, this.onOwnershipUpdateEvent))
+        this.market.events.Subscribed({}, this.handleEvent.bind(this, this.onSubscribeEvent))
 
+        const self = this
         this.market.events.allEvents()
             .on("data", event => {
                 self.emit("event", event)
@@ -60,6 +62,13 @@ class Watcher extends EventEmitter {
             .on("error", error => {
                 self.emit("error", error)
             })
+    }
+
+    handleEvent(handler, error, event) {
+        const self = this
+        handler.bind(this)(error, event).then(this.logger).then(async () => {
+            await self.emit("eventSuccessfullyProcessed", event)
+        })
     }
 
     logger() {

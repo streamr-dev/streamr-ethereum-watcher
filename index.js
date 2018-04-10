@@ -24,8 +24,10 @@ if (verbose) {
     watcher.on("productUndeployed", (id, body) => { console.log(`Product ${id} UNdeployed ${JSON.stringify(body)}`) })
     watcher.on("productUpdated", (id, body) => { console.log(`Product ${id} UPDATED ${JSON.stringify(body)}`) })
     watcher.on("subscribed", (body) => { console.log(`Product ${body.product} subscribed ${JSON.stringify(body)}`) })
-    watcher.logger = console.log
-    informer.logging = true
+    if (verbose > 1) {
+        watcher.logger = console.log
+        informer.logging = true
+    }
 }
 
 async function start() {
@@ -36,20 +38,29 @@ async function start() {
     watcher.on("subscribed", informer.subscribe.bind(informer))
 
     // catch up the blocks that happened when we were gone
-    let lastRecorded = await fs.readFile(logDir + "/lastBlock")
-    let lastActual = await web3.getBlockNumber()
+    let lastRecorded = parseInt(await fs.readFile(logDir + "/lastBlock"))
+    let lastActual = await web3.eth.getBlockNumber()
     while (lastRecorded < lastActual) {
-        log.debug(`Playing back blocks ${lastRecorded+1}...${lastActual} (inclusive)`)
+        console.log(`Playing back blocks ${lastRecorded+1}...${lastActual} (inclusive)`)
         await watcher.playback(lastRecorded + 1, lastActual)
         await fs.writeFile(logDir + "/lastBlock", lastActual)
         lastRecorded = lastActual
-        lastActual = await web3.getBlockNumber()
+        lastActual = await web3.eth.getBlockNumber()
     }
 
     // report new blocks as they arrive
     console.log("Starting watcher...")
     watcher.start()
 
-    return "Done"
+    watcher.on("eventSuccessfullyProcessed", event => {
+        fs.writeFile(logDir + "/lastBlock", event.blockNumber)
+            .then(() => {
+                if (verbose) {
+                    console.log(`Processed https://rinkeby.etherscan.io/block/${event.blockNumber}. Wrote ${logDir}/lastBlock.`)
+                }
+            })
+    })
+
+    return "Watcher started."
 }
 start().then(console.log)
