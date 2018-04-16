@@ -28,7 +28,7 @@ docker-login:
 
 docker-push: docker-login
 	docker push $(LATEST_TAG)
-
+.PHONY: unit-test
 unit-test:
 	npm install
 	npm test
