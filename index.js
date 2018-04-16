@@ -61,6 +61,13 @@ async function start() {
             })
     })
 
+    return new Promise((done, fail) => {
+        watcher.on("error", fail)
+    })
+
     return "Watcher started."
 }
-start().then(console.log)
+start().then(console.log).catch(e => {
+    console.error(e);
+    process.exit(1)
+})
