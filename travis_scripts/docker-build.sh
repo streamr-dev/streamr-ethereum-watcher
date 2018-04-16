@@ -19,4 +19,6 @@ docker build \
 docker tag ${GIT_TAG} ${BUILD_TAG}
 docker tag ${GIT_TAG} ${LATEST_TAG}
 docker login -u "${DOCKER_USER}" -p "${DOCKER_PASS}"
+if [ "$TRAVIS_PULL_REQUEST" = "false" ]; then
 docker push ${LATEST_TAG}
+fi
