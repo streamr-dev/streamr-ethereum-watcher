@@ -7,6 +7,9 @@ QNAME=$(OWNER)/$(IMAGE_NAME)
 GIT_TAG=$(QNAME):$(VCS_REF)
 BUILD_TAG=$(QNAME):$(IMAGE_VERSION)
 LATEST_TAG=$(QNAME):latest
+npm-login:
+	npm install -g npm-cli-login
+	npm-cli-login
 docker-build:
 	docker build \
 		--build-arg VCS_REF=$(VCS_REF) \
