@@ -31,4 +31,4 @@ RUN git submodule update --init --recursive
 RUN apt-get clean
 
 ENTRYPOINT ["node"]
-CMD ["index.js", "--streamrApiURL=http://localhost:8081/streamr-core/api/v1", "--devopsKey=devops-user-key","--ethereumServerURL=wss://rinkeby.infura.io/ws", "--marketplaceAddress=0x1994925b5da03929f8f51cf3891aee199656ec72","--verbose=1"]
+CMD ["index.js", "--streamrApiURL=http://localhost:8081/streamr-core/api/v1", "--devopsKey=devops-user-key","--ethereumServerURL=wss://rinkeby.infura.io/ws", "--marketplaceAddress=0xDA07b416867Ef8ee0F36e6870C76ffaf472d124C","--verbose=1"]

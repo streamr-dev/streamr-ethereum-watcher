@@ -1,1 +1,1 @@
-node index.js --streamrApiURL="http://localhost:8081/streamr-core/api/v1" --ethereumServerURL="wss://rinkeby.infura.io/ws" --marketplaceAddress="0x1994925b5da03929f8f51cf3891aee199656ec72" --devopsKey="devops-user-key" --verbose=1
+node index.js --streamrApiURL="http://localhost:8081/streamr-core/api/v1" --ethereumServerURL="wss://mainnet.infura.io/ws" --marketplaceAddress="0xf28a73603d577041228f543886f512d350c54d25" --devopsKey="9FA3g-mqSe2BijSni-U2SQETbEWsXLSBO0t_OWLBccPw" --verbose=1
