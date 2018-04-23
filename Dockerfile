@@ -30,5 +30,15 @@ COPY . /app
 RUN git submodule update --init --recursive
 RUN apt-get clean
 
-ENTRYPOINT ["node"]
-CMD ["index.js", "--streamrApiURL=http://localhost:8081/streamr-core/api/v1", "--devopsKey=devops-user-key","--ethereumServerURL=wss://rinkeby.infura.io/ws", "--marketplaceAddress=0xDA07b416867Ef8ee0F36e6870C76ffaf472d124C","--verbose=1"]
+# Default enironment variables
+ENV STREAMR_API_URL http://localhost:8081/streamr-core/api/v1
+ENV DEVOPS_KEY devops-user-key
+ENV ETHEREUM_SERVER_URL wss://rinkeby.infura.io/ws
+ENV MARKETPLACE_ADDRESS 0xDA07b416867Ef8ee0F36e6870C76ffaf472d124C
+
+CMD node index.js \
+    --streamrApiURL=${STREAMR_API_URL} \
+    --devopsKey=${DEVOPS_KEY} \
+    --ethereumServerURL=${ETHEREUM_SERVER_URL} \
+    --marketplaceAddress=${MARKETPLACE_ADDRESS} \
+    --verbose=1
