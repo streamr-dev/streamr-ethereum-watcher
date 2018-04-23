@@ -18,10 +18,7 @@ See https://github.com/streamr-dev/streamr-docker-dev for more information on ho
 If you are developing this service in particular, or are otherwise inclined, you can run this service with `npm run`.
 
 ## Publishing
-A [Docker image](https://hub.docker.com/r/streamr/data-api/) is automatically built and pushed to DockerHub when commits
-are pushed to branch `master`.
-
-Currently project has no CI system configured nor are any packages published to npmjs.com.
+The project is automatically tested and built using Travis CI. If and when all tests pass, a [Docker image](https://hub.docker.com/r/streamr/data-api/) is built and pushed to DockerHub by Travis CI.
 
 ## License
 
