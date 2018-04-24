@@ -34,7 +34,7 @@ RUN apt-get clean
 ENV STREAMR_API_URL http://localhost:8081/streamr-core/api/v1
 ENV DEVOPS_KEY devops-user-key
 ENV ETHEREUM_SERVER_URL wss://rinkeby.infura.io/ws
-ENV MARKETPLACE_ADDRESS 0xDA07b416867Ef8ee0F36e6870C76ffaf472d124C
+ENV MARKETPLACE_ADDRESS 0x0af64558670a3b761b57e465cb80b62254b39619
 
 CMD node index.js \
     --streamrApiURL=${STREAMR_API_URL} \
