@@ -142,7 +142,7 @@ class Watcher extends EventEmitter {
             blockIndex: event.transactionIndex,
             ownerAddress: event.returnValues.owner,
             beneficiaryAddress: event.returnValues.beneficiary,
-            pricePerSecond: event.returnValues.pricePerSecond,
+            pricePerSecond: event.returnValues.pricePerSecond / 10**9,
             priceCurrency: currencySymbol[event.returnValues.currency],
             minimumSubscriptionInSeconds: event.returnValues.minimumSubscriptionSeconds
         })
@@ -164,7 +164,7 @@ class Watcher extends EventEmitter {
             blockIndex: event.transactionIndex,
             ownerAddress: event.returnValues.owner,
             beneficiaryAddress: event.returnValues.beneficiary,
-            pricePerSecond: event.returnValues.pricePerSecond,
+            pricePerSecond: event.returnValues.pricePerSecond / 10**9,
             priceCurrency: currencySymbol[event.returnValues.currency],
             minimumSubscriptionInSeconds: event.returnValues.minimumSubscriptionSeconds
         })
@@ -217,7 +217,7 @@ class Watcher extends EventEmitter {
                 blockIndex: event.transactionIndex,
                 ownerAddress: p.owner,
                 beneficiaryAddress: p.beneficiary,
-                pricePerSecond: p.pricePerSecond,
+                pricePerSecond: p.pricePerSecond / 10**9,
                 priceCurrency: currencySymbol[+p.currency],
                 minimumSubscriptionInSeconds: p.minimumSubscriptionSeconds
             })
