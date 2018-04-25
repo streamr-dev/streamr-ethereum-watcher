@@ -3,6 +3,7 @@ const argv = require("yargs").argv
 
 const {
     marketplaceAddress,
+    networkId,
     ethereumServerURL,
     streamrApiURL,
     devopsKey,
@@ -10,11 +11,22 @@ const {
     logDir = "logs"
 } = argv
 
+const defaultServers = {
+    1: "wss://mainnet.infura.io/ws",
+    4: "wss://rinkeby.infura.io/ws"
+}
+
 const Web3 = require("web3")
-const web3 = new Web3(ethereumServerURL)
+const web3 = new Web3(ethereumServerURL || defaultServers[networkId] || "missing --ethereumServerURL or --networkId!")
+
+const Marketplace = require("../lib/marketplace-contracts/build/contracts/Marketplace.json")
+const deployedMarketplaceAddress = Marketplace.networks[networkId] && Marketplace.networks[networkId].address
+if (marketplaceAddress && !web3.utils.isAddress(marketplaceAddress)) { throw new Error("Bad --marketplaceAddress") }
+const marketAddress = marketplaceAddress || deployedMarketplaceAddress
+if (!marketAddress) { throw new Error("Requires --marketplaceAddress or deployment through marketplace-contracts") }
 
 const Watcher = require("./src/watcher")
-const watcher = new Watcher(web3, marketplaceAddress)
+const watcher = new Watcher(web3, marketAddress)
 
 const Informer = require("./src/informer")
 const informer = new Informer(streamrApiURL, devopsKey)

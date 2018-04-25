@@ -28,17 +28,19 @@ COPY package-lock.json /app
 RUN npm install
 COPY . /app
 RUN git submodule update --init --recursive
+RUN git submodule update --remote
 RUN apt-get clean
 
-# Default enironment variables
+# Default environment variables
 ENV STREAMR_API_URL http://localhost:8081/streamr-core/api/v1
 ENV DEVOPS_KEY devops-user-key
-ENV ETHEREUM_SERVER_URL wss://rinkeby.infura.io/ws
-ENV MARKETPLACE_ADDRESS 0x0af64558670a3b761b57e465cb80b62254b39619
+#ENV ETHEREUM_SERVER_URL wss://rinkeby.infura.io/ws
+#ENV MARKETPLACE_ADDRESS 0xDA07b416867Ef8ee0F36e6870C76ffaf472d124C
 
 CMD node index.js \
     --streamrApiURL=${STREAMR_API_URL} \
     --devopsKey=${DEVOPS_KEY} \
-    --ethereumServerURL=${ETHEREUM_SERVER_URL} \
-    --marketplaceAddress=${MARKETPLACE_ADDRESS} \
+    --networkId=4 \
     --verbose=1
+#    --ethereumServerURL=${ETHEREUM_SERVER_URL}
+#    --marketplaceAddress=${MARKETPLACE_ADDRESS}
