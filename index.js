@@ -11,6 +11,7 @@ const {
     logDir = "logs"
 } = argv
 
+// network ids: 1 = mainnet, 2 = morden, 3 = ropsten, 4 = rinkeby (current testnet)
 const defaultServers = {
     1: "wss://mainnet.infura.io/ws",
     4: "wss://rinkeby.infura.io/ws"
