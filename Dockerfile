@@ -28,7 +28,6 @@ COPY package-lock.json /app
 RUN npm install
 COPY . /app
 RUN git submodule update --init --recursive
-RUN git submodule update --remote
 RUN apt-get clean
 
 # Default environment variables
