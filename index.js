@@ -20,7 +20,7 @@ const defaultServers = {
 const Web3 = require("web3")
 const web3 = new Web3(ethereumServerURL || defaultServers[networkId] || "missing --ethereumServerURL or --networkId!")
 
-const Marketplace = require("../lib/marketplace-contracts/build/contracts/Marketplace.json")
+const Marketplace = require("./lib/marketplace-contracts/build/contracts/Marketplace.json")
 const deployedMarketplaceAddress = Marketplace.networks[networkId] && Marketplace.networks[networkId].address
 if (marketplaceAddress && !web3.utils.isAddress(marketplaceAddress)) { throw new Error("Bad --marketplaceAddress") }
 const marketAddress = marketplaceAddress || deployedMarketplaceAddress
