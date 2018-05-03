@@ -40,6 +40,6 @@ CMD node index.js \
     --streamrApiURL=${STREAMR_API_URL} \
     --devopsKey=${DEVOPS_KEY} \
     --networkId=4 \
-    --verbose=1
+    --verbose=2
 #    --ethereumServerURL=${ETHEREUM_SERVER_URL}
 #    --marketplaceAddress=${MARKETPLACE_ADDRESS}

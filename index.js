@@ -50,6 +50,16 @@ async function start() {
     watcher.on("productUpdated", informer.productUpdated.bind(informer))
     watcher.on("subscribed", informer.subscribe.bind(informer))
 
+    // write on disk how many blocks have been processed
+    watcher.on("eventSuccessfullyProcessed", event => {
+        fs.writeFile(logDir + "/lastBlock", event.blockNumber)
+            .then(() => {
+                if (verbose > 2) {
+                    console.log(`Processed https://rinkeby.etherscan.io/block/${event.blockNumber}. Wrote ${logDir}/lastBlock.`)
+                }
+            })
+    })
+
     // catch up the blocks that happened when we were gone
     let lastRecorded = parseInt(await fs.readFile(logDir + "/lastBlock"))
     let lastActual = await web3.eth.getBlockNumber()
@@ -64,15 +74,6 @@ async function start() {
     // report new blocks as they arrive
     console.log("Starting watcher...")
     watcher.start()
-
-    watcher.on("eventSuccessfullyProcessed", event => {
-        fs.writeFile(logDir + "/lastBlock", event.blockNumber)
-            .then(() => {
-                if (verbose) {
-                    console.log(`Processed https://rinkeby.etherscan.io/block/${event.blockNumber}. Wrote ${logDir}/lastBlock.`)
-                }
-            })
-    })
 
     return new Promise((done, fail) => {
         watcher.on("error", fail)

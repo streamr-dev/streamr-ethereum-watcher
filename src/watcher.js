@@ -53,6 +53,8 @@ class Watcher extends EventEmitter {
         }
         this.isRunning = true
 
+        this.logger(`Starting watcher for Marketplace at ${this.market.options.address}`)
+
         // TODO: refactor ProductCreated activates onProductCreated (not onDeployEvent)
         // TODO: autogenerate these bindings from a list maybe
         this.market.events.ProductCreated({}, this.handleEvent.bind(this, this.onDeployEvent))
@@ -79,6 +81,9 @@ class Watcher extends EventEmitter {
         const self = this
         handler.bind(this)(error, event).then(this.logger).then(async () => {
             await self.emit("eventSuccessfullyProcessed", event)
+        }).catch(async (e) => {
+            //await self.emit("error", e)
+            self.logger("Error while sending event: " + JSON.stringify(e))
         })
     }
 
@@ -120,6 +125,7 @@ class Watcher extends EventEmitter {
         while (b < toBlock - playbackStep) {
             await this.playbackStep(b, b + playbackStep)
             b += playbackStep
+            await this.emit("eventSuccessfullyProcessed", { blockNumber: b - 1 })
         }
         await this.playbackStep(b, toBlock)
     }
