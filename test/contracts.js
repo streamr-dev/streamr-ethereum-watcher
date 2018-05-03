@@ -25,7 +25,7 @@ describe("Contracts", () => {
         const productIdHex = web3.utils.fromUtf8(productId)
         const productIdBytes = productIdHex.slice(2).padEnd(64, "0")
 
-        const verbose = true
+        const verbose = false
 
         await sendFrom(accounts[0], marketplace.methods.createProduct(productIdHex, "End-to-end tester", accounts[3], 1, Currency.DATA, 1))
         await sendFrom(accounts[0], token.methods.mint(accounts[1], 100000), {verbose})
