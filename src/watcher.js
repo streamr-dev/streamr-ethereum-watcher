@@ -97,13 +97,19 @@ class Watcher extends EventEmitter {
         const events = await this.market.getPastEvents("allevents", {fromBlock, toBlock})
         this.logger(`    Playing back ${events.length} events`)
         for (let ev of events) {
-            switch (ev.event) {
-                case "ProductCreated": await this.onDeployEvent(null, ev); break;
-                case "ProductRedeployed": await this.onDeployEvent(null, ev); break;
-                case "ProductDeleted": await this.onUndeployEvent(null, ev); break;
-                case "ProductUpdated": await this.onUpdateEvent(null, ev); break;
-                case "ProductOwnershipChanged": await this.onOwnershipUpdateEvent(null, ev); break;
-                case "Subscribed": await this.onSubscribeEvent(null, ev); break;
+            try {
+                switch (ev.event) {
+                    case "ProductCreated": await this.onDeployEvent(null, ev); break;
+                    case "ProductRedeployed": await this.onDeployEvent(null, ev); break;
+                    case "ProductDeleted": await this.onUndeployEvent(null, ev); break;
+                    case "ProductUpdated": await this.onUpdateEvent(null, ev); break;
+                    case "ProductOwnershipChanged": await this.onOwnershipUpdateEvent(null, ev); break;
+                    case "Subscribed": await this.onSubscribeEvent(null, ev); break;
+                }
+            } catch (e) {
+                // if it was because streamr backend couldn't find the product for set(Un)Deployed, just keep chugging
+                if (e.code == "ECONNREFUSED") { continue }
+                throw e
             }
         }
     }
