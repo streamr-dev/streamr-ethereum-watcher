@@ -76,15 +76,17 @@ async function start() {
     watcher.start()
 
     return new Promise((done, fail) => {
-        watcher.on("error", fail)
+        watcher.on("error", e => {
+            // if it was because streamr backend couldn't find the product for set(Un)Deployed, just keep chugging
+            if (e.code == "ECONNREFUSED") { return }
+            
+            fail(e)
+        })
     })
 }
 
 start().catch(e => {
     console.error(e)
-
-    // if it was because streamr backend couldn't find the product for set(Un)Deployed, just keep chugging
-    if (e.code == "ECONNREFUSED") { return }
 
     process.exit(1)
 })
