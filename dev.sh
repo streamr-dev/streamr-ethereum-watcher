@@ -1,1 +1,1 @@
-node index.js --streamrApiURL="http://localhost:8081/streamr-core/api/v1" --ethereumServerURL="wss://rinkeby.infura.io/ws" --marketplaceAddress=$(eval echo $(jq .networks[\"4\"].address lib/marketplace-contracts/build/contracts/Marketplace.json)) --devopsKey="devops-user-key" --verbose=1
+node index.js --networkId=4 --streamrApiURL="http://localhost:8081/streamr-core/api/v1" --ethereumServerURL="wss://rinkeby.infura.io/ws" --devopsKey="devops-user-key" --verbose=2
