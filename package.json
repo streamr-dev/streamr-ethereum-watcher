@@ -14,6 +14,7 @@
   "author": "Streamr AG",
   "license": "AGPL",
   "dependencies": {
+    "aws-sdk": "^2.235.1",
     "mz": "^2.7.0",
     "node-fetch": "2.0.0",
     "promise-events": "^0.1.4",

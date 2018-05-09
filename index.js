@@ -1,5 +1,6 @@
-const fs = require("mz/fs")
 const argv = require("yargs").argv
+const fs = require("mz/fs")         // for persisting last processed block (to avoid full playback every restart)
+const AWS = require('aws-sdk')        // for CloudWatch metrics
 
 const {
     marketplaceAddress,
@@ -50,6 +51,17 @@ async function start() {
     watcher.on("productUpdated", informer.productUpdated.bind(informer))
     watcher.on("subscribed", informer.subscribe.bind(informer))
 
+    // set up metrics
+    watcher.on("event", event => {
+        putMetricData(event.event, 1)
+    })
+
+    if (verbose > 1) {
+        watcher.on("event", event => {
+            console.log(`    Watcher detected event: ${JSON.stringify(event)}`)
+        })
+    }
+
     // write on disk how many blocks have been processed
     watcher.on("eventSuccessfullyProcessed", event => {
         fs.writeFile(logDir + "/lastBlock", event.blockNumber)
@@ -76,6 +88,7 @@ async function start() {
         lastRecorded = lastActual
         lastActual = await web3.eth.getBlockNumber()
     }
+    putMetricData("PlaybackDone", 1)
 
     // report new blocks as they arrive
     console.log("Starting watcher...")
@@ -96,3 +109,30 @@ start().catch(e => {
 
     process.exit(1)
 })
+
+// Setting up CloudWatch service object, borrowed from https://docs.aws.amazon.com/sdk-for-javascript/v2/developer-guide/cloudwatch-examples-getting-metrics.html
+AWS.config.update({region: "eu-west-1"})
+const cw = new AWS.CloudWatch({apiVersion: "2010-08-01"})
+putMetricData("Restart", 1)
+
+function putMetricData(MetricName, Value) {
+    var params = {
+        MetricData: [
+            {
+                MetricName,
+                Value
+            },
+        ],
+        Namespace: "AWS/Logs"
+    };
+
+    cw.putMetricData(params, function(err, data) {
+        if (err) {
+            console.error(`Error sending metric ${MetricName} (${Value}): ${JSON.stringify(err)}`)
+        } else {
+            if (verbose > 1) {
+                console.log(`Sent metric ${MetricName}: ${Value}`)
+            }
+        }
+    })
+}
