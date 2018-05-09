@@ -61,7 +61,13 @@ async function start() {
     })
 
     // catch up the blocks that happened when we were gone
-    let lastRecorded = parseInt(await fs.readFile(logDir + "/lastBlock"))
+    let lastRecorded = 0
+    try {
+        lastRecorded = parseInt(await fs.readFile(logDir + "/lastBlock"))
+    } catch (e) {
+        // ignore error; if file is missing, start from zero
+    }
+
     let lastActual = await web3.eth.getBlockNumber()
     while (lastRecorded < lastActual) {
         console.log(`Playing back blocks ${lastRecorded+1}...${lastActual} (inclusive)`)
