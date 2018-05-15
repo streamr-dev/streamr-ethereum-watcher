@@ -23,7 +23,7 @@ const defaultServers = {
 AWS.config.update({region: "eu-west-1"})
 const cw = new AWS.CloudWatch({apiVersion: "2010-08-01"})
 
-var isMetric = (metrics == 'true');
+var isCollectingMetrics = (metrics == 'true');
 
 const Web3 = require("web3")
 const web3 = new Web3(ethereumServerURL || defaultServers[networkId] || "missing --ethereumServerURL or --networkId!")
@@ -52,7 +52,7 @@ if (verbose) {
 }
 
 function putMetricData(MetricName, Value) {
-    if (isMetric) {
+    if (isCollectingMetrics) {
         var params = {
             MetricData: [
                 {
