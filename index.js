@@ -9,6 +9,7 @@ const {
     streamrApiURL,
     devopsKey,
     verbose,
+    metrics,
     logDir = "logs"
 } = argv
 
@@ -17,6 +18,12 @@ const defaultServers = {
     1: "wss://mainnet.infura.io/ws",
     4: "wss://rinkeby.infura.io/ws"
 }
+
+// Setting up CloudWatch service object, borrowed from https://docs.aws.amazon.com/sdk-for-javascript/v2/developer-guide/cloudwatch-examples-getting-metrics.html
+AWS.config.update({region: "eu-west-1"})
+const cw = new AWS.CloudWatch({apiVersion: "2010-08-01"})
+
+var isMetric = (metrics == 'true');
 
 const Web3 = require("web3")
 const web3 = new Web3(ethereumServerURL || defaultServers[networkId] || "missing --ethereumServerURL or --networkId!")
@@ -41,6 +48,30 @@ if (verbose) {
     if (verbose > 1) {
         watcher.logger = console.log
         informer.logging = true
+    }
+}
+
+function putMetricData(MetricName, Value) {
+    if (isMetric) {
+        var params = {
+            MetricData: [
+                {
+                    MetricName,
+                    Value
+                },
+            ],
+            Namespace: "AWS/Logs"
+        };
+
+        cw.putMetricData(params, function (err, data) {
+            if (err) {
+                console.error(`Error sending metric ${MetricName} (${Value}): ${JSON.stringify(err)}`)
+            } else {
+                if (verbose > 1) {
+                    console.log(`Sent metric ${MetricName}: ${Value}`)
+                }
+            }
+        })
     }
 }
 
@@ -110,29 +141,7 @@ start().catch(e => {
     process.exit(1)
 })
 
-// Setting up CloudWatch service object, borrowed from https://docs.aws.amazon.com/sdk-for-javascript/v2/developer-guide/cloudwatch-examples-getting-metrics.html
-AWS.config.update({region: "eu-west-1"})
-const cw = new AWS.CloudWatch({apiVersion: "2010-08-01"})
+
 putMetricData("Restart", 1)
 
-function putMetricData(MetricName, Value) {
-    var params = {
-        MetricData: [
-            {
-                MetricName,
-                Value
-            },
-        ],
-        Namespace: "AWS/Logs"
-    };
 
-    cw.putMetricData(params, function(err, data) {
-        if (err) {
-            console.error(`Error sending metric ${MetricName} (${Value}): ${JSON.stringify(err)}`)
-        } else {
-            if (verbose > 1) {
-                console.log(`Sent metric ${MetricName}: ${Value}`)
-            }
-        }
-    })
-}
