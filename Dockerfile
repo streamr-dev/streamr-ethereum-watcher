@@ -20,10 +20,11 @@ RUN git submodule update --init --recursive
 ENV STREAMR_API_URL http://localhost:8081/streamr-core/api/v1
 ENV DEVOPS_KEY devops-user-key
 ENV METRICS true
+ENV NETWORK_ID 4
 
 CMD node index.js \
     --streamrApiURL=${STREAMR_API_URL} \
     --devopsKey=${DEVOPS_KEY} \
-    --networkId=4 \
+    --networkId=${NETWORK_ID} \
     --verbose=2 \
     --metrics=${METRICS}
