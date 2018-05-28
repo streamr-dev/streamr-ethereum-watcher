@@ -47,7 +47,7 @@ if (verbose) {
     watcher.on("subscribed", (body) => { console.log(`Product ${body.product} subscribed ${JSON.stringify(body)}`) })
     if (verbose > 1) {
         watcher.logger = console.log
-        informer.logging = true
+        informer.logger = console.info
     }
 }
 

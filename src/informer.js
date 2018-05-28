@@ -11,7 +11,6 @@ class Informer {
         }
         this.streamrUrl = streamrUrl
         this.devOpsAccessToken = devOpsAccessToken
-        this.logging = false
     }
 
     setDeployed(id, body) {
@@ -34,10 +33,12 @@ class Informer {
         return this._post(apiUrl, body)
     }
 
+    logger() {
+        // log nothing by default, allow override for logging
+    }
+
     _post(apiUrl, body, method='POST') {
-        if (this.logging) {
-            console.info(method, apiUrl, body ? '\n' + JSON.stringify(body, null, 4) : '')
-        }
+        this.logger(method, apiUrl, body ? '\n' + JSON.stringify(body, null, 4) : '')
 
         return fetch(apiUrl, {
             method,
