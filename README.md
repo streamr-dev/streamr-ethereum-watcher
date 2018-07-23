@@ -14,10 +14,10 @@ Project uses npm for package management.
 - To run tests `npm test`
 
 ## Running
-In most cases, you will want to run this service as a [pre-built Docker image](https://hub.docker.com/r/streamr/data-api/).
+In most cases, you will want to run this service as a [pre-built Docker image](https://hub.docker.com/r/streamr/ethereum-watcher/).
 See https://github.com/streamr-dev/streamr-docker-dev for more information on how to run the Streamr cloud architecture.
 
-If you are developing this service in particular, or are otherwise inclined, you can run this service with `npm run`.
+If you are developing this service in particular, or are otherwise inclined, you can run this service with `npm start`.
 
 ## Publishing
 The project is automatically tested and built using Travis CI. If and when all tests pass, a [Docker image](https://hub.docker.com/r/streamr/data-api/) is built and pushed to DockerHub by Travis CI.
