@@ -1,5 +1,4 @@
 const EventEmitter = require("promise-events")
-const Web3utils = require("web3-utils")
 
 const Marketplace = require("../lib/marketplace-contracts/build/contracts/Marketplace.json")
 

@@ -1,6 +1,6 @@
 const argv = require("yargs").argv
-const fs = require("mz/fs")         // for persisting last processed block (to avoid full playback every restart)
-const AWS = require('aws-sdk')        // for CloudWatch metrics
+const fs = require("mz/fs")             // for persisting last processed block (to avoid full playback every restart)
+const AWS = require("aws-sdk")          // for CloudWatch metrics
 
 const {
     marketplaceAddress,
@@ -22,8 +22,6 @@ const defaultServers = {
 // Setting up CloudWatch service object, borrowed from https://docs.aws.amazon.com/sdk-for-javascript/v2/developer-guide/cloudwatch-examples-getting-metrics.html
 AWS.config.update({region: "eu-west-1"})
 const cw = new AWS.CloudWatch({apiVersion: "2010-08-01"})
-
-var isCollectingMetrics = (metrics == 'true');
 
 const Web3 = require("web3")
 const web3 = new Web3(ethereumServerURL || defaultServers[networkId] || "missing --ethereumServerURL or --networkId!")
@@ -52,7 +50,7 @@ if (verbose) {
 }
 
 function putMetricData(MetricName, Value) {
-    if (isCollectingMetrics) {
+    if (metrics) {
         var params = {
             MetricData: [
                 {
