@@ -1,4 +1,4 @@
-![Travis CI state](https://travis-ci.com/streamr-dev/streamr-ethereum-watcher.svg?token=qNNVCnYJo1fz18VTNpPZ&branch=master)
+[![Build Status](https://travis-ci.com/streamr-dev/streamr-ethereum-watcher.svg?token=9unddqKugX2cPcyhtVxp&branch=master)](https://travis-ci.com/streamr-dev/streamr-ethereum-watcher)
 
 # Marketplace Watcher
 An optional service of the Streamr cloud architecture that listens to events emitted by the Streamr Marketplace smart
