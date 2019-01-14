@@ -1,3 +1,0 @@
-[submodule "lib/marketplace-contracts"]
-	path = lib/marketplace-contracts
-	url = git@github.com:streamr-dev/marketplace-contracts.git
