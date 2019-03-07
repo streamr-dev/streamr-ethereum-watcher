@@ -4,7 +4,6 @@
 target
 out
 node_modules
-lib/marketplace-contracts/*
 pm2*
 .travis_scripts
 test
