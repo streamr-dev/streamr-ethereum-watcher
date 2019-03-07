@@ -33,7 +33,7 @@ RUN pip install awscli --upgrade --user && \
 # App Variables
 ENV STREAMR_API_URL http://localhost:8081/streamr-core/api/v1
 ENV DEVOPS_KEY devops-user-key
-ENV METRICS true
+ENV METRICS false
 ENV NETWORK_ID 5
 
 # Secret Variables
@@ -50,4 +50,5 @@ CMD node index.js \
     --networkId=${NETWORK_ID} \
     --ethereumServerURL=${ETHEREUM_SERVER_URL} \
     --verbose=2 \
-    --metrics=${METRICS}
+    --metrics=${METRICS} \
+    --marketplaceAddress=${MARKETPLACE_ADDRESS}
