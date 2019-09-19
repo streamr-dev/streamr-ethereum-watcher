@@ -1,35 +1,52 @@
-const web3 = require("./init_web3")()     // test-local testrpc (default)
-//const web3 = require("./init_web3")("ws://127.0.0.1:8546")    // local client (parity/geth/testrpc from shell)
-//const web3 = require("./init_web3")("wss://rinkeby.infura.io/ws")
+const assert = require("assert")
 
-const { Marketplace: { ProductState, Currency } } = require("../lib/marketplace-contracts/src/contracts/enums")
+const {
+    Wallet,
+    providers: { Web3Provider },
+    utils: { formatBytes32String },
+} = require("ethers")
+const ganache = require("ganache-core")
 
-const { sendFrom } = require("../src/utils")
+const { Marketplace: { Currency } } = require("../lib/marketplace-contracts/src/contracts/enums")
+
+const deploy = require("./deploy_marketplace")
 
 // Just test the underlying contracts, to see they really work like we expect
 // If submodule changes, this test might catch violated assumptions in this project
 describe("Contracts", () => {
-    it("create + subscribe", async () => {
-        const accounts = await web3.eth.getAccounts()
+    it("create product + subscribe", async () => {
+        const key1 = "0x1234567812345678123456781234567812345678123456781234567812345678"
+        const key2 = "0x2234567812345678123456781234567812345678123456781234567812345679"
+        const provider = new Web3Provider(ganache.provider({
+            accounts: [
+                { secretKey: key1, balance: "0xffffffffffffffffffffffffff" },
+                { secretKey: key2, balance: "0xffffffffffffffffffffffffff" },
+            ],
+            logger: console,
+        }))
+        const wallet = new Wallet(key1, provider)
+        await provider.getNetwork()     // wait until ganache is up and ethers.js ready
 
-        const Marketplace = require("../lib/marketplace-contracts/build/contracts/Marketplace.json")
-        const Token = require("../lib/marketplace-contracts/build/contracts/MintableToken.json")
+        const { token, marketplace } = await deploy(wallet)
 
-        const token = await sendFrom(accounts[0], new web3.eth.Contract(Token.abi).deploy({ data: Token.bytecode, arguments: [] }))
-        const marketplace = await sendFrom(accounts[0], new web3.eth.Contract(Marketplace.abi).deploy({ data: Marketplace.bytecode, arguments: [
-            token.options.address,
-            accounts[0]     // currencyUpdateAgent
-        ]}))
+        const wallet2 = new Wallet(key2, provider)
+        const token2 = token.connect(wallet2)
+        const marketplace2 = marketplace.connect(wallet2)
 
-        const productId = "test-e2e"
-        const productIdHex = web3.utils.fromUtf8(productId)
-        const productIdBytes = productIdHex.slice(2).padEnd(64, "0")
+        const productId = "test-contracts"
+        const productIdBytes32 = formatBytes32String(productId)
 
-        const verbose = false
-
-        await sendFrom(accounts[0], marketplace.methods.createProduct(productIdHex, "End-to-end tester", accounts[3], 1, Currency.DATA, 1))
-        await sendFrom(accounts[0], token.methods.mint(accounts[1], 100000), {verbose})
-        await sendFrom(accounts[1], token.methods.approve(marketplace.options.address, 10000), {verbose})
-        await sendFrom(accounts[1], marketplace.methods.buy(productIdHex, 100), {verbose})
+        const tx1 = await marketplace.createProduct(productIdBytes32, "Contract tester", wallet.address, 1, Currency.DATA, 1)
+        const tr1 = await tx1.wait(0)
+        assert.deepStrictEqual(tr1.events.map(e => e.event), ["ProductCreated"])
+        const tx2 = await token.mint(wallet2.address, 100000)
+        const tr2 = await tx2.wait(0)
+        assert.deepStrictEqual(tr2.events.map(e => e.event), ["Mint", "Transfer"])
+        const tx3 = await token2.approve(marketplace.address, 10000)
+        const tr3 = await tx3.wait(0)
+        assert.deepStrictEqual(tr3.events.map(e => e.event), ["Approval"])
+        const tx4 = await marketplace2.buy(productIdBytes32, 100)
+        const tr4 = await tx4.wait(0)
+        assert.deepStrictEqual(tr4.events.map(e => e.event), ["NewSubscription", "Subscribed", undefined])  // 3rd event is token.Transfer
     })
 })

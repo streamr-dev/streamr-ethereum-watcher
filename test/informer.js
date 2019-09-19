@@ -1,20 +1,20 @@
-const assert = require('assert')
-const http = require('http')
+const assert = require("assert")
+const http = require("http")
 
-const Informer = require('../src/informer')
+const Informer = require("../src/informer")
 
 const TEST_SERVER_PORT = 51843
 
-describe('Informer', () => {
+describe("Informer", () => {
     let server
     let informer
     let requests
 
     before((done) => {
         server = http.createServer((request, response) => {
-            let body = "";
-            request.on('data', (chunk) => body += chunk)
-            request.on('end', () => {
+            let body = ""
+            request.on("data", (chunk) => body += chunk)
+            request.on("end", () => {
                 requests.push({
                     accessToken: request.headers.authorization,
                     url: request.url,
@@ -39,15 +39,15 @@ describe('Informer', () => {
 
     beforeEach(() => {
         requests = []
-        informer = new Informer(`http://127.0.0.1:${TEST_SERVER_PORT}`, 'devops-key')
+        informer = new Informer(`http://127.0.0.1:${TEST_SERVER_PORT}`, "devops-key")
     })
 
     it("setDeployed causes expected POST request", async () => {
-        await informer.setDeployed('product-id', {
+        await informer.setDeployed("product-id", {
             blockNumber: 0,
             blockIndex: 0,
-            ownerAddress: '0x0',
-            beneficiaryAddress: '0xF',
+            ownerAddress: "0x0",
+            beneficiaryAddress: "0xF",
             pricePerSecond: 5,
             priceCurrency: "EUR",
             minimumSubscriptionInSeconds: 0
@@ -55,14 +55,14 @@ describe('Informer', () => {
 
         assert.equal(requests.length, 1)
         assert.deepEqual(requests[0], {
-            method: 'POST',
-            url: '/products/product-id/setDeployed',
-            accessToken: 'Token devops-key',
+            method: "POST",
+            url: "/products/product-id/setDeployed",
+            accessToken: "Token devops-key",
             body: {
                 blockNumber: 0,
                 blockIndex: 0,
-                ownerAddress: '0x0',
-                beneficiaryAddress: '0xF',
+                ownerAddress: "0x0",
+                beneficiaryAddress: "0xF",
                 pricePerSecond: 5,
                 priceCurrency: "EUR",
                 minimumSubscriptionInSeconds: 0
@@ -71,16 +71,16 @@ describe('Informer', () => {
     })
 
     it("setUndeployed causes expected POST request", async () => {
-        await informer.setUndeployed('product-id', {
+        await informer.setUndeployed("product-id", {
             blockNumber: 0,
             blockIndex: 0,
         })
 
         assert.equal(requests.length, 1)
         assert.deepEqual(requests[0], {
-            method: 'POST',
-            url: '/products/product-id/setUndeployed',
-            accessToken: 'Token devops-key',
+            method: "POST",
+            url: "/products/product-id/setUndeployed",
+            accessToken: "Token devops-key",
             body: {
                 blockNumber: 0,
                 blockIndex: 0
