@@ -155,7 +155,7 @@ class Watcher extends EventEmitter {
             beneficiaryAddress: args.beneficiary,
             pricePerSecond: args.pricePerSecond.div(EE_PRICE_SCALE).toString(),
             priceCurrency: currencySymbol[args.currency],
-            minimumSubscriptionInSeconds: args.minimumSubscriptionSeconds
+            minimumSubscriptionInSeconds: args.minimumSubscriptionSeconds.toString(),
         })
     }
 
@@ -168,7 +168,7 @@ class Watcher extends EventEmitter {
             beneficiaryAddress: args.beneficiary,
             pricePerSecond: args.pricePerSecond.div(EE_PRICE_SCALE).toString(),
             priceCurrency: currencySymbol[args.currency],
-            minimumSubscriptionInSeconds: args.minimumSubscriptionSeconds
+            minimumSubscriptionInSeconds: args.minimumSubscriptionSeconds.toString(),
         })
     }
 
@@ -187,7 +187,7 @@ class Watcher extends EventEmitter {
             blockIndex,
             product: productId,
             address: args.subscriber,
-            endsAt: args.endTimestamp
+            endsAt: args.endTimestamp.toString(),
         })
     }
 
@@ -201,7 +201,7 @@ class Watcher extends EventEmitter {
             beneficiaryAddress: product.beneficiary,
             pricePerSecond: product.pricePerSecond.div(EE_PRICE_SCALE).toString(),
             priceCurrency: currencySymbol[product.currency],
-            minimumSubscriptionInSeconds: product.minimumSubscriptionSeconds
+            minimumSubscriptionInSeconds: product.minimumSubscriptionSeconds.toString(),
         })
     }
 }
