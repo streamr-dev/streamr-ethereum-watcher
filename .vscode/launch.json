@@ -1,0 +1,21 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Run watcher (Docker dev)",
+            "program": "${workspaceFolder}/index.js",
+            "args": [
+                "--streamrApiURL=http://localhost:8081/streamr-core/api/v1",
+                "--devopsKey=devops-user-key",
+                "--ethereumServerURL=http://localhost:8545",
+                "--verbose=2",
+                "--marketplaceAddress=0xeaa002f7dc60178b6103f8617be45a9d3df659b6"
+            ]
+        }
+    ]
+}

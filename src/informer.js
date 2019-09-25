@@ -1,13 +1,13 @@
-const fetch = require('node-fetch')
-const urlJoin = require('url-join')
+const fetch = require("node-fetch")
+const urlJoin = require("url-join")
 
 class Informer {
     constructor(streamrUrl, devOpsAccessToken) {
         if (!streamrUrl) {
-            throw 'No streamUrl given'
+            throw "No streamUrl given"
         }
         if (!devOpsAccessToken) {
-            throw 'No devOpsAccessToken given'
+            throw "No devOpsAccessToken given"
         }
         this.streamrUrl = streamrUrl
         this.devOpsAccessToken = devOpsAccessToken
@@ -29,7 +29,7 @@ class Informer {
     }
 
     subscribe(body) {
-        const apiUrl = urlJoin(this.streamrUrl, `/subscriptions`)
+        const apiUrl = urlJoin(this.streamrUrl, "/subscriptions")
         return this._post(apiUrl, body)
     }
 
@@ -37,16 +37,16 @@ class Informer {
         // log nothing by default, allow override for logging
     }
 
-    _post(apiUrl, body, method='POST') {
-        this.logger(method, apiUrl, body ? '\n' + JSON.stringify(body, null, 4) : '')
+    _post(apiUrl, body, method = "POST") {
+        this.logger(method, apiUrl, body ? "\n" + JSON.stringify(body, null, 4) : "")
 
         return fetch(apiUrl, {
             method,
             body: JSON.stringify(body),
             headers: {
-                'Accept': 'application/json',
-                'Content-type': 'application/json',
-                'Authorization': `Token ${this.devOpsAccessToken}`
+                "Accept": "application/json",
+                "Content-type": "application/json",
+                "Authorization": `Token ${this.devOpsAccessToken}`
             }
         })
     }

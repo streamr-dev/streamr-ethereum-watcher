@@ -1,47 +1,55 @@
 const EventEmitter = require("promise-events")
 
+const {
+    Contract,
+    utils: { BigNumber }
+} = require("ethers")
+
+const EE_PRICE_SCALE = new BigNumber(1e9)  // scale price to "nanotokens"/token-gwei so that it fits into mysql and Java long
+
 const Marketplace = require("../lib/marketplace-contracts/build/contracts/Marketplace.json")
 
 const { Marketplace: { currencySymbol } } = require("../lib/marketplace-contracts/src/contracts/enums")
 
-const RINKEBY = 4
-const MAINNET = 1
-
 // "warp" to this block; before this block there weren't (too many) events
 const playbackStartBlock = {
-    [MAINNET]: 5450000,
-    [RINKEBY]: 1920000
+    "1": 5450000,       // mainnet
+    "4": 1920000,       // rinkeby
 }
 const playbackStep = 1000
 
 /**
  * Watcher generates Node events when Marketplace contract events show up in Ethereum blocks
+ *
+ * Exhaustive list of v3.1 contract events: (that's the mainnet deployment)
+ *
+ *  // product events
+ *  event ProductCreated(address indexed owner, bytes32 indexed id, string name, address beneficiary, uint pricePerSecond, Currency currency, uint minimumSubscriptionSeconds);
+ *  event ProductUpdated(address indexed owner, bytes32 indexed id, string name, address beneficiary, uint pricePerSecond, Currency currency, uint minimumSubscriptionSeconds);
+ *  event ProductDeleted(address indexed owner, bytes32 indexed id);
+ *  event ProductRedeployed(address indexed owner, bytes32 indexed id);
+ *  event ProductOwnershipOffered(address indexed owner, bytes32 indexed id, address indexed to);
+ *  event ProductOwnershipChanged(address indexed newOwner, bytes32 indexed id, address indexed oldOwner);
+ *
+ *  // subscription events
+ *  event Subscribed(bytes32 indexed productId, address indexed subscriber, uint endTimestamp);
+ *  event NewSubscription(bytes32 indexed productId, address indexed subscriber, uint endTimestamp);
+ *  event SubscriptionExtended(bytes32 indexed productId, address indexed subscriber, uint endTimestamp);
+ *  event SubscriptionTransferred(bytes32 indexed productId, address indexed from, address indexed to, uint secondsTransferred, uint datacoinTransferred);
+ *
+ *  // currency events
+ *  event ExchangeRatesUpdated(uint timestamp, uint dataInUsd);
  */
 class Watcher extends EventEmitter {
-    constructor(web3, marketplaceAddress) {
+    constructor(provider, marketplaceAddress) {
         super()
-        this.market = new web3.eth.Contract(Marketplace.abi, marketplaceAddress)
-        this.web3 = web3
+        this.provider = provider
+        this.market = new Contract(marketplaceAddress, Marketplace.abi, provider)
     }
 
-    /*
-    // product events
-    event ProductCreated(address indexed owner, bytes32 indexed id, string name, address beneficiary, uint pricePerSecond, Currency currency, uint minimumSubscriptionSeconds);
-    event ProductUpdated(address indexed owner, bytes32 indexed id, string name, address beneficiary, uint pricePerSecond, Currency currency, uint minimumSubscriptionSeconds);
-    event ProductDeleted(address indexed owner, bytes32 indexed id);
-    event ProductRedeployed(address indexed owner, bytes32 indexed id);
-    event ProductOwnershipOffered(address indexed owner, bytes32 indexed id, address indexed to);
-    event ProductOwnershipChanged(address indexed newOwner, bytes32 indexed id, address indexed oldOwner);
-
-    // subscription events
-    event Subscribed(bytes32 indexed productId, address indexed subscriber, uint endTimestamp);
-    event NewSubscription(bytes32 indexed productId, address indexed subscriber, uint endTimestamp);
-    event SubscriptionExtended(bytes32 indexed productId, address indexed subscriber, uint endTimestamp);
-    event SubscriptionTransferred(bytes32 indexed productId, address indexed from, address indexed to, uint secondsTransferred, uint datacoinTransferred);
-
-    // currency events
-    event ExchangeRatesUpdated(uint timestamp, uint dataInUsd);
-    */
+    logger() {
+        // log nothing by default, allow override for logging
+    }
 
     /**
      * Start watching incoming blocks
@@ -51,59 +59,61 @@ class Watcher extends EventEmitter {
             throw new Error("Already started!")
         }
         this.isRunning = true
+        this.logger(`Starting watcher for Marketplace at ${this.market.address}`)
 
-        this.logger(`Starting watcher for Marketplace at ${this.market.options.address}`)
+        this.watchEvent("ProductCreated", this.onDeployEvent)
+        this.watchEvent("ProductRedeployed", this.onDeployEvent)
+        this.watchEvent("ProductDeleted", this.onUndeployEvent)
+        this.watchEvent("ProductUpdated", this.onUpdateEvent)
+        this.watchEvent("ProductOwnershipChanged", this.onOwnershipUpdateEvent)
+        this.watchEvent("Subscribed", this.onSubscribeEvent)
 
-        // TODO: refactor ProductCreated activates onProductCreated (not onDeployEvent)
-        // TODO: autogenerate these bindings from a list maybe
-        this.market.events.ProductCreated({}, this.handleEvent.bind(this, this.onDeployEvent))
-        this.market.events.ProductRedeployed({}, this.handleEvent.bind(this, this.onDeployEvent))
-        this.market.events.ProductDeleted({}, this.handleEvent.bind(this, this.onUndeployEvent))
-        this.market.events.ProductUpdated({}, this.handleEvent.bind(this, this.onUpdateEvent))
-        this.market.events.ProductOwnershipChanged({}, this.handleEvent.bind(this, this.onOwnershipUpdateEvent))
-        this.market.events.Subscribed({}, this.handleEvent.bind(this, this.onSubscribeEvent))
+        this.watchEvent("ProductOwnershipOffered", this.logEvent)
+        this.watchEvent("NewSubscription", this.logEvent)
+        this.watchEvent("SubscriptionExtended", this.logEvent)
+        this.watchEvent("SubscriptionTransferred", this.logEvent)
+        this.watchEvent("ExchangeRatesUpdated", this.logEvent)
 
-        const self = this
-        this.market.events.allEvents()
-            .on("data", event => {
-                self.emit("event", event)
-            })
-            .on("changed", event => {
-                console.warn("Blockchain reorg may have dropped an event: " + JSON.stringify(event))
-            })
-            .on("error", error => {
-                self.emit("error", error)
-            })
-    }
-
-    handleEvent(handler, error, event) {
-        const self = this
-        handler.bind(this)(error, event).then(this.logger).then(async () => {
-            await self.emit("eventSuccessfullyProcessed", event)
-        }).catch(async (e) => {
-            //await self.emit("error", e)
-            self.logger("Error while sending event: " + JSON.stringify(e))
+        this.provider.on({ address: this.market.address }, log => {
+            this.logger("Event logged at " + log.blockNumber)
         })
     }
 
-    logger() {
-        // log nothing by default, allow override for logging
+    // for filter callback, see https://docs.ethers.io/ethers.js/html/api-contract.html#event-object
+    watchEvent(eventName, handler) {
+        const filter = this.market.filters[eventName]()
+        const self = this
+        this.market.on(filter, (...args) => {
+            const event = args.pop()
+            self.logger(`Event: ${event.event}, args: ${JSON.stringify(args)}`)
+            handler.call(self, event.blockNumber, event.transactionIndex, event.args).catch(async (e) => {
+                await self.emit("error", e)
+                self.logger("Error while sending event: " + e.stack)
+            })
+        })
+    }
+
+    async logEvent(...args) {
+        const eventObject = args.pop()
+        this.logger(`Event ignored: ${eventObject.event}, args: ${JSON.stringify(args)}`)
     }
 
     // SYNCHRONOUSLY play back events one by one. Wait for promise to return before sending the next one
     async playbackStep(fromBlock, toBlock) {
         this.logger(`  Getting events from blocks ${fromBlock}...${toBlock}`)
-        const events = await this.market.getPastEvents("allevents", {fromBlock, toBlock})
+        const filter = { fromBlock, toBlock, address: this.market.address }
+        const events = await this.provider.getLogs(filter)
         this.logger(`    Playing back ${events.length} events`)
-        for (let ev of events) {
+        for (let raw of events) {
+            const event = this.market.interface.parseLog(raw)
             try {
-                switch (ev.event) {
-                    case "ProductCreated": await this.onDeployEvent(null, ev); break;
-                    case "ProductRedeployed": await this.onDeployEvent(null, ev); break;
-                    case "ProductDeleted": await this.onUndeployEvent(null, ev); break;
-                    case "ProductUpdated": await this.onUpdateEvent(null, ev); break;
-                    case "ProductOwnershipChanged": await this.onOwnershipUpdateEvent(null, ev); break;
-                    case "Subscribed": await this.onSubscribeEvent(null, ev); break;
+                switch (event.name) {
+                    case "ProductCreated": await this.onDeployEvent(raw.blockNumber, raw.transactionIndex, event.values); break
+                    case "ProductRedeployed": await this.onDeployEvent(raw.blockNumber, raw.transactionIndex, event.values); break
+                    case "ProductDeleted": await this.onUndeployEvent(raw.blockNumber, raw.transactionIndex, event.values); break
+                    case "ProductUpdated": await this.onUpdateEvent(raw.blockNumber, raw.transactionIndex, event.values); break
+                    case "ProductOwnershipChanged": await this.onOwnershipUpdateEvent(raw.blockNumber, raw.transactionIndex, event.values); break
+                    case "Subscribed": await this.onSubscribeEvent(raw.blockNumber, raw.transactionIndex, event.values); break
                 }
             } catch (e) {
                 // if it was because streamr backend couldn't find the product for set(Un)Deployed, just keep chugging
@@ -117,12 +127,13 @@ class Watcher extends EventEmitter {
     // see https://github.com/INFURA/infura/issues/54
     async playback(fromBlock, toBlock) {
         if (!this.networkId) {
-            this.networkId = await this.web3.eth.net.getId()
+            const network = await this.provider.getNetwork()
+            this.networkId = network.chainId
         }
         let b = fromBlock
 
         // before start there weren't too many events to choke infura
-        const start = playbackStartBlock[this.networkId]
+        const start = playbackStartBlock[this.networkId] || 0
         if (fromBlock < start) {
             await this.playbackStep(fromBlock, start - 1)
             b = start
@@ -135,103 +146,62 @@ class Watcher extends EventEmitter {
         await this.playbackStep(b, toBlock)
     }
 
-
-
-    onDeployEvent(error, event) {
-        if (error) {
-            throw error
-        }
-        if (event.removed) {
-            // TODO: how to react? Fire a productUndeployed?
-            console.error("Blockchain reorg may have dropped an event: " + JSON.stringify(event))
-            return
-        }
-
-        const productId = event.returnValues.id.slice(2)    // remove "0x" from beginning
+    onDeployEvent(blockNumber, blockIndex, args) {
+        const productId = args.id.slice(2)    // remove "0x" from beginning
         return this.emit("productDeployed", productId, {
-            blockNumber: event.blockNumber,
-            blockIndex: event.transactionIndex,
-            ownerAddress: event.returnValues.owner,
-            beneficiaryAddress: event.returnValues.beneficiary,
-            pricePerSecond: event.returnValues.pricePerSecond / 10**9,
-            priceCurrency: currencySymbol[event.returnValues.currency],
-            minimumSubscriptionInSeconds: event.returnValues.minimumSubscriptionSeconds
+            blockNumber,
+            blockIndex,
+            ownerAddress: args.owner,
+            beneficiaryAddress: args.beneficiary,
+            pricePerSecond: args.pricePerSecond.div(EE_PRICE_SCALE).toString(),
+            priceCurrency: currencySymbol[args.currency],
+            minimumSubscriptionInSeconds: args.minimumSubscriptionSeconds.toString(),
         })
     }
 
-    onUpdateEvent(error, event) {
-        if (error) {
-            throw error
-        }
-        if (event.removed) {
-            // TODO: how to react? Send another Update event with old info?
-            console.error("Blockchain reorg may have dropped an event: " + JSON.stringify(event))
-            return
-        }
-
-        const productId = event.returnValues.id.slice(2)    // remove "0x" from beginning
+    onUpdateEvent(blockNumber, blockIndex, args) {
+        const productId = args.id.slice(2)    // remove "0x" from beginning
         return this.emit("productUpdated", productId, {
-            blockNumber: event.blockNumber,
-            blockIndex: event.transactionIndex,
-            ownerAddress: event.returnValues.owner,
-            beneficiaryAddress: event.returnValues.beneficiary,
-            pricePerSecond: event.returnValues.pricePerSecond / 10**9,
-            priceCurrency: currencySymbol[event.returnValues.currency],
-            minimumSubscriptionInSeconds: event.returnValues.minimumSubscriptionSeconds
+            blockNumber,
+            blockIndex,
+            ownerAddress: args.owner,
+            beneficiaryAddress: args.beneficiary,
+            pricePerSecond: args.pricePerSecond.div(EE_PRICE_SCALE).toString(),
+            priceCurrency: currencySymbol[args.currency],
+            minimumSubscriptionInSeconds: args.minimumSubscriptionSeconds.toString(),
         })
     }
 
-    onUndeployEvent(error, event) {
-        if (error) {
-            throw error
-        }
-        if (event.removed) {
-            // TODO: how to react? Fire a productDeployed?
-            console.error("Blockchain reorg may have dropped an event: " + JSON.stringify(event))
-            return
-        }
-        const productId = event.returnValues.id.slice(2)    // remove "0x" from beginning
+    onUndeployEvent(blockNumber, blockIndex, args) {
+        const productId = args.id.slice(2)    // remove "0x" from beginning
         return this.emit("productUndeployed", productId, {
-            blockNumber: event.blockNumber,
-            blockIndex: event.transactionIndex
+            blockNumber,
+            blockIndex,
         })
     }
 
-    onSubscribeEvent(error, event) {
-        if (error) {
-            throw error
-        }
-        const productId = event.returnValues.productId.slice(2)    // remove "0x" from beginning
+    onSubscribeEvent(blockNumber, blockIndex, args) {
+        const productId = args.productId.slice(2)    // remove "0x" from beginning
         return this.emit("subscribed", {
-            blockNumber: event.blockNumber,
-            blockIndex: event.transactionIndex,
+            blockNumber,
+            blockIndex,
             product: productId,
-            address: event.returnValues.subscriber,
-            endsAt: event.returnValues.endTimestamp
+            address: args.subscriber,
+            endsAt: args.endTimestamp.toString(),
         })
     }
 
-    onOwnershipUpdateEvent(error, event) {
-        if (error) {
-            throw error
-        }
-        if (event.removed) {
-            // TODO: how to react? Send another Update event with old info?
-            console.error("Blockchain reorg may have dropped an event: " + JSON.stringify(event))
-            return
-        }
-        //const productId = event.returnValues.id.slice(2)    // remove "0x" from beginning
-        const productId = event.returnValues.id
-        return this.market.methods.getProduct(productId).call().then(p => {
-            return this.emit("productUpdated", productId, {
-                blockNumber: event.blockNumber,
-                blockIndex: event.transactionIndex,
-                ownerAddress: p.owner,
-                beneficiaryAddress: p.beneficiary,
-                pricePerSecond: p.pricePerSecond / 10**9,
-                priceCurrency: currencySymbol[+p.currency],
-                minimumSubscriptionInSeconds: p.minimumSubscriptionSeconds
-            })
+    async onOwnershipUpdateEvent(blockNumber, blockIndex, args) {
+        const productId = args.id.slice(2)    // remove "0x" from beginning
+        const product = await this.market.getProduct(args.id)
+        await this.emit("productUpdated", productId, {
+            blockNumber,
+            blockIndex,
+            ownerAddress: product.owner,
+            beneficiaryAddress: product.beneficiary,
+            pricePerSecond: product.pricePerSecond.div(EE_PRICE_SCALE).toString(),
+            priceCurrency: currencySymbol[product.currency],
+            minimumSubscriptionInSeconds: product.minimumSubscriptionSeconds.toString(),
         })
     }
 }
