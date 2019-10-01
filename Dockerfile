@@ -34,7 +34,7 @@ RUN pip install awscli --upgrade --user && \
 ENV STREAMR_API_URL http://localhost:8081/streamr-core/api/v1
 ENV DEVOPS_KEY devops-user-key
 ENV METRICS false
-ENV NETWORK_ID 1
+ENV NETWORK_ID rinkeby
 ENV MARKETPLACE_ADDRESS 0xA10151D088f6f2705a05d6c83719e99E079A61C1
 
 # Secret Variables
