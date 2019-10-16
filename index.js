@@ -102,7 +102,7 @@ async function start() {
 
     // report new blocks as they arrive
     log("Starting watcher...")
-    watcher.start()
+    await watcher.start()
 
     return new Promise((done, fail) => {
         watcher.on("error", e => {
