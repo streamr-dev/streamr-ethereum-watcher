@@ -41,7 +41,7 @@ describe("Watcher", () => {
         marketplace2 = marketplace.connect(wallet2)
 
         watcher = new Watcher(provider, marketplace.address)
-        watcher.start()
+        await watcher.start()
     })
 
     /**

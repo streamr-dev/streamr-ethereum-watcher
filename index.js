@@ -18,9 +18,10 @@ const {
     logDir = "logs"     // also where the persisted program state (lastBlock) lives
 } = argv
 
+const { throwIfNotContract } = require("./src/checkArguments")
+
 const {
     getDefaultProvider,
-    utils: { getAddress },
     providers: { JsonRpcProvider }
 } = require("ethers")
 
@@ -39,7 +40,7 @@ async function start() {
 
     const addr = marketplaceAddress || deployedMarketplaceAddress
     if (!addr) { throw new Error("Requires --marketplaceAddress or --networkId one of " + Object.keys(Marketplace.networks).join(", ")) }
-    const marketAddress = getAddress(marketplaceAddress || deployedMarketplaceAddress)
+    const marketAddress = await throwIfNotContract(provider, marketplaceAddress || deployedMarketplaceAddress)
 
     const Watcher = require("./src/watcher")
     const watcher = new Watcher(provider, marketAddress)
@@ -101,7 +102,7 @@ async function start() {
 
     // report new blocks as they arrive
     log("Starting watcher...")
-    watcher.start()
+    await watcher.start()
 
     return new Promise((done, fail) => {
         watcher.on("error", e => {
