@@ -52,16 +52,10 @@ class Watcher extends EventEmitter {
     }
 
     /**
-     * Start watching incoming blocks
+     * Check this.market really looks like a Marketplace and not something funny
      */
-    async start() {
-        if (this.isRunning) {
-            throw new Error("Already started!")
-        }
-        this.isRunning = true
-        this.logger(`Starting watcher for Marketplace at ${this.market.address}`)
-
-        // check it really looks like a Marketplace and not something funny
+    async checkMarketplaceAddress() {
+        this.logger(`Checking the Marketplace contract at ${this.market.address}:`)
         const getterNames = Marketplace.abi.filter(f => f.constant && f.inputs.length === 0).map(f => f.name)
         for (const getterName of getterNames) {
             // throws "Error: contract not deployed" if address is bad
@@ -69,6 +63,19 @@ class Watcher extends EventEmitter {
             const value = await this.market[getterName]()
             this.logger(`  ${getterName}: ${value}`)
         }
+    }
+
+    /**
+     * Start watching incoming blocks
+     */
+    async start() {
+        if (this.isRunning) {
+            throw new Error("Already started!")
+        }
+        //await this.checkMarketplaceAddress()
+
+        this.isRunning = true
+        this.logger(`Starting watcher for Marketplace at ${this.market.address}`)
 
         this.watchEvent("ProductCreated", this.onDeployEvent)
         this.watchEvent("ProductRedeployed", this.onDeployEvent)

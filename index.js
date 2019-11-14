@@ -61,6 +61,8 @@ async function start() {
             })
         }
     }
+    await watcher.checkMarketplaceAddress()
+
     // set up reporting
     watcher.on("productDeployed", informer.setDeployed.bind(informer))
     watcher.on("productUndeployed", informer.setUndeployed.bind(informer))
