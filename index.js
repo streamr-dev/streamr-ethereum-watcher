@@ -35,6 +35,11 @@ async function start() {
         networkId ? getDefaultProvider(networkId) : null
     if (!provider) { throw new Error("missing --ethereumServerURL or --networkId!") }
 
+    const network = await provider.getNetwork().catch(e => {
+        throw new Error(`Connecting to Ethereum failed, --networkId=${networkId} --ethereumServerURL=${ethereumServerURL}`, e)
+    })
+    log("Connected to Ethereum network: ", JSON.stringify(network))
+
     // deployed using truffle, mainnet tx: https://etherscan.io/tx/0x868a6604e6c33ebc52a3fe5d020d970fdd0019e8eb595232599d67f91624d877
     const deployedMarketplaceAddress = Marketplace.networks[networkId] && Marketplace.networks[networkId].address
 
