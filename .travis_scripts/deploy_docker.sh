@@ -22,10 +22,10 @@ if [ $1 = "dev" ]; then
     fi
 elif [ $1 = "production" ]; then
     echo "Tag Production latest/tag"
-    docker tag $OWNER/$IMAGE_NAME:taggit $OWNER/$IMAGE_NAME:$TAG
+    docker tag $OWNER/$IMAGE_NAME:taggit $OWNER/$IMAGE_NAME:$TRAVIS_TAG
     docker tag $OWNER/$IMAGE_NAME:taggit $OWNER/$IMAGE_NAME:latest
     ## Push Production
-    docker push $OWNER/$IMAGE_NAME:$TAG
+    docker push $OWNER/$IMAGE_NAME:$TRAVIS_TAG
     docker push $OWNER/$IMAGE_NAME:latest
 fi
 
