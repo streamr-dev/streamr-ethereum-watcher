@@ -24,7 +24,8 @@ jobs:
     if: tag IS blank
     install: true
     script:
-    - docker build -t $OWNER/$IMAGE_NAME:taggit .
+    - docker build -t $OWNER/$IMAGE_NAME:local .
+    - .travis_scripts/smoke_test.sh
     deploy:
     - provider: script
       script: bash .travis_scripts/deploy_docker.sh dev
@@ -32,7 +33,8 @@ jobs:
     if: tag IS present
     install: true
     script:
-    - docker build -t $OWNER/$IMAGE_NAME:taggit .
+    - docker build -t $OWNER/$IMAGE_NAME:local .
+    - .travis_scripts/smoke_test.sh
     deploy:
     - provider: script
       script: bash .travis_scripts/deploy_docker.sh production
