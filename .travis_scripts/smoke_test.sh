@@ -15,7 +15,7 @@ $TRAVIS_BUILD_DIR/streamr-docker-dev/streamr-docker-dev/bin.sh start
 ## Wait for the service to come online and test
 wait_time=10;
 for (( i=0; i < 5; i=i+1 )); do
-    docker logs streamr_dev_ethereum_watcher_local > out.txt
+    docker logs streamr-dev-ethereum-watcher > out.txt
     grep -q "Starting watcher for" out.txt
     res=$?;
     if test "$res" != "0"; then
