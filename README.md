@@ -14,7 +14,7 @@ Project uses npm for package management.
 
 ## Running
 In most cases, you will want to run this service as a [pre-built Docker image](https://hub.docker.com/r/streamr/ethereum-watcher/).
-See https://github.com/streamr-dev/streamr-docker-dev for more information on how to run the Streamr cloud architecture.
+See https://github.com/streamr-dev/streamr-docker-dev for more information on how to run the Streamr stack.
 
 If you are developing this service in particular, or are otherwise inclined, you can run this service with `npm start`.
 
