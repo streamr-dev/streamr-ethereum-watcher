@@ -51,7 +51,7 @@ async function start() {
     const marketAddress = await throwIfNotContract(provider, marketplaceAddress || deployedMarketplaceAddress)
 
     const Watcher = require("./src/watcher")
-    const watcher = new Watcher(provider, marketAddress)
+    const watcher = new Watcher(provider, marketAddress, old)
 
     const Informer = require("./src/informer")
     const informer = new Informer(streamrApiURL, devopsKey)

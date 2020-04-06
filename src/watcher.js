@@ -8,6 +8,7 @@ const {
 const EE_PRICE_SCALE = new BigNumber(1e9)  // scale price to "nanotokens"/token-gwei so that it fits into mysql and Java long
 
 const Marketplace = require("../lib/marketplace-contracts/build/contracts/Marketplace.json")
+const OldMarketplace = require("../lib/marketplace-contracts/build/contracts/OldMarketplace.json")
 
 const { Marketplace: { currencySymbol } } = require("../lib/marketplace-contracts/src/contracts/enums")
 
@@ -41,10 +42,16 @@ const playbackStep = 1000
  *  event ExchangeRatesUpdated(uint timestamp, uint dataInUsd);
  */
 class Watcher extends EventEmitter {
-    constructor(provider, marketplaceAddress) {
+    constructor(provider, marketplaceAddress, useOldMarketplace) {
         super()
         this.provider = provider
-        this.market = new Contract(marketplaceAddress, Marketplace.abi, provider)
+        if (useOldMarketplace) {
+            this.abi = OldMarketplace.abi
+        } else {
+            this.abi = Marketplace.abi
+            playbackStartBlock["1"] = 9814860
+        }
+        this.market = new Contract(marketplaceAddress, this.abi, provider)
     }
 
     logger() {
@@ -56,7 +63,7 @@ class Watcher extends EventEmitter {
      */
     async checkMarketplaceAddress() {
         this.logger(`Checking the Marketplace contract at ${this.market.address}:`)
-        const getterNames = Marketplace.abi.filter(f => f.constant && f.inputs.length === 0).map(f => f.name)
+        const getterNames = this.abi.filter(f => f.constant && f.inputs.length === 0).map(f => f.name)
         for (const getterName of getterNames) {
             // throws "Error: contract not deployed" if address is bad
             // throws "Error: call exception" if getter not available (probably wrong contract)
