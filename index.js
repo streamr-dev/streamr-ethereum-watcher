@@ -8,6 +8,7 @@ const cw = new AWS.CloudWatch({apiVersion: "2010-08-01"})
 
 const argv = require("yargs").argv
 const {
+    old,
     marketplaceAddress,
     networkId,
     ethereumServerURL,
@@ -25,7 +26,9 @@ const {
     providers: { JsonRpcProvider }
 } = require("ethers")
 
-const Marketplace = require("./lib/marketplace-contracts/build/contracts/Marketplace.json")
+const Marketplace = old ?
+    require("./lib/marketplace-contracts/build/contracts/OldMarketplace.json") :
+    require("./lib/marketplace-contracts/build/contracts/Marketplace.json")
 
 const { log, error } = console
 
