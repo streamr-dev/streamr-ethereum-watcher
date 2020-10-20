@@ -108,7 +108,7 @@ class Watcher extends EventEmitter {
         const self = this
         this.market.on(filter, (...args) => {
             const event = args.pop()
-            self.logger(`Event: ${event.event}, args: ${JSON.stringify(args)}`)
+            self.logger(`Event: ${event.event}, args: ${JSON.stringify(args.map(a => a.toString()))}`)
             handler.call(self, event.blockNumber, event.transactionIndex, event.args).catch(async (e) => {
                 await self.emit("error", e)
                 self.logger("Error while sending event: " + e.stack)
@@ -118,7 +118,7 @@ class Watcher extends EventEmitter {
 
     async logEvent(...args) {
         const eventObject = args.pop()
-        this.logger(`Event ignored: ${eventObject.event}, args: ${JSON.stringify(args)}`)
+        this.logger(`Event ignored: ${eventObject.event}, args: ${JSON.stringify(args.map(a => a.toString()))}`)
     }
 
     // SYNCHRONOUSLY play back events one by one. Wait for promise to return before sending the next one
