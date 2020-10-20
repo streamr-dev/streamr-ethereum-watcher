@@ -7,13 +7,13 @@ if [ $1 = "dev" ]; then
     if [ $TRAVIS_EVENT_TYPE = "cron" ]; then
         # The script detects that there is a cron job through the variable TRAVIS_EVENT_TYPE which will be
         # 'cron' if the build is triggered by a cron job
-        echo "Tag Nightly"
-        nightly_build=nightly-$(date '+%Y-%m-%d')
-        docker tag $OWNER/$IMAGE_NAME:local $OWNER/$IMAGE_NAME:$nightly_build
-        docker tag $OWNER/$IMAGE_NAME:local $OWNER/$IMAGE_NAME:nightly
-        ## Push Nightly
-        docker push $OWNER/$IMAGE_NAME:$nightly_build
-        docker push $OWNER/$IMAGE_NAME:nightly
+        # echo "Tag Nightly"
+        # nightly_build=nightly-$(date '+%Y-%m-%d')
+        # docker tag $OWNER/$IMAGE_NAME:local $OWNER/$IMAGE_NAME:$nightly_build
+        # docker tag $OWNER/$IMAGE_NAME:local $OWNER/$IMAGE_NAME:nightly
+        # ## Push Nightly
+        # docker push $OWNER/$IMAGE_NAME:$nightly_build
+        # docker push $OWNER/$IMAGE_NAME:nightly
     else
         echo "Tag dev"
         docker tag $OWNER/$IMAGE_NAME:local $OWNER/$IMAGE_NAME:$1
