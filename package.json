@@ -19,7 +19,7 @@
     "bn.js": "4.11.8",
     "ethers": "^4.0.27",
     "mz": "^2.7.0",
-    "node-fetch": "2.0.0",
+    "node-fetch": "2.6.1",
     "promise-events": "^0.1.4",
     "sha3": "1.2.1",
     "url-join": "^4.0.0",
