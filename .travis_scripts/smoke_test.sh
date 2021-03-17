@@ -9,7 +9,7 @@ git clone https://github.com/streamr-dev/streamr-docker-dev.git
 sed -i "s#$OWNER/$IMAGE_NAME:dev#$OWNER/$IMAGE_NAME\:local#g" $TRAVIS_BUILD_DIR/streamr-docker-dev/docker-compose.override.yml
 
 ## Start up stack
-$TRAVIS_BUILD_DIR/streamr-docker-dev/streamr-docker-dev/bin.sh start
+$TRAVIS_BUILD_DIR/streamr-docker-dev/streamr-docker-dev/bin.sh start --wait
 
 ## Wait for the service to come online and test
 wait_time=10;
