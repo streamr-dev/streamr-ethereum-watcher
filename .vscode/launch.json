@@ -10,11 +10,11 @@
             "name": "Run watcher (Docker dev)",
             "program": "${workspaceFolder}/index.js",
             "args": [
-                "--streamrApiURL=http://localhost:8081/streamr-core/api/v1",
+                "--streamrApiURL=http://localhost:8081/api/v1",
                 "--devopsKey=devops-user-key",
                 "--ethereumServerURL=http://localhost:8545",
                 "--verbose=2",
-                "--marketplaceAddress=0xeaa002f7dc60178b6103f8617be45a9d3df659b6"
+                "--marketplaceAddress=0xF1371c0f40528406dc4f4cAf89924eA9Da49E866"
             ]
         }
     ]

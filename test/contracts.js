@@ -14,7 +14,8 @@ const deploy = require("./deploy_marketplace")
 // Just test the underlying contracts, to see they really work like we expect
 // If submodule changes, this test might catch violated assumptions in this project
 describe("Contracts", () => {
-    it("create product + subscribe", async () => {
+    it("create product + subscribe", async function() {
+        this.timeout(10000)
         const key1 = "0x1234567812345678123456781234567812345678123456781234567812345678"
         const key2 = "0x2234567812345678123456781234567812345678123456781234567812345679"
         const provider = new Web3Provider(ganache.provider({
