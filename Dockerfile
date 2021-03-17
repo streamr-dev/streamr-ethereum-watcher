@@ -1,5 +1,5 @@
-# Use official Node 9 Image as base image
-FROM node:8-alpine
+# TODO: always update to latest node LTS (see https://nodejs.org/en/about/releases/)
+FROM node:14-alpine
 RUN apk update && \
     apk upgrade && \
     apk add --no-cache python git make g++ bash
