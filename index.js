@@ -1,5 +1,5 @@
 // for persisting last processed block (to avoid full playback every restart)
-const fs = require("mz/fs")
+const fs = require("fs")
 
 // Setting up CloudWatch service object, borrowed from https://docs.aws.amazon.com/sdk-for-javascript/v2/developer-guide/cloudwatch-examples-getting-metrics.html
 const AWS = require("aws-sdk")
@@ -84,18 +84,18 @@ async function start() {
 
     // write on disk how many blocks have been processed
     watcher.on("eventSuccessfullyProcessed", event => {
-        fs.writeFile(logDir + "/lastBlock", event.blockNumber)
-            .then(() => {
-                if (verbose > 2) {
-                    log(`Processed https://rinkeby.etherscan.io/block/${event.blockNumber}. Wrote ${logDir}/lastBlock.`)
-                }
-            })
+        fs.writeFile(logDir + "/lastBlock", event.blockNumber.toString(), error => {
+            if (error) { throw error }
+            if (verbose > 2) {
+                log(`Processed https://etherscan.io/block/${event.blockNumber}. Wrote ${logDir}/lastBlock.`)
+            }
+        })
     })
 
     // catch up the blocks that happened when we were gone
     let lastRecorded = 0
     try {
-        lastRecorded = parseInt(await fs.readFile(logDir + "/lastBlock"))
+        lastRecorded = parseInt(fs.readFileSync(logDir + "/lastBlock"))
     } catch (e) {
         // ignore error; if file is missing, start from zero
     }
@@ -104,7 +104,7 @@ async function start() {
     while (lastRecorded < lastActual) {
         log(`Playing back blocks ${lastRecorded + 1}...${lastActual} (inclusive)`)
         await watcher.playback(lastRecorded + 1, lastActual)
-        await fs.writeFile(logDir + "/lastBlock", lastActual)
+        fs.writeFileSync(logDir + "/lastBlock", lastActual.toString())
         lastRecorded = lastActual
         lastActual = await provider.getBlockNumber()
     }
