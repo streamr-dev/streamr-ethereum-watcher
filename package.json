@@ -20,7 +20,7 @@
     "ethers": "^4.0.27",
     "node-fetch": "2.0.0",
     "promise-events": "^0.1.4",
-    "sha3": "1.2.1",
+    "sha3": "2.1.4",
     "url-join": "^4.0.0",
     "yargs": "11.0.0"
   },
