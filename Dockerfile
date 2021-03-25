@@ -13,7 +13,6 @@ COPY package.json /app
 COPY package-lock.json /app
 RUN npm ci
 COPY . /app
-RUN git submodule update --init --recursive
 
 RUN apk add --no-cache python3 && \
     python3 -m ensurepip && \
