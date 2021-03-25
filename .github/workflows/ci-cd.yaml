@@ -1,0 +1,136 @@
+name: CI & CD
+on:
+  push:
+    branches:
+      - master
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'
+  pull_request:
+    branches:
+      - master
+
+jobs:
+  integration:
+    name: CI
+    runs-on: ${{ matrix.os }}
+    continue-on-error: false
+    strategy:
+      fail-fast: false
+      matrix:
+        node_version:
+          - 14.x
+        os:
+          - ubuntu-16.04
+    steps:
+      - uses: actions/checkout@v2.3.4
+      - name: Node ${{ matrix.node_version }} - x64 on ${{ matrix.os }}
+        uses: actions/setup-node@v2.1.5
+        with:
+          node-version: ${{ matrix.node_version }}
+      - uses: actions/cache@v2.1.4
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+      - name: Test
+        run: |
+          npm run lint
+          npm test
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1.1.1
+      - name: Cache Docker layers
+        uses: actions/cache@v2.1.4
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-
+      - name: Build
+        uses: docker/build-push-action@v2.3.0
+        with:
+          context: .
+          file: ./Dockerfile
+          platforms: linux/amd64
+          push: false
+          load: true
+          tags: docker.io/streamr/ethereum-watcher:latest
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache
+
+  delivery:
+    name: CD
+    if: github.event_name != "pull_request"
+    needs:
+      - integration
+    runs-on: ubuntu-16.04
+    steps:
+      - uses: actions/checkout@v2.3.4
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1.1.1
+        id: buildx
+      - name: Cache Docker layers
+        uses: actions/cache@v2.1.4
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-
+      - name: Docker meta
+        id: docker_meta
+        uses: crazy-max/ghaction-docker-meta@v1.12.0
+        with:
+          images: docker.io/streamr/ethereum-watcher
+          tag-sha: true
+      - name: Build local Docker image for running smoke tests
+        uses: docker/build-push-action@v2.3.0
+        with:
+          context: .
+          file: ./Dockerfile
+          platforms: linux/amd64
+          push: false
+          load: true
+          tags: ${{ steps.docker_meta.outputs.tags }}
+          labels: ${{ steps.docker_meta.outputs.labels }}
+          builder: ${{ steps.buildx.outputs.name }}
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache
+      - name: Start Streamr Docker Stack
+        uses: streamr-dev/streamr-docker-dev-action@v1.0.0-alpha.3
+        with:
+          services-to-start: "engine-and-editor nginx ethereum-watcher"
+      - name: Run Smoke test
+        run: |
+          wait_time=10;
+          for (( i=0; i < 5; i=i+1 )); do
+            docker logs streamr-dev-ethereum-watcher > out.txt
+            grep -q "Starting watcher for" out.txt
+            res=$?
+            if test "$res" != "0"; then
+              echo "Attempting to connect to Ethereum-Watcher retrying in $wait_time seconds"
+              sleep $wait_time
+              wait_time=$(( 2*wait_time ))
+            else
+              break
+            fi
+          done
+          set -e
+          grep -q "Starting watcher for" out.txt
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v1.8.0
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Build and push container to Docker Hub
+        uses: docker/build-push-action@v2.3.0
+        with:
+          context: .
+          file: ./Dockerfile
+          platforms: linux/amd64
+          push: true
+          load: false
+          tags: ${{ steps.docker_meta.outputs.tags }}
+          labels: ${{ steps.docker_meta.outputs.labels }}
+          builder: ${{ steps.buildx.outputs.name }}
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache
