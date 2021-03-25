@@ -35,6 +35,7 @@ jobs:
             ${{ runner.os }}-node-
       - name: Test
         run: |
+          npm ci
           npm run lint
           npm test
       - name: Set up Docker Buildx
