@@ -8,5 +8,5 @@ pm2*
 .travis_scripts
 test
 streamr-ethereum-watcher.iml
-
+streamr-docker-dev
 
