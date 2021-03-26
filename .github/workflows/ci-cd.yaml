@@ -84,7 +84,7 @@ jobs:
         id: docker_meta
         uses: crazy-max/ghaction-docker-meta@v1.12.0
         with:
-          images: docker.io/streamr/ethereum-watcher
+          images: streamr/ethereum-watcher
           tag-sha: true
       - name: Build local Docker image for running smoke tests
         uses: docker/build-push-action@v2.3.0
@@ -94,7 +94,7 @@ jobs:
           platforms: linux/amd64
           push: false
           load: true
-          tags: ${{ steps.docker_meta.outputs.tags }}
+          tags: streamr/ethereum-watcher:dev
           labels: ${{ steps.docker_meta.outputs.labels }}
           builder: ${{ steps.buildx.outputs.name }}
           cache-from: type=local,src=/tmp/.buildx-cache
@@ -105,6 +105,7 @@ jobs:
           services-to-start: "engine-and-editor nginx ethereum-watcher"
       - name: Run Smoke test
         run: |
+          docker ps
           wait_time=10;
           for (( i=0; i < 5; i=i+1 )); do
             docker logs streamr-dev-ethereum-watcher > out.txt
