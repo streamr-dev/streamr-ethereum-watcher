@@ -9,10 +9,7 @@ COPY . /app
 
 # TODO: always update to latest node LTS (see https://nodejs.org/en/about/releases/)
 FROM node:14-buster-slim
-RUN apt-get update && apt-get --assume-yes --no-install-recommends install \
-	python \
-	python-pip \
-	&& pip install awscli
+RUN apt-get update && apt-get --assume-yes --no-install-recommends install awscli
 WORKDIR /app
 COPY --from=builder /app/ .
 
