@@ -105,7 +105,6 @@ jobs:
           services-to-start: "engine-and-editor nginx ethereum-watcher"
       - name: Run Smoke test
         run: |
-          docker ps
           wait_time=10;
           for (( i=0; i < 5; i=i+1 )); do
             docker logs streamr-dev-ethereum-watcher > out.txt
