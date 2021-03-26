@@ -77,9 +77,9 @@ jobs:
         uses: actions/cache@v2.1.4
         with:
           path: /tmp/.buildx-cache
-          key: ${{ runner.os }}-buildx-${{ github.sha }}
+          key: linux-buildx-${{ github.sha }}
           restore-keys: |
-            ${{ runner.os }}-buildx-
+            linux-buildx-
       - name: Docker meta
         id: docker_meta
         uses: crazy-max/ghaction-docker-meta@v1.12.0
