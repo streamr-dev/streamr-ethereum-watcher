@@ -77,9 +77,9 @@ jobs:
         uses: actions/cache@v2.1.4
         with:
           path: /tmp/.buildx-cache
-          key: ${{ runner.os }}-buildx-${{ github.sha }}
+          key: linux-buildx-${{ github.sha }}
           restore-keys: |
-            ${{ runner.os }}-buildx-
+            linux-buildx-
       - name: Docker meta
         id: docker_meta
         uses: crazy-max/ghaction-docker-meta@v1.12.0
@@ -105,7 +105,6 @@ jobs:
           services-to-start: "engine-and-editor nginx ethereum-watcher"
       - name: Run Smoke test
         run: |
-          docker ps
           wait_time=10;
           for (( i=0; i < 5; i=i+1 )); do
             docker logs streamr-dev-ethereum-watcher > out.txt
