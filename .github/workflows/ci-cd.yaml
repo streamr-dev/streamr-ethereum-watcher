@@ -102,7 +102,7 @@ jobs:
       - name: Start Streamr Docker Stack
         uses: streamr-dev/streamr-docker-dev-action@v1.0.0-alpha.3
         with:
-          services-to-start: "engine-and-editor nginx ethereum-watcher"
+          services-to-start: "core-api nginx ethereum-watcher"
       - name: Run Smoke test
         run: |
           wait_time=10;
