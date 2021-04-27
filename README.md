@@ -2,7 +2,7 @@
 
 # Marketplace Watcher
 An optional service of the Streamr cloud architecture that listens to events emitted by the Streamr Marketplace smart
-contract and informs [Engine-and-Editor](https://github.com/streamr-dev/engine-and-editor) of changes to products.
+contract and informs [Core API](https://github.com/streamr-dev/core-api) of changes to products.
 
 For redundancy, run multiple instances in parallel attached to different Ethereum nodes.
 
