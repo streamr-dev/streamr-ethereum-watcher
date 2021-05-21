@@ -59,7 +59,7 @@ async function start() {
     if (!provider) { throw new Error("missing --ethereumServerURL or --networkId!") }
 
     const network = await provider.getNetwork().catch(e => {
-        throw new Error(`Connecting to Ethereum failed, --networkId=${networkId} --ethereumServerURL=${ethereumServerURL}`, e)
+        throw new Error(`Connecting to Ethereum failed, --networkId=${networkId} --ethereumServerURL=${ethereumServerURL}: ${e.message}`)
     })
     log("Connected to Ethereum network: ", JSON.stringify(network))
 
