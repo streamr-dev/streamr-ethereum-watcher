@@ -103,11 +103,12 @@ async function start() {
     })
 
     // write on disk how many blocks have been processed
+    const lastBlockPath = logDir + "/lastBlock";
     watcher.on("eventSuccessfullyProcessed", event => {
-        fs.writeFile(logDir + "/lastBlock", event.blockNumber.toString(), err => {
+        fs.writeFile(lastBlockPath, event.blockNumber.toString(), err => {
             if (err) { throw err }
             if (verbose > 2) {
-                log(`Processed https://etherscan.io/block/${event.blockNumber}. Wrote ${logDir}/lastBlock.`)
+                log(`Processed https://etherscan.io/block/${event.blockNumber}. Wrote ${lastBlockPath}.`)
             }
         })
     })
@@ -115,7 +116,7 @@ async function start() {
     // catch up the blocks that happened when we were gone
     let lastRecorded = 0
     try {
-        lastRecorded = parseInt(fs.readFileSync(logDir + "/lastBlock"))
+        lastRecorded = parseInt(fs.readFileSync(lastBlockPath))
     } catch (e) {
         // ignore error; if file is missing, start from zero
     }
@@ -124,7 +125,7 @@ async function start() {
     while (lastRecorded < lastActual) {
         log(`Playing back blocks ${lastRecorded + 1}...${lastActual} (inclusive)`)
         await watcher.playback(lastRecorded + 1, lastActual)
-        fs.writeFileSync(logDir + "/lastBlock", lastActual.toString())
+        fs.writeFileSync(lastBlockPath, lastActual.toString())
         lastRecorded = lastActual
         lastActual = await provider.getBlockNumber()
     }
