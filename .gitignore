@@ -6,7 +6,10 @@ node_modules
 .idea/tasks.xml
 .idea/dictionaries
 .idea/httpRequests
-
+.idea/google-java-format.xml
+.idea/sonarlint/
+.idea/misc.xml
+.idea/vcs.xml
 # .gitignore doesn't work for tracked files  /:  please don't commit it
 #logs/lastBlock
 
