@@ -1,16 +1,13 @@
 // for persisting last processed block (to avoid full playback every restart)
 const fs = require("fs")
-
 const StreamrClient = require("streamr-client")
-
 const ethers = require("ethers")
-
-// Setting up CloudWatch service object, borrowed from https://docs.aws.amazon.com/sdk-for-javascript/v2/developer-guide/cloudwatch-examples-getting-metrics.html
 const AWS = require("aws-sdk")
-AWS.config.update({region: "eu-west-1"})
-const cw = new AWS.CloudWatch({apiVersion: "2010-08-01"})
-
 const argv = require("yargs").argv
+const { throwIfNotContract } = require("./src/checkArguments")
+const Watcher = require("./src/watcher")
+const Informer = require("./src/informer")
+
 const {
     old,
     marketplaceAddress,
@@ -23,13 +20,18 @@ const {
     logDir = "logs"     // also where the persisted program state (lastBlock) lives
 } = argv
 
-const { throwIfNotContract } = require("./src/checkArguments")
-
+// TODO: Is old marketplace still needed?
+// TODO: Remove old argument
+// TODO: Move following statement to top where all other requires are
 const Marketplace = old ?
     require("./lib/marketplace-contracts/build/contracts/OldMarketplace.json") :
     require("./lib/marketplace-contracts/build/contracts/Marketplace.json")
 
 const { log, error } = console
+
+// Setting up CloudWatch service object, borrowed from https://docs.aws.amazon.com/sdk-for-javascript/v2/developer-guide/cloudwatch-examples-getting-metrics.html
+AWS.config.update({region: "eu-west-1"})
+const cw = new AWS.CloudWatch({apiVersion: "2010-08-01"})
 
 try {
     new ethers.Wallet(devopsKey)
@@ -72,10 +74,8 @@ async function start() {
     if (!addr) { throw new Error("Requires --marketplaceAddress or --networkId one of " + Object.keys(Marketplace.networks).join(", ")) }
     const marketAddress = await throwIfNotContract(provider, marketplaceAddress || deployedMarketplaceAddress)
 
-    const Watcher = require("./src/watcher")
     const watcher = new Watcher(provider, marketAddress, old)
 
-    const Informer = require("./src/informer")
     const informer = new Informer(streamrApiURL, getSessionToken)
 
     if (verbose) {
