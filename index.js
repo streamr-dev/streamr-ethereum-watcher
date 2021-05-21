@@ -25,11 +25,6 @@ const {
 
 const { throwIfNotContract } = require("./src/checkArguments")
 
-const {
-    getDefaultProvider,
-    providers: { JsonRpcProvider }
-} = require("ethers")
-
 const Marketplace = old ?
     require("./lib/marketplace-contracts/build/contracts/OldMarketplace.json") :
     require("./lib/marketplace-contracts/build/contracts/Marketplace.json")
@@ -56,12 +51,12 @@ async function start() {
     let provider = null
     if (networkId) {
         if (ethereumServerURL) {
-            provider = new JsonRpcProvider(ethereumServerURL)
+            provider = new ethers.providers.JsonRpcProvider(ethereumServerURL)
         } else {
-            provider = getDefaultProvider(networkId)
+            provider = ethers.getDefaultProvider(networkId)
         }
     } else if (ethereumServerURL) {
-        provider = new JsonRpcProvider(ethereumServerURL)
+        provider = new ethers.providers.JsonRpcProvider(ethereumServerURL)
     }
     if (!provider) { throw new Error("missing --ethereumServerURL or --networkId!") }
 
