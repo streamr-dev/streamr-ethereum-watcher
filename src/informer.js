@@ -2,15 +2,12 @@ const fetch = require("node-fetch")
 const urlJoin = require("url-join")
 
 class Informer {
-    constructor(streamrUrl, devOpsAccessToken) {
+    constructor(streamrUrl, sessionTokenGetterFunc) {
         if (!streamrUrl) {
             throw "No streamUrl given"
         }
-        if (!devOpsAccessToken) {
-            throw "No devOpsAccessToken given"
-        }
         this.streamrUrl = streamrUrl
-        this.devOpsAccessToken = devOpsAccessToken
+        this.getSessionToken = sessionTokenGetterFunc
     }
 
     setDeployed(id, body) {
@@ -40,15 +37,17 @@ class Informer {
     _post(apiUrl, body, method = "POST") {
         this.logger(method, apiUrl, body ? "\n" + JSON.stringify(body, null, 4) : "")
 
-        return fetch(apiUrl, {
-            method,
-            body: JSON.stringify(body),
-            headers: {
-                "Accept": "application/json",
-                "Content-type": "application/json",
-                "Authorization": `Token ${this.devOpsAccessToken}`
-            }
-        })
+        return this.getSessionToken().then(sessionToken =>
+            fetch(apiUrl, {
+                method,
+                body: JSON.stringify(body),
+                headers: {
+                    "Accept": "application/json",
+                    "Content-type": "application/json",
+                    "Authorization": `Bearer ${sessionToken}`
+                }
+            })
+        )
     }
 }
 

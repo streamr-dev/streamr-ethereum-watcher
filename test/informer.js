@@ -5,6 +5,10 @@ const Informer = require("../src/informer")
 
 const TEST_SERVER_PORT = 51843
 
+async function getSessionToken() {
+    return "YQoijTHJOwt4y8bPtPmLNFpbS2TT8C3SmL6WP9QCGJjlH7iyaxyTBKGJHG5KE8eu"
+}
+
 describe("Informer", () => {
     let server
     let informer
@@ -39,7 +43,7 @@ describe("Informer", () => {
 
     beforeEach(() => {
         requests = []
-        informer = new Informer(`http://127.0.0.1:${TEST_SERVER_PORT}`, "devops-key")
+        informer = new Informer(`http://127.0.0.1:${TEST_SERVER_PORT}`, getSessionToken)
     })
 
     it("setDeployed causes expected POST request", async () => {
@@ -57,7 +61,7 @@ describe("Informer", () => {
         assert.deepEqual(requests[0], {
             method: "POST",
             url: "/products/product-id/setDeployed",
-            accessToken: "Token devops-key",
+            accessToken: "Bearer YQoijTHJOwt4y8bPtPmLNFpbS2TT8C3SmL6WP9QCGJjlH7iyaxyTBKGJHG5KE8eu",
             body: {
                 blockNumber: 0,
                 blockIndex: 0,
@@ -80,7 +84,7 @@ describe("Informer", () => {
         assert.deepEqual(requests[0], {
             method: "POST",
             url: "/products/product-id/setUndeployed",
-            accessToken: "Token devops-key",
+            accessToken: "Bearer YQoijTHJOwt4y8bPtPmLNFpbS2TT8C3SmL6WP9QCGJjlH7iyaxyTBKGJHG5KE8eu",
             body: {
                 blockNumber: 0,
                 blockIndex: 0

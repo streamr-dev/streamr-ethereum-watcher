@@ -1,6 +1,10 @@
 // for persisting last processed block (to avoid full playback every restart)
 const fs = require("fs")
 
+const StreamrClient = require("streamr-client")
+
+const ethers = require("ethers")
+
 // Setting up CloudWatch service object, borrowed from https://docs.aws.amazon.com/sdk-for-javascript/v2/developer-guide/cloudwatch-examples-getting-metrics.html
 const AWS = require("aws-sdk")
 AWS.config.update({region: "eu-west-1"})
@@ -32,6 +36,22 @@ const Marketplace = old ?
 
 const { log, error } = console
 
+try {
+    new ethers.Wallet(devopsKey)
+} catch (e) {
+    console.error(`Bad --devopsKey argument "${devopsKey}", expected a valid Ethereum key`) // eslint-disable-line no-console
+    process.exit(1)
+}
+
+async function getSessionToken() {
+    const client = new StreamrClient({
+        auth: {
+            privateKey: devopsKey
+        }
+    })
+    return client.session.getSessionToken()
+}
+
 async function start() {
     const provider =
         ethereumServerURL ? new JsonRpcProvider(ethereumServerURL) :
@@ -54,7 +74,7 @@ async function start() {
     const watcher = new Watcher(provider, marketAddress, old)
 
     const Informer = require("./src/informer")
-    const informer = new Informer(streamrApiURL, devopsKey)
+    const informer = new Informer(streamrApiURL, getSessionToken)
 
     if (verbose) {
         watcher.on("productDeployed", (id, body) => { log(`Product ${id} deployed ${JSON.stringify(body)}`) })
