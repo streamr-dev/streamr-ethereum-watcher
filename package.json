@@ -21,6 +21,7 @@
     "node-fetch": "2.0.0",
     "promise-events": "^0.1.4",
     "sha3": "2.1.4",
+    "streamr-client": "5.2.1",
     "url-join": "^4.0.0",
     "yargs": "11.0.0"
   },
