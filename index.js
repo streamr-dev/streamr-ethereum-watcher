@@ -104,8 +104,8 @@ async function start() {
 
     // write on disk how many blocks have been processed
     watcher.on("eventSuccessfullyProcessed", event => {
-        fs.writeFile(logDir + "/lastBlock", event.blockNumber.toString(), error => {
-            if (error) { throw error }
+        fs.writeFile(logDir + "/lastBlock", event.blockNumber.toString(), err => {
+            if (err) { throw err }
             if (verbose > 2) {
                 log(`Processed https://etherscan.io/block/${event.blockNumber}. Wrote ${logDir}/lastBlock.`)
             }
