@@ -156,7 +156,7 @@ async function start() {
 
 function putMetricData(MetricName, Value) {
     if (metrics) {
-        var params = {
+        const params = {
             MetricData: [
                 {
                     MetricName,
