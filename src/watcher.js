@@ -1,14 +1,10 @@
 const EventEmitter = require("promise-events")
-
 const ethers = require("ethers")
-
-const EE_PRICE_SCALE = new ethers.utils.BigNumber(1e9)  // scale price to "nanotokens"/token-gwei so that it fits into mysql and Java long
-
 const Marketplace = require("../lib/marketplace-contracts/build/contracts/Marketplace.json")
 const OldMarketplace = require("../lib/marketplace-contracts/build/contracts/OldMarketplace.json")
-
 const { Marketplace: { currencySymbol } } = require("../lib/marketplace-contracts/src/contracts/enums")
 
+const EE_PRICE_SCALE = new ethers.utils.BigNumber(1e9)  // scale price to "nanotokens"/token-gwei so that it fits into mysql and Java long
 // "warp" to this block; before this block there weren't (too many) events
 const playbackStartBlock = {
     "1": 5450000,       // mainnet
