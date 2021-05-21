@@ -53,9 +53,16 @@ async function getSessionToken() {
 }
 
 async function start() {
-    const provider =
-        ethereumServerURL ? new JsonRpcProvider(ethereumServerURL) :
-        networkId ? getDefaultProvider(networkId) : null
+    let provider = null
+    if (networkId) {
+        if (ethereumServerURL) {
+            provider = new JsonRpcProvider(ethereumServerURL)
+        } else {
+            provider = getDefaultProvider(networkId)
+        }
+    } else if (ethereumServerURL) {
+        provider = new JsonRpcProvider(ethereumServerURL)
+    }
     if (!provider) { throw new Error("missing --ethereumServerURL or --networkId!") }
 
     const network = await provider.getNetwork().catch(e => {
