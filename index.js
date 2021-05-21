@@ -116,7 +116,8 @@ async function start() {
     // catch up the blocks that happened when we were gone
     let lastRecorded = 0
     try {
-        lastRecorded = parseInt(fs.readFileSync(lastBlockPath))
+        const buffer = fs.readFileSync(lastBlockPath);
+        lastRecorded = parseInt(buffer.toString())
     } catch (e) {
         // ignore error; if file is missing, start from zero
     }
