@@ -119,6 +119,7 @@ async function start() {
         const buffer = fs.readFileSync(lastBlockPath);
         lastRecorded = parseInt(buffer.toString())
     } catch (e) {
+        error(`error while reading last block: ${e.message}`)
         // ignore error; if file is missing, start from zero
     }
 
