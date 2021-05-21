@@ -1,11 +1,8 @@
 const EventEmitter = require("promise-events")
 
-const {
-    Contract,
-    utils: { BigNumber }
-} = require("ethers")
+const ethers = require("ethers")
 
-const EE_PRICE_SCALE = new BigNumber(1e9)  // scale price to "nanotokens"/token-gwei so that it fits into mysql and Java long
+const EE_PRICE_SCALE = new ethers.utils.BigNumber(1e9)  // scale price to "nanotokens"/token-gwei so that it fits into mysql and Java long
 
 const Marketplace = require("../lib/marketplace-contracts/build/contracts/Marketplace.json")
 const OldMarketplace = require("../lib/marketplace-contracts/build/contracts/OldMarketplace.json")
@@ -51,7 +48,7 @@ class Watcher extends EventEmitter {
             this.abi = Marketplace.abi
             playbackStartBlock["1"] = 9814860
         }
-        this.market = new Contract(marketplaceAddress, this.abi, provider)
+        this.market = new ethers.Contract(marketplaceAddress, this.abi, provider)
     }
 
     logger() {
