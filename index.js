@@ -1,10 +1,9 @@
-const log = require("src/log")
+const log = require("./src/log")
 // for persisting last processed block (to avoid full playback every restart)
 const fs = require("fs")
 const StreamrClient = require("streamr-client")
 const ethers = require("ethers")
-const AWS = require("aws-sdk")
-const argv = require("yargs").argv
+const yargs = require("yargs")
 const { throwIfNotContract } = require("./src/checkArguments")
 const Watcher = require("./src/watcher")
 const Informer = require("./src/informer")
@@ -17,9 +16,8 @@ const {
     streamrApiURL,
     devopsKey,
     verbose,
-    metrics,
     logDir = "logs"     // also where the persisted program state (lastBlock) lives
-} = argv
+} = yargs.argv
 
 // TODO: Is old marketplace still needed?
 // TODO: Remove old argument
@@ -27,10 +25,6 @@ const {
 const Marketplace = old ?
     require("./lib/marketplace-contracts/build/contracts/OldMarketplace.json") :
     require("./lib/marketplace-contracts/build/contracts/Marketplace.json")
-
-// Setting up CloudWatch service object, borrowed from https://docs.aws.amazon.com/sdk-for-javascript/v2/developer-guide/cloudwatch-examples-getting-metrics.html
-AWS.config.update({region: "eu-west-1"})
-const cw = new AWS.CloudWatch({apiVersion: "2010-08-01"})
 
 try {
     new ethers.Wallet(devopsKey)
@@ -98,9 +92,8 @@ async function start() {
     watcher.on("productUpdated", informer.productUpdated.bind(informer))
     watcher.on("subscribed", informer.subscribe.bind(informer))
 
-    // set up metrics
     watcher.on("event", event => {
-        putMetricData(event.event, 1)
+        log.info(`event: ${event.event}`)
     })
 
     // write on disk how many blocks have been processed
@@ -132,7 +125,7 @@ async function start() {
         lastRecorded = lastActual
         lastActual = await provider.getBlockNumber()
     }
-    putMetricData("PlaybackDone", 1)
+    log.info("Playback done")
 
     // report new blocks as they arrive
     log.info("Starting watcher...")
@@ -148,34 +141,9 @@ async function start() {
     })
 }
 
-function putMetricData(MetricName, Value) {
-    if (metrics) {
-        const params = {
-            MetricData: [
-                {
-                    MetricName,
-                    Value
-                },
-            ],
-            Namespace: "AWS/Logs"
-        }
-
-        cw.putMetricData(params, function (err, data) {
-            if (err) {
-                log.error(`Error sending metric ${MetricName} (${Value}): ${JSON.stringify(err)}`)
-            } else {
-                if (verbose > 1) {
-                    log.info(`Sent metric ${MetricName}: ${Value}`)
-                    log.info("Got back " + JSON.stringify(data))
-                }
-            }
-        })
-    }
-}
-
 start().catch(e => {
     log.error(e.stack)
     process.exit(1)
 })
 
-putMetricData("Restart", 1)
+log.error("Restart")
