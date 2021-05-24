@@ -7,9 +7,9 @@ const yargs = require("yargs")
 const { throwIfNotContract } = require("./src/checkArguments")
 const Watcher = require("./src/watcher")
 const Informer = require("./src/informer")
+const Marketplace = require("./lib/marketplace-contracts/build/contracts/Marketplace.json")
 
 const {
-    old,
     marketplaceAddress,
     networkId,
     ethereumServerURL,
@@ -18,13 +18,6 @@ const {
     verbose,
     logDir = "logs"     // also where the persisted program state (lastBlock) lives
 } = yargs.argv
-
-// TODO: Is old marketplace still needed?
-// TODO: Remove old argument
-// TODO: Move following statement to top where all other requires are
-const Marketplace = old ?
-    require("./lib/marketplace-contracts/build/contracts/OldMarketplace.json") :
-    require("./lib/marketplace-contracts/build/contracts/Marketplace.json")
 
 try {
     new ethers.Wallet(devopsKey)
@@ -67,7 +60,7 @@ async function start() {
     if (!addr) { throw new Error("Requires --marketplaceAddress or --networkId one of " + Object.keys(Marketplace.networks).join(", ")) }
     const marketAddress = await throwIfNotContract(provider, marketplaceAddress || deployedMarketplaceAddress)
 
-    const watcher = new Watcher(provider, marketAddress, old)
+    const watcher = new Watcher(provider, marketAddress)
 
     const informer = new Informer(streamrApiURL, getSessionToken)
 
