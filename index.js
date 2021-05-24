@@ -1,4 +1,4 @@
-const log = require("src/log")
+const log = require("./src/log")
 // for persisting last processed block (to avoid full playback every restart)
 const fs = require("fs")
 const StreamrClient = require("streamr-client")
