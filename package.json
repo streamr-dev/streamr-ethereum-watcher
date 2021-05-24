@@ -15,7 +15,6 @@
   "author": "Streamr Network AG",
   "license": "AGPL-3.0",
   "dependencies": {
-    "aws-sdk": "^2.235.1",
     "bn.js": "4.11.8",
     "ethers": "^4.0.27",
     "node-fetch": "2.0.0",
