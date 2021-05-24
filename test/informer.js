@@ -1,6 +1,5 @@
 const assert = require("assert")
 const http = require("http")
-
 const Informer = require("../src/informer")
 
 const TEST_SERVER_PORT = 51843
