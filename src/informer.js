@@ -4,7 +4,7 @@ const urlJoin = require("url-join")
 class Informer {
     constructor(streamrUrl, sessionTokenGetterFunc) {
         if (!streamrUrl) {
-            throw "No streamUrl given"
+            throw new Error("No streamUrl given")
         }
         this.streamrUrl = streamrUrl
         this.getSessionToken = sessionTokenGetterFunc

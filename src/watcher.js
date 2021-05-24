@@ -1,17 +1,10 @@
 const EventEmitter = require("promise-events")
-
-const {
-    Contract,
-    utils: { BigNumber }
-} = require("ethers")
-
-const EE_PRICE_SCALE = new BigNumber(1e9)  // scale price to "nanotokens"/token-gwei so that it fits into mysql and Java long
-
+const ethers = require("ethers")
 const Marketplace = require("../lib/marketplace-contracts/build/contracts/Marketplace.json")
 const OldMarketplace = require("../lib/marketplace-contracts/build/contracts/OldMarketplace.json")
-
 const { Marketplace: { currencySymbol } } = require("../lib/marketplace-contracts/src/contracts/enums")
 
+const EE_PRICE_SCALE = new ethers.utils.BigNumber(1e9)  // scale price to "nanotokens"/token-gwei so that it fits into mysql and Java long
 // "warp" to this block; before this block there weren't (too many) events
 const playbackStartBlock = {
     "1": 5450000,       // mainnet
@@ -51,7 +44,7 @@ class Watcher extends EventEmitter {
             this.abi = Marketplace.abi
             playbackStartBlock["1"] = 9814860
         }
-        this.market = new Contract(marketplaceAddress, this.abi, provider)
+        this.market = new ethers.Contract(marketplaceAddress, this.abi, provider)
     }
 
     logger() {
@@ -140,7 +133,7 @@ class Watcher extends EventEmitter {
                 }
             } catch (e) {
                 // if it was because streamr backend couldn't find the product for set(Un)Deployed, just keep chugging
-                if (e.code == "ECONNREFUSED") { continue }
+                if (e.code === "ECONNREFUSED") { continue }
                 throw e
             }
         }
