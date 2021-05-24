@@ -1,3 +1,4 @@
+const log = require("src/log")
 // for persisting last processed block (to avoid full playback every restart)
 const fs = require("fs")
 const StreamrClient = require("streamr-client")
@@ -27,8 +28,6 @@ const Marketplace = old ?
     require("./lib/marketplace-contracts/build/contracts/OldMarketplace.json") :
     require("./lib/marketplace-contracts/build/contracts/Marketplace.json")
 
-const { log, error } = console
-
 // Setting up CloudWatch service object, borrowed from https://docs.aws.amazon.com/sdk-for-javascript/v2/developer-guide/cloudwatch-examples-getting-metrics.html
 AWS.config.update({region: "eu-west-1"})
 const cw = new AWS.CloudWatch({apiVersion: "2010-08-01"})
@@ -36,7 +35,7 @@ const cw = new AWS.CloudWatch({apiVersion: "2010-08-01"})
 try {
     new ethers.Wallet(devopsKey)
 } catch (e) {
-    console.error(`Bad --devopsKey argument "${devopsKey}", expected a valid Ethereum key`) // eslint-disable-line no-console
+    log.error(`Bad --devopsKey argument "${devopsKey}", expected a valid Ethereum key`)
     process.exit(1)
 }
 
@@ -65,7 +64,7 @@ async function start() {
     const network = await provider.getNetwork().catch(e => {
         throw new Error(`Connecting to Ethereum failed, --networkId=${networkId} --ethereumServerURL=${ethereumServerURL}: ${e.message}`)
     })
-    log("Connected to Ethereum network: ", JSON.stringify(network))
+    log.info("Connected to Ethereum network: ", JSON.stringify(network))
 
     // deployed using truffle, mainnet tx: https://etherscan.io/tx/0x868a6604e6c33ebc52a3fe5d020d970fdd0019e8eb595232599d67f91624d877
     const deployedMarketplaceAddress = Marketplace.networks[networkId] && Marketplace.networks[networkId].address
@@ -79,15 +78,15 @@ async function start() {
     const informer = new Informer(streamrApiURL, getSessionToken)
 
     if (verbose) {
-        watcher.on("productDeployed", (id, body) => { log(`Product ${id} deployed ${JSON.stringify(body)}`) })
-        watcher.on("productUndeployed", (id, body) => { log(`Product ${id} UNdeployed ${JSON.stringify(body)}`) })
-        watcher.on("productUpdated", (id, body) => { log(`Product ${id} UPDATED ${JSON.stringify(body)}`) })
-        watcher.on("subscribed", (body) => { log(`Product ${body.product} subscribed ${JSON.stringify(body)}`) })
+        watcher.on("productDeployed", (id, body) => { log.info(`Product ${id} deployed ${JSON.stringify(body)}`) })
+        watcher.on("productUndeployed", (id, body) => { log.info(`Product ${id} UNdeployed ${JSON.stringify(body)}`) })
+        watcher.on("productUpdated", (id, body) => { log.info(`Product ${id} UPDATED ${JSON.stringify(body)}`) })
+        watcher.on("subscribed", (body) => { log.info(`Product ${body.product} subscribed ${JSON.stringify(body)}`) })
         if (verbose > 1) {
-            watcher.logger = (...args) => { log(" Watcher >", ...args) }
-            informer.logger = (...args) => { log(" watcher/Informer >", ...args) }
+            watcher.logger = (...args) => { log.info(" Watcher >", ...args) }
+            informer.logger = (...args) => { log.info(" watcher/Informer >", ...args) }
             watcher.on("event", event => {
-                log(`    Watcher detected event: ${JSON.stringify(event)}`)
+                log.info(`    Watcher detected event: ${JSON.stringify(event)}`)
             })
         }
     }
@@ -105,12 +104,12 @@ async function start() {
     })
 
     // write on disk how many blocks have been processed
-    const lastBlockPath = logDir + "/lastBlock";
+    const lastBlockPath = logDir + "/lastBlock"
     watcher.on("eventSuccessfullyProcessed", event => {
         fs.writeFile(lastBlockPath, event.blockNumber.toString(), err => {
             if (err) { throw err }
             if (verbose > 2) {
-                log(`Processed https://etherscan.io/block/${event.blockNumber}. Wrote ${lastBlockPath}.`)
+                log.info(`Processed https://etherscan.io/block/${event.blockNumber}. Wrote ${lastBlockPath}.`)
             }
         })
     })
@@ -118,16 +117,16 @@ async function start() {
     // catch up the blocks that happened when we were gone
     let lastRecorded = 0
     try {
-        const buffer = fs.readFileSync(lastBlockPath);
+        const buffer = fs.readFileSync(lastBlockPath)
         lastRecorded = parseInt(buffer.toString())
     } catch (e) {
-        error(`error while reading last block: ${e.message}`)
+        log.error(`error while reading last block: ${e.message}`)
         // ignore error; if file is missing, start from zero
     }
 
     let lastActual = await provider.getBlockNumber()
     while (lastRecorded < lastActual) {
-        log(`Playing back blocks ${lastRecorded + 1}...${lastActual} (inclusive)`)
+        log.info(`Playing back blocks ${lastRecorded + 1}...${lastActual} (inclusive)`)
         await watcher.playback(lastRecorded + 1, lastActual)
         fs.writeFileSync(lastBlockPath, lastActual.toString())
         lastRecorded = lastActual
@@ -136,7 +135,7 @@ async function start() {
     putMetricData("PlaybackDone", 1)
 
     // report new blocks as they arrive
-    log("Starting watcher...")
+    log.info("Starting watcher...")
     await watcher.start()
 
     return new Promise((done, fail) => {
@@ -163,11 +162,11 @@ function putMetricData(MetricName, Value) {
 
         cw.putMetricData(params, function (err, data) {
             if (err) {
-                error(`Error sending metric ${MetricName} (${Value}): ${JSON.stringify(err)}`)
+                log.error(`Error sending metric ${MetricName} (${Value}): ${JSON.stringify(err)}`)
             } else {
                 if (verbose > 1) {
-                    log(`Sent metric ${MetricName}: ${Value}`)
-                    log("Got back " + JSON.stringify(data))
+                    log.info(`Sent metric ${MetricName}: ${Value}`)
+                    log.info("Got back " + JSON.stringify(data))
                 }
             }
         })
@@ -175,7 +174,7 @@ function putMetricData(MetricName, Value) {
 }
 
 start().catch(e => {
-    error(e.stack)
+    log.error(e.stack)
     process.exit(1)
 })
 
