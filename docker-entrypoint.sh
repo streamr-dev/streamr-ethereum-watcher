@@ -1,4 +1,4 @@
 #!/bin/bash
-set -e -u -o pipefail
+set -e -u
 
 exec "$@"
