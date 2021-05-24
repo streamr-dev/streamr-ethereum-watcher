@@ -3,7 +3,7 @@ const log = require("./src/log")
 const fs = require("fs")
 const StreamrClient = require("streamr-client")
 const ethers = require("ethers")
-const argv = require("yargs").argv
+const yargs = require("yargs")
 const { throwIfNotContract } = require("./src/checkArguments")
 const Watcher = require("./src/watcher")
 const Informer = require("./src/informer")
@@ -17,7 +17,7 @@ const {
     devopsKey,
     verbose,
     logDir = "logs"     // also where the persisted program state (lastBlock) lives
-} = argv
+} = yargs.argv
 
 // TODO: Is old marketplace still needed?
 // TODO: Remove old argument
