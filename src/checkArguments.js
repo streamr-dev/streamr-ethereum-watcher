@@ -6,10 +6,10 @@ const ethers = require("ethers")
  * Validate Ethereum contract addresses from user input
  * @returns {EthereumAddress} checksum-formatted by ethers.js
  **/
-async function throwIfNotContract(eth, address, variableDescription) {
-    const addr = throwIfBadAddress(address, variableDescription)
+async function throwIfNotContract(eth, address) {
+    const addr = throwIfBadAddress(address)
     if (await eth.getCode(address) === "0x") {
-        throw new Error(`${variableDescription || "Error"}: No contract at ${address}`)
+        throw new Error(`"Error: No contract at ${address}`)
     }
     return addr
 }
@@ -17,11 +17,11 @@ async function throwIfNotContract(eth, address, variableDescription) {
  * Validate addresses from user input
  * @returns {EthereumAddress} checksum-formatted by ethers.js
  **/
-function throwIfBadAddress(address, variableDescription) {
+function throwIfBadAddress(address) {
     try {
         return ethers.utils.getAddress(address)
     } catch (e) {
-        throw new Error(`${variableDescription || "Error"}: Bad Ethereum address ${address}`)
+        throw new Error(`Error: Bad Ethereum address ${address}`)
     }
 }
 
