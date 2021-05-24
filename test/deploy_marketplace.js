@@ -16,5 +16,5 @@ module.exports = async wallet => {
     const marketplace = await marketDeployer.deploy(token.address, wallet.address, oldMarketplace.address)
     await marketplace.deployed()
 
-    return { token, marketplace, oldMarketplace }
+    return { token, marketplace }
 }
