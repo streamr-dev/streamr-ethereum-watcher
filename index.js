@@ -122,8 +122,7 @@ async function start() {
         const buffer = fs.readFileSync(lastBlockPath)
         lastRecorded = parseInt(buffer.toString())
     } catch (e) {
-        log.error(`error while reading last block: ${e.message}`)
-        // ignore error; if file is missing, start from zero
+        log.info("No lastBlock file found. Start from block zero.")
     }
 
     let lastActual = await provider.getBlockNumber()
