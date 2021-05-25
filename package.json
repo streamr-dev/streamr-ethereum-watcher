@@ -15,22 +15,22 @@
   "author": "Streamr Network AG",
   "license": "AGPL-3.0",
   "dependencies": {
-    "bn.js": "4.11.8",
-    "ethers": "^4.0.27",
-    "node-fetch": "2.0.0",
-    "promise-events": "^0.1.4",
+    "bn.js": "5.2.0",
+    "ethers": "4.0.48",
+    "node-fetch": "2.6.1",
+    "promise-events": "0.2.4",
     "sha3": "2.1.4",
-    "streamr-client": "5.2.1",
-    "url-join": "^4.0.0",
-    "yargs": "11.0.0"
+    "streamr-client": "5.4.1",
+    "url-join": "4.0.1",
+    "yargs": "17.0.1"
   },
   "devDependencies": {
-    "cli-table": "^0.3.1",
-    "eslint": "^5.16.0",
+    "cli-table": "0.3.6",
+    "eslint": "7.27.0",
     "ganache-cli": "6.12.2",
     "ganache-core": "2.13.2",
-    "lodash": "^4.17.19",
-    "mocha": "^5.0.1",
-    "sinon": "^4.4.2"
+    "lodash": "4.17.21",
+    "mocha": "8.4.0",
+    "sinon": "10.0.0"
   }
 }
