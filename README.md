@@ -9,8 +9,10 @@ For redundancy, run multiple instances in parallel attached to different Ethereu
 ## Building
 Project uses npm for package management.
 
-- Start off by installing required dependencies with `npm install`
-- To run tests `npm test`
+- Start off by installing required dependencies with `npm ci`
+- To run tests `npm test` or `make test`
+- To build local Docker image, start Streamr Docker stack and to see logs run
+  `make docker-build start log`
 
 ## Running
 In most cases, you will want to run this service as a [pre-built Docker image](https://hub.docker.com/r/streamr/ethereum-watcher/).
@@ -19,7 +21,7 @@ See https://github.com/streamr-dev/streamr-docker-dev for more information on ho
 If you are developing this service in particular, or are otherwise inclined, you can run this service with `npm start`.
 
 ## Publishing
-The project is automatically tested and built using Travis CI. If and when all tests pass, a [Docker image](https://hub.docker.com/r/streamr/data-api/) is built and pushed to DockerHub by Travis CI.
+The project is automatically tested and built using GitHub Actions. If and when all tests pass, a [Docker image](https://hub.docker.com/r/streamr/data-api/) is built and pushed to DockerHub by GitHub Actions.
 
 ## License
 

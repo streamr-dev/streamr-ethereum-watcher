@@ -1,5 +1,4 @@
-# .gitignore doesn't work for tracked files  /:  please don't commit it
-#logs/lastBlock
+/lastBlock
 
 # npm
 node_modules
