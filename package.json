@@ -1,6 +1,6 @@
 {
   "name": "streamr-ethereum-watcher",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "Watch Ethereum blocks as they come, send relevant info to Streamr",
   "main": "index.js",
   "scripts": {
