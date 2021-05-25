@@ -3,33 +3,49 @@ const log = require("./src/log")
 const fs = require("fs")
 const StreamrClient = require("streamr-client")
 const ethers = require("ethers")
-const yargs = require("yargs")
+const yargs = require("yargs/yargs")
+const { hideBin } = require("yargs/helpers")
 const { throwIfNotContract } = require("./src/checkArguments")
 const Watcher = require("./src/watcher")
 const Informer = require("./src/informer")
 const Marketplace = require("./lib/marketplace-contracts/build/contracts/Marketplace.json")
 
-const {
-    marketplaceAddress,
-    networkId,
-    ethereumServerURL,
-    streamrApiURL,
-    devopsKey,
-    verbose,
-    logDir = "logs"     // also where the persisted program state (lastBlock) lives
-} = yargs.argv
+const args = yargs(hideBin(process.argv))
+    .option("marketplaceAddress", {
+        string: true,
+    })
+    .option("networkId", {
+        number: true,
+    })
+    .option("ethereumServerURL", {
+        string: true,
+    })
+    .option("streamrApiURL", {
+        string: true,
+    })
+    .option("devopsKey", {
+        string: true,
+    })
+    .option("verbose", {
+        number: true,
+    })
+    .option("logDir", {
+        string: true,
+        default: "logs", // also where the persisted program state (lastBlock) lives
+    })
+    .argv
 
 try {
-    new ethers.Wallet(devopsKey)
+    new ethers.Wallet(args.devopsKey)
 } catch (e) {
-    log.error(`Bad --devopsKey argument "${devopsKey}", expected a valid Ethereum key`)
+    log.error(`Bad --devopsKey argument "${args.devopsKey}", expected a valid Ethereum key`)
     process.exit(1)
 }
 
 async function getSessionToken() {
     const client = new StreamrClient({
         auth: {
-            privateKey: devopsKey
+            privateKey: args.devopsKey
         }
     })
     return client.session.getSessionToken()
@@ -37,41 +53,41 @@ async function getSessionToken() {
 
 async function start() {
     let provider = null
-    if (networkId) {
-        if (ethereumServerURL) {
-            provider = new ethers.providers.JsonRpcProvider(ethereumServerURL)
+    if (args.networkId) {
+        if (args.ethereumServerURL) {
+            provider = new ethers.providers.JsonRpcProvider(args.ethereumServerURL)
         } else {
-            provider = ethers.getDefaultProvider(networkId)
+            provider = ethers.getDefaultProvider(args.networkId)
         }
-    } else if (ethereumServerURL) {
-        provider = new ethers.providers.JsonRpcProvider(ethereumServerURL)
+    } else if (args.ethereumServerURL) {
+        provider = new ethers.providers.JsonRpcProvider(args.ethereumServerURL)
     }
     if (!provider) { throw new Error("missing --ethereumServerURL or --networkId!") }
 
     const network = await provider.getNetwork().catch(e => {
-        throw new Error(`Connecting to Ethereum failed, --networkId=${networkId} --ethereumServerURL=${ethereumServerURL}: ${e.message}`)
+        throw new Error(`Connecting to Ethereum failed, --networkId=${args.networkId} --ethereumServerURL=${args.ethereumServerURL}: ${e.message}`)
     })
     log.info("Connected to Ethereum network: ", JSON.stringify(network))
 
     // deployed using truffle, mainnet tx: https://etherscan.io/tx/0x868a6604e6c33ebc52a3fe5d020d970fdd0019e8eb595232599d67f91624d877
-    const deployedMarketplaceAddress = Marketplace.networks[networkId] && Marketplace.networks[networkId].address
+    const deployedMarketplaceAddress = Marketplace.networks[args.networkId] && Marketplace.networks[args.networkId].address
 
-    const addr = marketplaceAddress || deployedMarketplaceAddress
+    const addr = args.marketplaceAddress || deployedMarketplaceAddress
     if (!addr) { throw new Error("Requires --marketplaceAddress or --networkId one of " + Object.keys(Marketplace.networks).join(", ")) }
-    const marketAddress = await throwIfNotContract(provider, marketplaceAddress || deployedMarketplaceAddress)
+    const marketAddress = await throwIfNotContract(provider, args.marketplaceAddress || deployedMarketplaceAddress)
 
     const watcher = new Watcher(provider, marketAddress)
 
-    const informer = new Informer(streamrApiURL, getSessionToken)
+    const informer = new Informer(args.streamrApiURL, getSessionToken)
 
-    if (verbose) {
+    if (args.verbose) {
         watcher.on("productDeployed", (id, body) => { log.info(`Product ${id} deployed ${JSON.stringify(body)}`) })
         watcher.on("productUndeployed", (id, body) => { log.info(`Product ${id} UNdeployed ${JSON.stringify(body)}`) })
         watcher.on("productUpdated", (id, body) => { log.info(`Product ${id} UPDATED ${JSON.stringify(body)}`) })
         watcher.on("subscribed", (body) => { log.info(`Product ${body.product} subscribed ${JSON.stringify(body)}`) })
-        if (verbose > 1) {
-            watcher.logger = (...args) => { log.info(" Watcher >", ...args) }
-            informer.logger = (...args) => { log.info(" watcher/Informer >", ...args) }
+        if (args.verbose > 1) {
+            watcher.logger = (...msgs) => { log.info(" Watcher >", ...msgs) }
+            informer.logger = (...msgs) => { log.info(" watcher/Informer >", ...msgs) }
             watcher.on("event", event => {
                 log.info(`    Watcher detected event: ${JSON.stringify(event)}`)
             })
@@ -90,11 +106,11 @@ async function start() {
     })
 
     // write on disk how many blocks have been processed
-    const lastBlockPath = logDir + "/lastBlock"
+    const lastBlockPath = args.logDir + "/lastBlock"
     watcher.on("eventSuccessfullyProcessed", event => {
         fs.writeFile(lastBlockPath, event.blockNumber.toString(), err => {
             if (err) { throw err }
-            if (verbose > 2) {
+            if (args.verbose > 2) {
                 log.info(`Processed https://etherscan.io/block/${event.blockNumber}. Wrote ${lastBlockPath}.`)
             }
         })
