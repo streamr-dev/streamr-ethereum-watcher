@@ -29,9 +29,9 @@ const args = yargs(hideBin(process.argv))
     .option("verbose", {
         number: true,
     })
-    .option("logDir", {
+    .option("lastBlockDir", {
         string: true,
-        default: "logs", // also where the persisted program state (lastBlock) lives
+        default: ".",
     })
     .argv
 
@@ -106,7 +106,7 @@ async function start() {
     })
 
     // write on disk how many blocks have been processed
-    const lastBlockPath = args.logDir + "/lastBlock"
+    const lastBlockPath = args.lastBlockDir + "/lastBlock"
     watcher.on("eventSuccessfullyProcessed", event => {
         fs.writeFile(lastBlockPath, event.blockNumber.toString(), err => {
             if (err) { throw err }
