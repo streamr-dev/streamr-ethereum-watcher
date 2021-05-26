@@ -108,7 +108,7 @@ jobs:
           wait_time=10;
           for (( i=0; i < 5; i=i+1 )); do
             docker logs streamr-dev-ethereum-watcher > out.txt
-            grep -q "Starting watcher for" out.txt
+            grep -q "Connected to Ethereum network" out.txt
             res=$?
             if test "$res" != "0"; then
               echo "Attempting to connect to Ethereum-Watcher retrying in $wait_time seconds"
@@ -119,7 +119,7 @@ jobs:
             fi
           done
           set -e
-          grep -q "Starting watcher for" out.txt
+          grep -q "Connected to Ethereum network" out.txt
       - name: Login to GitHub Container Registry
         uses: docker/login-action@v1.8.0
         with:
