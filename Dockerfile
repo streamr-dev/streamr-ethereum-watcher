@@ -28,5 +28,4 @@ CMD node index.js \
     --devopsKey=${DEVOPS_KEY} \
     --networkId=${NETWORK_ID} \
     --ethereumServerURL=${ETHEREUM_SERVER_URL} \
-    --verbose=2 \
     --marketplaceAddress=${MARKETPLACE_ADDRESS}

@@ -26,9 +26,6 @@ const args = yargs(hideBin(process.argv))
     .option("devopsKey", {
         string: true,
     })
-    .option("verbose", {
-        number: true,
-    })
     .option("lastBlockDir", {
         string: true,
         default: ".",
@@ -77,22 +74,17 @@ async function start() {
     const marketAddress = await throwIfNotContract(provider, args.marketplaceAddress || deployedMarketplaceAddress)
 
     const watcher = new Watcher(provider, marketAddress)
-
+    watcher.logger = (...msgs) => { log.info(" Watcher >", ...msgs) }
     const informer = new Informer(args.streamrApiURL, getSessionToken)
+    informer.logger = (...msgs) => { log.info(" watcher/Informer >", ...msgs) }
 
-    if (args.verbose) {
-        watcher.on("productDeployed", (id, body) => { log.info(`Product ${id} deployed ${JSON.stringify(body)}`) })
-        watcher.on("productUndeployed", (id, body) => { log.info(`Product ${id} UNdeployed ${JSON.stringify(body)}`) })
-        watcher.on("productUpdated", (id, body) => { log.info(`Product ${id} UPDATED ${JSON.stringify(body)}`) })
-        watcher.on("subscribed", (body) => { log.info(`Product ${body.product} subscribed ${JSON.stringify(body)}`) })
-        if (args.verbose > 1) {
-            watcher.logger = (...msgs) => { log.info(" Watcher >", ...msgs) }
-            informer.logger = (...msgs) => { log.info(" watcher/Informer >", ...msgs) }
-            watcher.on("event", event => {
-                log.info(`    Watcher detected event: ${JSON.stringify(event)}`)
-            })
-        }
-    }
+    watcher.on("productDeployed", (id, body) => { log.info(`Product ${id} deployed ${JSON.stringify(body)}`) })
+    watcher.on("productUndeployed", (id, body) => { log.info(`Product ${id} UNdeployed ${JSON.stringify(body)}`) })
+    watcher.on("productUpdated", (id, body) => { log.info(`Product ${id} UPDATED ${JSON.stringify(body)}`) })
+    watcher.on("subscribed", (body) => { log.info(`Product ${body.product} subscribed ${JSON.stringify(body)}`) })
+    watcher.on("event", event => {
+        log.info(`    Watcher detected event: ${JSON.stringify(event)}`)
+    })
     await watcher.checkMarketplaceAddress()
 
     // set up reporting
@@ -110,9 +102,7 @@ async function start() {
     watcher.on("eventSuccessfullyProcessed", event => {
         fs.writeFile(lastBlockPath, event.blockNumber.toString(), err => {
             if (err) { throw err }
-            if (args.verbose > 2) {
-                log.info(`Processed https://etherscan.io/block/${event.blockNumber}. Wrote ${lastBlockPath}.`)
-            }
+            log.info(`Processed https://etherscan.io/block/${event.blockNumber}. Wrote ${lastBlockPath}.`)
         })
     })
 
