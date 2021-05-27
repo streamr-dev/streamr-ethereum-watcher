@@ -12,20 +12,13 @@ FROM node:14-buster-slim
 WORKDIR /app
 COPY --from=builder /app/ .
 
-# Default environment variables
-# App Variables
-ENV STREAMR_API_URL=http://localhost:8081/streamr-core/api/v1
-# core-api devops account private key in test db
-ENV DEVOPS_KEY=0x628acb12df34bb30a0b2f95ec2e6a743b386c5d4f63aa9f338bec6f613160e78
-ENV NETWORK_ID=rinkeby
-ENV MARKETPLACE_ADDRESS=0xf1371c0f40528406dc4f4caf89924ea9da49e866
-ENV ETHEREUM_SERVER_URL=http://10.200.10.1:8545
+# Environment variables for development
+ENV DEVOPS_KEY="0x628acb12df34bb30a0b2f95ec2e6a743b386c5d4f63aa9f338bec6f613160e78"
+ENV ETHEREUM_SERVER_URL="http://10.200.10.1:8545"
+ENV STREAMR_API_URL="http://localhost:8081/streamr-core/api/v1"
+ENV NETWORK_ID="8995"
+ENV MARKETPLACE_ADDRESS="0xf1371c0f40528406dc4f4caf89924ea9da49e866"
+ENV LAST_BLOCK_DIR="."
+ENV NODE_ENV="development"
 
-ENTRYPOINT ["sh", "docker-entrypoint.sh"]
-
-CMD node index.js \
-    --streamrApiURL=${STREAMR_API_URL} \
-    --devopsKey=${DEVOPS_KEY} \
-    --networkId=${NETWORK_ID} \
-    --ethereumServerURL=${ETHEREUM_SERVER_URL} \
-    --marketplaceAddress=${MARKETPLACE_ADDRESS}
+ENTRYPOINT ["node", "index.js"]
