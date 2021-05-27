@@ -1,32 +1,35 @@
 const fetch = require("node-fetch")
-const urlJoin = require("url-join")
 
 class Informer {
     constructor(streamrUrl, sessionTokenGetterFunc) {
         if (!streamrUrl) {
             throw new Error("No streamUrl given")
         }
-        this.streamrUrl = streamrUrl
+        if (streamrUrl.endsWith("/")) {
+            this.streamrUrl = streamrUrl.slice(0, streamrUrl.length - 1)
+        } else {
+            this.streamrUrl = streamrUrl
+        }
         this.getSessionToken = sessionTokenGetterFunc
     }
 
     setDeployed(id, body) {
-        const apiUrl = urlJoin(this.streamrUrl, `/products/${id}/setDeployed`)
+        const apiUrl = `${this.streamrUrl}/products/${id}/setDeployed`
         return this._post(apiUrl, body)
     }
 
     setUndeployed(id, body) {
-        const apiUrl = urlJoin(this.streamrUrl, `/products/${id}/setUndeployed`)
+        const apiUrl = `${this.streamrUrl}/products/${id}/setUndeployed`
         return this._post(apiUrl, body)
     }
 
     productUpdated(id, body) {
-        const apiUrl = urlJoin(this.streamrUrl, `/products/${id}/setPricing`)
+        const apiUrl = `${this.streamrUrl}/products/${id}/setPricing`
         return this._post(apiUrl, body)
     }
 
     subscribe(body) {
-        const apiUrl = urlJoin(this.streamrUrl, "/subscriptions")
+        const apiUrl = `${this.streamrUrl}/subscriptions`
         return this._post(apiUrl, body)
     }
 

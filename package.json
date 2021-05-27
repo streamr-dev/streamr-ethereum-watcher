@@ -18,8 +18,7 @@
     "ethers": "4.0.48",
     "node-fetch": "2.6.1",
     "promise-events": "0.2.4",
-    "streamr-client": "5.4.1",
-    "url-join": "4.0.1"
+    "streamr-client": "5.4.1"
   },
   "devDependencies": {
     "eslint": "7.27.0",
