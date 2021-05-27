@@ -55,8 +55,6 @@ class Watcher extends EventEmitter {
             .filter(f => f.constant && f.inputs.length === 0)
             .map(f => f.name)
         for (const getterName of getterNames) {
-            // throws "Error: contract not deployed" if address is bad
-            // throws "Error: call exception" if getter not available (probably wrong contract)
             const value = await this.market[getterName]()
             this.logger(`  ${getterName}: ${value}`)
         }
@@ -69,7 +67,6 @@ class Watcher extends EventEmitter {
         if (this.isRunning) {
             throw new Error("Already started!")
         }
-        //await this.checkMarketplaceAddress()
 
         this.isRunning = true
         this.logger(`Starting watcher for Marketplace at ${this.market.address}`)
