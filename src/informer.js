@@ -34,16 +34,16 @@ class Informer {
         // log nothing by default, allow override for logging
     }
 
-    _post(apiUrl, body, method = "POST") {
+    _post(apiUrl, body) {
         let logBody = ""
         if (body) {
             logBody = "\n" + JSON.stringify(body, null, 4)
         }
-        this.logger(method, apiUrl, logBody)
+        this.logger("POST", apiUrl, logBody)
 
         return this.getSessionToken().then(sessionToken =>
             fetch(apiUrl, {
-                method,
+                method: "POST",
                 body: JSON.stringify(body),
                 headers: {
                     "Accept": "application/json",
