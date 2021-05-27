@@ -3,13 +3,13 @@ Description=Ethereum Watcher for Mainnet
 After=network.target
 
 [Service]
-Environment='DEVOPS_KEY="TODO"'
-Environment='ETHEREUM_SERVER_URL="TODO"'
-Environment='STREAMR_API_URL="https://streamr.network/api/v1"'
-Environment='NETWORK_ID="1"'
-Environment='MARKETPLACE_ADDRESS="0x2b3f2887c697b3f4f8d9f818c95482e1a3a759a5"'
-Environment='LAST_BLOCK_DIR="/srv/ethereum-watcher-mainnet"'
-Environment='NODE_ENV="production"'
+Environment="DEVOPS_KEY=TODO"
+Environment="ETHEREUM_SERVER_URL=TODO"
+Environment="STREAMR_API_URL=https://streamr.network/api/v1"
+Environment="NETWORK_ID=1"
+Environment="MARKETPLACE_ADDRESS=0x2b3f2887c697b3f4f8d9f818c95482e1a3a759a5"
+Environment="LAST_BLOCK_DIR=/srv/ethereum-watcher-mainnet"
+Environment="NODE_ENV=production"
 WorkingDirectory=/home/ubuntu/streamr-ethereum-watcher
 Type=simple
 User=ubuntu
