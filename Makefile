@@ -4,8 +4,17 @@ SHELL = /bin/bash
 .ONESHELL:
 .DEFAULT_GOAL = test
 
+# Development env
+export DEVOPS_KEY=0x628acb12df34bb30a0b2f95ec2e6a743b386c5d4f63aa9f338bec6f613160e78
+export ETHEREUM_SERVER_URL=http://10.200.10.1:8545
+export STREAMR_API_URL=http://localhost:8081/streamr-core/api/v1
+export NETWORK_ID=8995
+export MARKETPLACE_ADDRESS=0xf1371c0f40528406dc4f4caf89924ea9da49e866
+export LAST_BLOCK_DIR=.
+export NODE_ENV=development
+
 #
-# Npm recipes
+# nvm, Node and Npm macros
 #
 nvm_brew = /usr/local/opt/nvm/nvm.sh
 ifneq ("$(wildcard $(nvm_brew))", "")
@@ -19,6 +28,10 @@ node_version = $(shell cat .nvmrc)
 define npm
 	@$(eval npm_args=$(1))
 	/bin/bash -e -o pipefail -l -c "source $(nvm_sh) && nvm exec $(node_version) npm $(npm_args)"
+endef
+define node
+	@$(eval node_args=$(1))
+	/bin/bash -e -o pipefail -l -c "source $(nvm_sh) && nvm exec $(node_version) node $(node_args)"
 endef
 
 node_modules: ## Run 'npm ci' if directory doesn't exist
@@ -34,7 +47,7 @@ test: lint ## Run npm run test
 
 .PHONY: run
 run: node_modules ## Run npm run start
-	$(call npm, run start)
+	$(call node, index.js)
 
 .PHONY: docker-build
 docker-build: ## Build Docker dev container
