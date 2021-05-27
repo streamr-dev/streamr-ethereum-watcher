@@ -1,7 +1,7 @@
 const EventEmitter = require("promise-events")
 const ethers = require("ethers")
 const Marketplace = require("../lib/marketplace-contracts/build/contracts/Marketplace.json")
-const { Marketplace: { currencySymbol } } = require("../lib/marketplace-contracts/src/contracts/enums")
+const {Marketplace: {currencySymbol}} = require("../lib/marketplace-contracts/src/contracts/enums")
 
 const EE_PRICE_SCALE = new ethers.utils.BigNumber(1e9)  // scale price to "nanotokens"/token-gwei so that it fits into mysql and Java long
 // "warp" to this block; before this block there weren't (too many) events
@@ -51,7 +51,9 @@ class Watcher extends EventEmitter {
      */
     async checkMarketplaceAddress() {
         this.logger(`Checking the Marketplace contract at ${this.market.address}:`)
-        const getterNames = this.abi.filter(f => f.constant && f.inputs.length === 0).map(f => f.name)
+        const getterNames = this.abi
+            .filter(f => f.constant && f.inputs.length === 0)
+            .map(f => f.name)
         for (const getterName of getterNames) {
             // throws "Error: contract not deployed" if address is bad
             // throws "Error: call exception" if getter not available (probably wrong contract)
@@ -85,7 +87,7 @@ class Watcher extends EventEmitter {
         this.watchEvent("SubscriptionTransferred", this.logEvent)
         this.watchEvent("ExchangeRatesUpdated", this.logEvent)
 
-        this.provider.on({ address: this.market.address }, log => {
+        this.provider.on({address: this.market.address}, log => {
             this.logger("Event logged at " + log.blockNumber)
         })
     }
@@ -97,10 +99,11 @@ class Watcher extends EventEmitter {
         this.market.on(filter, (...args) => {
             const event = args.pop()
             self.logger(`Event: ${event.event}, args: ${JSON.stringify(args.map(a => a.toString()))}`)
-            handler.call(self, event.blockNumber, event.transactionIndex, event.args).catch(async (e) => {
-                await self.emit("error", e)
-                self.logger("Error while sending event: " + e.stack)
-            })
+            handler.call(self, event.blockNumber, event.transactionIndex, event.args)
+                .catch(async (e) => {
+                    await self.emit("error", e)
+                    self.logger("Error while sending event: " + e.stack)
+                })
         })
     }
 
@@ -112,23 +115,41 @@ class Watcher extends EventEmitter {
     // SYNCHRONOUSLY play back events one by one. Wait for promise to return before sending the next one
     async playbackStep(fromBlock, toBlock) {
         this.logger(`  Getting events from blocks ${fromBlock}...${toBlock}`)
-        const filter = { fromBlock, toBlock, address: this.market.address }
+        const filter = {
+            fromBlock,
+            toBlock,
+            address: this.market.address,
+        }
         const events = await this.provider.getLogs(filter)
         this.logger(`    Playing back ${events.length} events`)
         for (let raw of events) {
             const event = this.market.interface.parseLog(raw)
             try {
                 switch (event.name) {
-                    case "ProductCreated": await this.onDeployEvent(raw.blockNumber, raw.transactionIndex, event.values); break
-                    case "ProductRedeployed": await this.onDeployEvent(raw.blockNumber, raw.transactionIndex, event.values); break
-                    case "ProductDeleted": await this.onUndeployEvent(raw.blockNumber, raw.transactionIndex, event.values); break
-                    case "ProductUpdated": await this.onUpdateEvent(raw.blockNumber, raw.transactionIndex, event.values); break
-                    case "ProductOwnershipChanged": await this.onOwnershipUpdateEvent(raw.blockNumber, raw.transactionIndex, event.values); break
-                    case "Subscribed": await this.onSubscribeEvent(raw.blockNumber, raw.transactionIndex, event.values); break
+                    case "ProductCreated":
+                        await this.onDeployEvent(raw.blockNumber, raw.transactionIndex, event.values)
+                        break
+                    case "ProductRedeployed":
+                        await this.onDeployEvent(raw.blockNumber, raw.transactionIndex, event.values)
+                        break
+                    case "ProductDeleted":
+                        await this.onUndeployEvent(raw.blockNumber, raw.transactionIndex, event.values)
+                        break
+                    case "ProductUpdated":
+                        await this.onUpdateEvent(raw.blockNumber, raw.transactionIndex, event.values)
+                        break
+                    case "ProductOwnershipChanged":
+                        await this.onOwnershipUpdateEvent(raw.blockNumber, raw.transactionIndex, event.values)
+                        break
+                    case "Subscribed":
+                        await this.onSubscribeEvent(raw.blockNumber, raw.transactionIndex, event.values)
+                        break
                 }
             } catch (e) {
                 // if it was because streamr backend couldn't find the product for set(Un)Deployed, just keep chugging
-                if (e.code === "ECONNREFUSED") { continue }
+                if (e.code === "ECONNREFUSED") {
+                    continue
+                }
                 throw e
             }
         }
@@ -152,7 +173,7 @@ class Watcher extends EventEmitter {
         while (b < toBlock - playbackStep) {
             await this.playbackStep(b, b + playbackStep)
             b += playbackStep
-            await this.emit("eventSuccessfullyProcessed", { blockNumber: b - 1 })
+            await this.emit("eventSuccessfullyProcessed", {blockNumber: b - 1})
         }
         await this.playbackStep(b, toBlock)
     }

@@ -56,7 +56,7 @@ wipe: ## Run streamr-docker-dev stop and wipe
 	streamr-docker-dev wipe
 
 .PHONY: start
-start:
+start: ## Start Docker stack required for running ethereum watcher
 	streamr-docker-dev start ethereum-watcher
 
 .PHONY: stop

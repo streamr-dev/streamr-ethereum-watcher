@@ -35,7 +35,11 @@ class Informer {
     }
 
     _post(apiUrl, body, method = "POST") {
-        this.logger(method, apiUrl, body ? "\n" + JSON.stringify(body, null, 4) : "")
+        let logBody = ""
+        if (body) {
+            logBody = "\n" + JSON.stringify(body, null, 4)
+        }
+        this.logger(method, apiUrl, logBody)
 
         return this.getSessionToken().then(sessionToken =>
             fetch(apiUrl, {

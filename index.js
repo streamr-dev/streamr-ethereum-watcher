@@ -4,8 +4,8 @@ const fs = require("fs")
 const StreamrClient = require("streamr-client")
 const ethers = require("ethers")
 const yargs = require("yargs/yargs")
-const { hideBin } = require("yargs/helpers")
-const { throwIfNotContract } = require("./src/checkArguments")
+const {hideBin} = require("yargs/helpers")
+const {throwIfNotContract} = require("./src/checkArguments")
 const Watcher = require("./src/watcher")
 const Informer = require("./src/informer")
 const Marketplace = require("./lib/marketplace-contracts/build/contracts/Marketplace.json")
@@ -59,7 +59,9 @@ async function start() {
     } else if (args.ethereumServerURL) {
         provider = new ethers.providers.JsonRpcProvider(args.ethereumServerURL)
     }
-    if (!provider) { throw new Error("missing --ethereumServerURL or --networkId!") }
+    if (!provider) {
+        throw new Error("missing --ethereumServerURL or --networkId!")
+    }
 
     const network = await provider.getNetwork().catch(e => {
         throw new Error(`Connecting to Ethereum failed, --networkId=${args.networkId} --ethereumServerURL=${args.ethereumServerURL}: ${e.message}`)
@@ -70,18 +72,32 @@ async function start() {
     const deployedMarketplaceAddress = Marketplace.networks[args.networkId] && Marketplace.networks[args.networkId].address
 
     const addr = args.marketplaceAddress || deployedMarketplaceAddress
-    if (!addr) { throw new Error("Requires --marketplaceAddress or --networkId one of " + Object.keys(Marketplace.networks).join(", ")) }
+    if (!addr) {
+        throw new Error("Requires --marketplaceAddress or --networkId one of " + Object.keys(Marketplace.networks).join(", "))
+    }
     const marketAddress = await throwIfNotContract(provider, args.marketplaceAddress || deployedMarketplaceAddress)
 
     const watcher = new Watcher(provider, marketAddress)
-    watcher.logger = (...msgs) => { log.info(" Watcher >", ...msgs) }
+    watcher.logger = (...msgs) => {
+        log.info(" Watcher >", ...msgs)
+    }
     const informer = new Informer(args.streamrApiURL, getSessionToken)
-    informer.logger = (...msgs) => { log.info(" watcher/Informer >", ...msgs) }
+    informer.logger = (...msgs) => {
+        log.info(" watcher/Informer >", ...msgs)
+    }
 
-    watcher.on("productDeployed", (id, body) => { log.info(`Product ${id} deployed ${JSON.stringify(body)}`) })
-    watcher.on("productUndeployed", (id, body) => { log.info(`Product ${id} UNdeployed ${JSON.stringify(body)}`) })
-    watcher.on("productUpdated", (id, body) => { log.info(`Product ${id} UPDATED ${JSON.stringify(body)}`) })
-    watcher.on("subscribed", (body) => { log.info(`Product ${body.product} subscribed ${JSON.stringify(body)}`) })
+    watcher.on("productDeployed", (id, body) => {
+        log.info(`Product ${id} deployed ${JSON.stringify(body)}`)
+    })
+    watcher.on("productUndeployed", (id, body) => {
+        log.info(`Product ${id} UNdeployed ${JSON.stringify(body)}`)
+    })
+    watcher.on("productUpdated", (id, body) => {
+        log.info(`Product ${id} UPDATED ${JSON.stringify(body)}`)
+    })
+    watcher.on("subscribed", (body) => {
+        log.info(`Product ${body.product} subscribed ${JSON.stringify(body)}`)
+    })
     watcher.on("event", event => {
         log.info(`    Watcher detected event: ${JSON.stringify(event)}`)
     })
@@ -101,7 +117,9 @@ async function start() {
     const lastBlockPath = args.lastBlockDir + "/lastBlock"
     watcher.on("eventSuccessfullyProcessed", event => {
         fs.writeFile(lastBlockPath, event.blockNumber.toString(), err => {
-            if (err) { throw err }
+            if (err) {
+                throw err
+            }
             log.info(`Processed https://etherscan.io/block/${event.blockNumber}. Wrote ${lastBlockPath}.`)
         })
     })
@@ -132,7 +150,9 @@ async function start() {
     return new Promise((done, fail) => {
         watcher.on("error", e => {
             // if it was because streamr backend couldn't find the product for set(Un)Deployed, just keep chugging
-            if (e.code === "ECONNREFUSED") { return }
+            if (e.code === "ECONNREFUSED") {
+                return
+            }
 
             fail(e)
         })
