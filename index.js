@@ -62,13 +62,7 @@ async function start() {
     const marketAddress = await throwIfNotContract(provider, marketplaceAddress || deployedMarketplaceAddress)
 
     const watcher = new Watcher(provider, marketAddress)
-    watcher.logger = (...msgs) => {
-        log.info(" Watcher >", ...msgs)
-    }
     const informer = new Informer(streamrApiURL, getSessionToken)
-    informer.logger = (...msgs) => {
-        log.info(" watcher/Informer >", ...msgs)
-    }
 
     watcher.on("productDeployed", (id, body) => {
         log.info(`Product ${id} deployed ${JSON.stringify(body)}`)

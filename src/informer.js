@@ -1,3 +1,4 @@
+const log = require("./log")
 const fetch = require("node-fetch")
 
 class Informer {
@@ -33,16 +34,12 @@ class Informer {
         return this._post(apiUrl, body)
     }
 
-    logger() {
-        // log nothing by default, allow override for logging
-    }
-
     _post(apiUrl, body) {
         let logBody = ""
         if (body) {
             logBody = "\n" + JSON.stringify(body, null, 4)
         }
-        this.logger("POST", apiUrl, logBody)
+        log.info(" watcher/Informer > POST ", apiUrl, logBody)
 
         return this.getSessionToken().then(sessionToken =>
             fetch(apiUrl, {
