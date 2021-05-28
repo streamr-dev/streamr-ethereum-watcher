@@ -1,11 +1,11 @@
 module.exports = {
-    error(data) {
-        console.error(data) // eslint-disable-line no-console
+    error(...messages) {
+        console.error(...messages) // eslint-disable-line no-console
     },
-    warn(data) {
-        console.warn(data) // eslint-disable-line no-console
+    warn(...messages) {
+        console.warn(...messages) // eslint-disable-line no-console
     },
-    info(data) {
-        console.info(data) // eslint-disable-line no-console
+    info(...messages) {
+        console.info(...messages) // eslint-disable-line no-console
     }
 }
