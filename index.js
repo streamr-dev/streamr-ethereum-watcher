@@ -64,31 +64,25 @@ async function start() {
     const informer = new Informer(streamrApiURL, getSessionToken)
 
     watcher.on("productDeployed", (id, body) => {
+        informer.setDeployed(id, body)
         log.info(`Product ${id} deployed ${JSON.stringify(body)}`)
     })
     watcher.on("productUndeployed", (id, body) => {
+        informer.setUndeployed(id, body)
         log.info(`Product ${id} UNdeployed ${JSON.stringify(body)}`)
     })
     watcher.on("productUpdated", (id, body) => {
+        informer.productUpdated(id, body)
         log.info(`Product ${id} UPDATED ${JSON.stringify(body)}`)
     })
     watcher.on("subscribed", (body) => {
+        informer.subscribe(body)
         log.info(`Product ${body.product} subscribed ${JSON.stringify(body)}`)
     })
     watcher.on("event", event => {
         log.info(`    Watcher detected event: ${JSON.stringify(event)}`)
     })
     await watcher.checkMarketplaceAddress()
-
-    // set up reporting
-    watcher.on("productDeployed", informer.setDeployed.bind(informer))
-    watcher.on("productUndeployed", informer.setUndeployed.bind(informer))
-    watcher.on("productUpdated", informer.productUpdated.bind(informer))
-    watcher.on("subscribed", informer.subscribe.bind(informer))
-
-    watcher.on("event", event => {
-        log.info(`event: ${event.event}`)
-    })
 
     // write on disk how many blocks have been processed
     const store = new LastBlockStore(lastBlockDir)
