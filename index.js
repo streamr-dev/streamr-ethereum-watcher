@@ -119,10 +119,9 @@ async function start() {
         lastRecorded = lastActual
         lastActual = await provider.getBlockNumber()
     }
-    log.info("Playback done")
+    log.info("Playback done. Starting watcher...")
 
     // report new blocks as they arrive
-    log.info("Starting watcher...")
     await watcher.start()
 
     return new Promise((done, fail) => {
