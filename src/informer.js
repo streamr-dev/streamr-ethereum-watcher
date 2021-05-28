@@ -37,9 +37,9 @@ class Informer {
     _post(apiUrl, body) {
         let logBody = ""
         if (body) {
-            logBody = "\n" + JSON.stringify(body, null, 4)
+            logBody = JSON.stringify(body)
         }
-        log.info(" watcher/Informer > POST ", apiUrl, logBody)
+        log.info("Watcher/Informer > POST", apiUrl, logBody)
 
         return this.getSessionToken().then(sessionToken =>
             fetch(apiUrl, {

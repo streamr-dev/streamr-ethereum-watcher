@@ -47,14 +47,15 @@ class Watcher extends EventEmitter {
      * Check this.market really looks like a Marketplace and not something funny
      */
     async checkMarketplaceAddress() {
-        log.info(` Watcher > Checking the Marketplace contract at ${this.market.address}:`)
         const getterNames = this.abi
             .filter(f => f.constant && f.inputs.length === 0)
             .map(f => f.name)
+        let msg = ""
         for (const getterName of getterNames) {
             const value = await this.market[getterName]()
-            log.info(` Watcher >   ${getterName}: ${value}`)
+            msg += ` ${getterName}: ${value},`
         }
+        log.info(`Watcher > Checking the Marketplace contract at ${this.market.address}: ${msg}`)
     }
 
     /**
@@ -66,7 +67,7 @@ class Watcher extends EventEmitter {
         }
 
         this.isRunning = true
-        log.info(` Watcher > Starting watcher for Marketplace at ${this.market.address}`)
+        log.info(`Watcher > Starting watcher for Marketplace at ${this.market.address}`)
 
         this.watchEvent("ProductCreated", this.onDeployEvent)
         this.watchEvent("ProductRedeployed", this.onDeployEvent)
@@ -82,7 +83,7 @@ class Watcher extends EventEmitter {
         this.watchEvent("ExchangeRatesUpdated", this.logEvent)
 
         this.provider.on({address: this.market.address}, logEntry => {
-            log.info(" Watcher > Event logged at " + logEntry.blockNumber)
+            log.info("Watcher > Event logged at " + logEntry.blockNumber)
         })
     }
 
@@ -92,30 +93,30 @@ class Watcher extends EventEmitter {
         const self = this
         this.market.on(filter, (...args) => {
             const event = args.pop()
-            log.info(` Watcher > Event: ${event.event}, args: ${JSON.stringify(args.map(a => a.toString()))}`)
+            log.info(`Watcher > Event: ${event.event}, args: ${JSON.stringify(args.map(a => a.toString()))}`)
             handler.call(self, event.blockNumber, event.transactionIndex, event.args)
                 .catch(async (e) => {
                     await self.emit("error", e)
-                    log.error(" Watcher > Error while sending event: " + e.stack)
+                    log.error("Watcher > Error while sending event: " + e.stack)
                 })
         })
     }
 
     async logEvent(...args) {
         const eventObject = args.pop()
-        log.info(` Watcher > Event ignored: ${eventObject.event}, args: ${JSON.stringify(args.map(a => a.toString()))}`)
+        log.warn(`Watcher > Event ignored: ${eventObject.event}, args: ${JSON.stringify(args.map(a => a.toString()))}`)
     }
 
     // SYNCHRONOUSLY play back events one by one. Wait for promise to return before sending the next one
     async playbackStep(fromBlock, toBlock) {
-        log.info(` Watcher >   Getting events from blocks ${fromBlock}...${toBlock}`)
+        log.info(`Watcher > Getting events from blocks ${fromBlock}...${toBlock}`)
         const filter = {
             fromBlock,
             toBlock,
             address: this.market.address,
         }
         const events = await this.provider.getLogs(filter)
-        log.info(` Watcher >     Playing back ${events.length} events`)
+        log.info(`Watcher > Playing back ${events.length} events`)
         for (let raw of events) {
             const event = this.market.interface.parseLog(raw)
             try {
