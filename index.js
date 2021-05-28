@@ -8,19 +8,18 @@ const Watcher = require("./src/watcher")
 const Informer = require("./src/informer")
 const Marketplace = require("./lib/marketplace-contracts/build/contracts/Marketplace.json")
 
-const marketplaceAddress = getEnv("MARKETPLACE_ADDRESS")
-const networkId = getEnv("NETWORK_ID")
-const ethereumServerURL = getEnv("ETHEREUM_SERVER_URL")
-const streamrApiURL = getEnv("STREAMR_API_URL")
-const devopsKey = getEnv("DEVOPS_KEY")
-const lastBlockDir = getEnv("LAST_BLOCK_DIR")
-
-try {
-    new ethers.Wallet(devopsKey)
-} catch (e) {
-    log.error(`Bad --devopsKey argument "${devopsKey}", expected a valid Ethereum key`)
-    process.exit(1)
-}
+const MARKETPLACE_ADDRESS = "MARKETPLACE_ADDRESS"
+const marketplaceAddress = getEnv(MARKETPLACE_ADDRESS)
+const NETWORK_ID = "NETWORK_ID"
+const networkId = getEnv(NETWORK_ID)
+const ETHEREUM_SERVER_URL = "ETHEREUM_SERVER_URL"
+const ethereumServerURL = getEnv(ETHEREUM_SERVER_URL)
+const STREAMR_API_URL = "STREAMR_API_URL"
+const streamrApiURL = getEnv(STREAMR_API_URL)
+const DEVOPS_KEY = "DEVOPS_KEY"
+const devopsKey = getEnv(DEVOPS_KEY)
+const LAST_BLOCK_DIR = "LAST_BLOCK_DIR"
+const lastBlockDir = getEnv(LAST_BLOCK_DIR)
 
 async function getSessionToken() {
     const client = new StreamrClient({
@@ -32,6 +31,12 @@ async function getSessionToken() {
 }
 
 async function start() {
+    try {
+        new ethers.Wallet(devopsKey)
+    } catch (e) {
+        log.error(`Expected a valid Ethereum key for environment variable ${DEVOPS_KEY}="${devopsKey}".`)
+        process.exit(1)
+    }
     let provider = null
     if (networkId) {
         if (ethereumServerURL) {
@@ -43,11 +48,13 @@ async function start() {
         provider = new ethers.providers.JsonRpcProvider(ethereumServerURL)
     }
     if (!provider) {
-        throw new Error("missing --ethereumServerURL or --networkId!")
+        log.error(`Requires ${ETHEREUM_SERVER_URL} or ${NETWORK_ID} environment variables!`)
+        process.exit(1)
     }
 
     const network = await provider.getNetwork().catch(e => {
-        throw new Error(`Connecting to Ethereum failed, --networkId=${networkId} --ethereumServerURL=${ethereumServerURL}: ${e.message}`)
+        log.error(`Connecting to Ethereum failed, ${NETWORK_ID}=${networkId} ${ETHEREUM_SERVER_URL}=${ethereumServerURL}: ${e.message}`)
+        process.exit(1)
     })
     log.info("Connected to Ethereum network: ", JSON.stringify(network))
 
@@ -56,7 +63,8 @@ async function start() {
 
     const addr = marketplaceAddress || deployedMarketplaceAddress
     if (!addr) {
-        throw new Error("Requires --marketplaceAddress or --networkId one of " + Object.keys(Marketplace.networks).join(", "))
+        log.error(`Requires ${MARKETPLACE_ADDRESS} or ${NETWORK_ID} one of ` + Object.keys(Marketplace.networks).join(", "))
+        process.exit(1)
     }
     const marketAddress = await throwIfNotContract(provider, marketplaceAddress || deployedMarketplaceAddress)
 
@@ -80,7 +88,7 @@ async function start() {
         log.info(`Product ${body.product} subscribed ${JSON.stringify(body)}`)
     })
     watcher.on("event", event => {
-        log.info(`    Watcher detected event: ${JSON.stringify(event)}`)
+        log.info(`Watcher detected event: ${JSON.stringify(event)}`)
     })
     await watcher.checkMarketplaceAddress()
 
@@ -119,8 +127,8 @@ async function start() {
 }
 
 start().catch(e => {
-    log.error(e.stack)
+    log.error(`Unexpected error: ${e.stack}`)
     process.exit(1)
 })
 
-log.error("Restart")
+log.error("Unexpected restart.")
