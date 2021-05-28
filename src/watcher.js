@@ -141,6 +141,7 @@ class Watcher extends EventEmitter {
                         break
                 }
             } catch (e) {
+                log.error(`Watcher > unexpected error: ${e}`)
                 // if it was because streamr backend couldn't find the product for set(Un)Deployed, just keep chugging
                 if (e.code === "ECONNREFUSED") {
                     continue

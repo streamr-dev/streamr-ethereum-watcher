@@ -116,6 +116,7 @@ async function start() {
 
     return new Promise((done, fail) => {
         watcher.on("error", e => {
+            log.error(`Unexpected error on main: ${e}`)
             // if it was because streamr backend couldn't find the product for set(Un)Deployed, just keep chugging
             if (e.code === "ECONNREFUSED") {
                 return
