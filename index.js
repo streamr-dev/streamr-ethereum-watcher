@@ -1,7 +1,6 @@
 const log = require("./src/log")
 const {getEnv} = require("./src/env")
-// for persisting last processed block (to avoid full playback every restart)
-const fs = require("fs")
+const LastBlockStore = require("./src/LastBlockStore")
 const StreamrClient = require("streamr-client")
 const ethers = require("ethers")
 const {throwIfNotContract} = require("./src/checkArguments")
@@ -92,30 +91,19 @@ async function start() {
     })
 
     // write on disk how many blocks have been processed
-    const lastBlockPath = lastBlockDir + "/lastBlock"
+    const store = new LastBlockStore(lastBlockDir)
     watcher.on("eventSuccessfullyProcessed", event => {
-        fs.writeFile(lastBlockPath, event.blockNumber.toString(), err => {
-            if (err) {
-                throw err
-            }
-            log.info(`Processed https://etherscan.io/block/${event.blockNumber}. Wrote ${lastBlockPath}.`)
-        })
+        store.write(event.blockNumber.toString())
     })
 
     // catch up the blocks that happened when we were gone
-    let lastRecorded = 0
-    try {
-        const buffer = fs.readFileSync(lastBlockPath)
-        lastRecorded = parseInt(buffer.toString())
-    } catch (e) {
-        log.info("No lastBlock file found. Start from block zero.")
-    }
+    let lastRecorded = store.read()
 
     let lastActual = await provider.getBlockNumber()
     while (lastRecorded < lastActual) {
         log.info(`Playing back blocks ${lastRecorded + 1}...${lastActual} (inclusive)`)
         await watcher.playback(lastRecorded + 1, lastActual)
-        fs.writeFileSync(lastBlockPath, lastActual.toString())
+        store.write(lastActual.toString())
         lastRecorded = lastActual
         lastActual = await provider.getBlockNumber()
     }
