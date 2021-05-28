@@ -8,7 +8,7 @@
             "type": "node",
             "request": "launch",
             "name": "Run watcher (Docker dev)",
-            "program": "${workspaceFolder}/index.js",
+            "program": "${workspaceFolder}/src/main.js",
             "args": [
                 "--streamrApiURL=http://localhost:8081/api/v1",
                 "--devopsKey=devops-user-key",

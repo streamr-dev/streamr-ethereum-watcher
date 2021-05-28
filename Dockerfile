@@ -21,4 +21,4 @@ ENV MARKETPLACE_ADDRESS="0xf1371c0f40528406dc4f4caf89924ea9da49e866"
 ENV LAST_BLOCK_DIR="."
 ENV NODE_ENV="development"
 
-ENTRYPOINT ["node", "index.js"]
+ENTRYPOINT ["node", "src/main.js"]

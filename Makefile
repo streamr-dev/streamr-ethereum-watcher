@@ -47,7 +47,7 @@ test: lint ## Run npm run test
 
 .PHONY: run
 run: node_modules ## Run npm run start
-	$(call node, index.js)
+	$(call node, src/main.js)
 
 .PHONY: docker-build
 docker-build: ## Build Docker dev container
