@@ -5,6 +5,7 @@
   "main": "src/main.js",
   "scripts": {
     "lint": "eslint src test",
+    "fmt": "eslint --fix src",
     "test": "mocha --exit"
   },
   "keywords": [
