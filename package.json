@@ -5,6 +5,7 @@
   "main": "src/main.ts",
   "scripts": {
     "lint": "eslint src test",
+    "fmt": "eslint --fix src",
     "test": "ts-mocha --exit test/*.ts"
   },
   "keywords": [

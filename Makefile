@@ -41,6 +41,10 @@ node_modules: ## Run 'npm ci' if directory doesn't exist
 lint: node_modules ## Run npm lint
 	$(call npm, run lint)
 
+.PHONY: fmt
+fmt: node_modules ## Format source code
+	$(call npm, run fmt)
+
 .PHONY: test
 test: lint ## Run npm run test
 	$(call npm, run test)
