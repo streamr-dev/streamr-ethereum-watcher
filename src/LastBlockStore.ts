@@ -1,10 +1,12 @@
-const log = require("./log")
-const fs = require("fs")
+import log from "./log"
+import fs from "fs"
 
 const filename = "/lastBlock"
 
-class LastBlockStore {
-    constructor(lastBlockDirPath) {
+export default class LastBlockStore {
+    private readonly lastBlockPath: string
+
+    constructor(lastBlockDirPath: string) {
         if (lastBlockDirPath === null) {
             this.lastBlockPath = "."  + filename
         } else {
@@ -12,17 +14,17 @@ class LastBlockStore {
         }
     }
 
-    write(blockNumber) {
+    write(blockNumber: number): void {
         try {
-            fs.writeFileSync(this.lastBlockPath, blockNumber)
+            fs.writeFileSync(this.lastBlockPath, blockNumber.toString())
             log.info(`Processed https://etherscan.io/block/${blockNumber}. Wrote ${this.lastBlockPath}.`)
         } catch (e) {
             log.error(`Error while writing ${this.lastBlockPath} file: ${e.message}`)
         }
     }
 
-    read() {
-        let blockNumber
+    read(): number {
+        let blockNumber: number
         try {
             const buffer = fs.readFileSync(this.lastBlockPath)
             blockNumber = parseInt(buffer.toString())
@@ -33,5 +35,3 @@ class LastBlockStore {
         return blockNumber
     }
 }
-
-module.exports = LastBlockStore

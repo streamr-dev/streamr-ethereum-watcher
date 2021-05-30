@@ -1,16 +1,26 @@
-const sinon = require("sinon")
-const assert = require("assert")
-const ethers = require("ethers")
-const ganache = require("ganache-core")
-const { Marketplace: { Currency } } = require("../lib/marketplace-contracts/src/contracts/enums")
-const deploy = require("./deploy_marketplace")
-const Watcher = require("../src/watcher")
+import sinon from "sinon"
+import assert from "assert"
+import {ethers} from "ethers"
+import ganache from "ganache-core"
+import * as MarketplaceEnums from "../src/MarketplaceEnums"
+import {deploy} from "./deploy_marketplace"
+import Watcher from "../src/watcher"
+const Marketplace = require("../lib/marketplace-contracts/build/contracts/Marketplace.json")
 
 describe("Watcher", () => {
-    let watcher, provider
+    let watcher: Watcher
+    let provider: ethers.providers.Provider
 
-    let token, marketplace, wallet
-    let token2, marketplace2, wallet2
+    let token: ethers.Contract
+    let marketplace: ethers.Contract
+    let wallet: ethers.Wallet
+
+    let token2: ethers.Contract
+    let marketplace2: ethers.Contract
+    let wallet2: ethers.Wallet
+
+    const pollingInterval = 2000
+
     before(async function() {
         this.timeout(10000)
         const key1 = "0x1234567812345678123456781234567812345678123456781234567812345678"
@@ -23,17 +33,19 @@ describe("Watcher", () => {
             logger: console,
             blockTime: 0,
         }))
-        provider.pollingInterval = 100
+
         wallet = new ethers.Wallet(key1, provider)
         await provider.getNetwork() // wait until ganache is up and ethers.js ready
 
-        ;({ token, marketplace } = await deploy(wallet))
+        const deployed = await deploy(wallet)
+        token = deployed.token
+        marketplace = deployed.marketplace
 
         wallet2 = new ethers.Wallet(key2, provider)
         token2 = token.connect(wallet2)
         marketplace2 = marketplace.connect(wallet2)
 
-        watcher = new Watcher(provider, marketplace.address)
+        watcher = new Watcher(provider, Marketplace.abi, marketplace)
         await watcher.start()
     })
 
@@ -43,7 +55,7 @@ describe("Watcher", () => {
      * TODO: find a better way
      */
     async function waitForWatcher() {
-        const ms = provider.pollingInterval * 2 + 100
+        const ms = pollingInterval * 2 + 100
         return new Promise(resolve => {
             setTimeout(resolve, ms)
         })
@@ -62,7 +74,7 @@ describe("Watcher", () => {
         it("catches product creation", async () => {
             const cb = sinon.spy()
             watcher.on("productDeployed", cb)
-            const tx = await marketplace.createProduct(productIdBytes32, "Event tester", wallet.address, price, Currency.DATA, 1)
+            const tx = await marketplace.createProduct(productIdBytes32, "Event tester", wallet.address, price, MarketplaceEnums.Currency.DATA, 1)
             await tx.wait(1)
             await waitForWatcher()
             assert.strictEqual(cb.callCount, 1)
@@ -71,7 +83,7 @@ describe("Watcher", () => {
             assert.strictEqual(cb.args[0][1].beneficiaryAddress, wallet.address)
             assert.strictEqual(cb.args[0][1].minimumSubscriptionInSeconds, "1")
             assert.strictEqual(cb.args[0][1].pricePerSecond, scaledPrice.toString())
-            assert.strictEqual(cb.args[0][1].priceCurrency, "DATA")
+            assert.strictEqual(cb.args[0][1].priceCurrency, "0")
         }).timeout(10000)
 
         it("catches product deletion", async () => {
@@ -96,14 +108,14 @@ describe("Watcher", () => {
             assert.strictEqual(cb.args[0][1].beneficiaryAddress, wallet.address)
             assert.strictEqual(cb.args[0][1].minimumSubscriptionInSeconds, "1")
             assert.strictEqual(cb.args[0][1].pricePerSecond, scaledPrice.toString())
-            assert.strictEqual(cb.args[0][1].priceCurrency, "DATA")
+            assert.strictEqual(cb.args[0][1].priceCurrency, "0")
         }).timeout(10000)
 
         // function updateProduct(bytes32 productId, string name, address beneficiary, uint pricePerSecond, Currency currency, uint minimumSubscriptionSeconds) public onlyProductOwner(productId) {
         it("catches product info update", async () => {
             const cb = sinon.spy()
             watcher.on("productUpdated", cb)
-            const tx = await marketplace.updateProduct(productIdBytes32, "Muh produx111!", wallet2.address, price2, Currency.DATA, 10)
+            const tx = await marketplace.updateProduct(productIdBytes32, "Muh produx111!", wallet2.address, price2, MarketplaceEnums.Currency.DATA, 10)
             await tx.wait(1)
             await waitForWatcher()
             assert.strictEqual(cb.callCount, 1)
@@ -111,8 +123,8 @@ describe("Watcher", () => {
             assert.strictEqual(cb.args[0][1].ownerAddress, wallet.address)
             assert.strictEqual(cb.args[0][1].beneficiaryAddress, wallet2.address)
             assert.strictEqual(cb.args[0][1].minimumSubscriptionInSeconds, "10")
-            assert.strictEqual(cb.args[0][1].pricePerSecond, scaledPrice2.toString())
-            assert.strictEqual(cb.args[0][1].priceCurrency, "DATA")
+            assert.strictEqual(cb.args[0][1].pricePerSecond, scaledPrice2)
+            assert.strictEqual(cb.args[0][1].priceCurrency, "0")
             watcher.removeListener("productUpdated", cb)
         }).timeout(10000)
 
@@ -130,7 +142,7 @@ describe("Watcher", () => {
             assert.strictEqual(cb.args[0][1].beneficiaryAddress, wallet2.address)
             assert.strictEqual(cb.args[0][1].minimumSubscriptionInSeconds, "10")
             assert.strictEqual(cb.args[0][1].pricePerSecond, scaledPrice2.toString())
-            assert.strictEqual(cb.args[0][1].priceCurrency, "DATA")
+            assert.strictEqual(cb.args[0][1].priceCurrency, "0")
         }).timeout(10000)
 
         it("catches subscription", async () => {
@@ -156,41 +168,6 @@ describe("Watcher", () => {
         const id1 = ethers.utils.formatBytes32String("first-test-id")
         const id2 = ethers.utils.formatBytes32String("second-test-id")
         it("catches product creation/deletion/redeploy/update/buy", async () => {
-            const cb = sinon.spy()
-            watcher.on("productDeployed", cb)
-
-            const tx1 = await marketplace.createProduct(id1, "playback-test", wallet.address, ethers.utils.parseEther("1"), Currency.DATA, 1) // -> productDeployed
-            const tr1 = await tx1.wait(1)
-            assert.deepStrictEqual(tr1.events.map(e => e.event), ["ProductCreated"])
-            const tx2 = await marketplace.deleteProduct(id1) // -> productUndeployed
-            const tr2 = await tx2.wait(1)
-            assert.deepStrictEqual(tr2.events.map(e => e.event), ["ProductDeleted"])
-            const tx3 = await marketplace.redeployProduct(id1) // -> productDeployed
-            const tr3 = await tx3.wait(1)
-            assert.deepStrictEqual(tr3.events.map(e => e.event), ["ProductRedeployed"])
-            const tx4 = await token.mint(wallet2.address, ethers.utils.parseEther("1000"))
-            const tr4 = await tx4.wait(1)
-            assert.deepStrictEqual(tr4.events.map(e => e.event), ["Mint", "Transfer"])
-            const tx5 = await token2.approve(marketplace.address, ethers.utils.parseEther("1000"))
-            const tr5 = await tx5.wait(1)
-            assert.deepStrictEqual(tr5.events.map(e => e.event), ["Approval"])
-            const tx6 = await marketplace2.buy(id1, 100) // -> subscribed
-            const tr6 = await tx6.wait(1)
-            assert.deepStrictEqual(tr6.events.map(e => e.event), ["NewSubscription", "Subscribed", undefined])  // 3rd event is token.Transfer
-            const tx7 = await marketplace2.buy(id1, 200) // -> subscribed
-            const tr7 = await tx7.wait(1)
-            assert.deepStrictEqual(tr7.events.map(e => e.event), ["SubscriptionExtended", "Subscribed", undefined])  // 3rd event is token.Transfer
-            const tx8 = await marketplace.updateProduct(id1, "updated-name", wallet.address, ethers.utils.parseEther("2"), Currency.DATA, 10) // -> productUpdated
-            const tr8 = await tx8.wait(1)
-            assert.deepStrictEqual(tr8.events.map(e => e.event), ["ProductUpdated"])
-            const tx9 = await marketplace.createProduct(id2, "playback-test-end", wallet.address, ethers.utils.parseEther("1"), Currency.DATA, 1) // -> productDeployed
-            const tr9 = await tx9.wait(1)
-            assert.deepStrictEqual(tr9.events.map(e => e.event), ["ProductCreated"])
-            await waitForWatcher()
-
-            const from = cb.args[0][1].blockNumber
-            const to = cb.args[2][1].blockNumber
-
             const deployed = sinon.spy()
             const undeployed = sinon.spy()
             const subscribe = sinon.spy()
@@ -199,11 +176,43 @@ describe("Watcher", () => {
             watcher.on("productUndeployed", undeployed)
             watcher.on("productUpdated", updated)
             watcher.on("subscribed", subscribe)
+
+            const tx1 = await marketplace.createProduct(id1, "playback-test", wallet.address, ethers.utils.parseEther("1"), MarketplaceEnums.Currency.DATA, 1) // -> productDeployed
+            const tr1 = await tx1.wait(1)
+            assert.deepStrictEqual(tr1.events.map((e: ethers.Event) => e.event), ["ProductCreated"])
+            const tx2 = await marketplace.deleteProduct(id1) // -> productUndeployed
+            const tr2 = await tx2.wait(1)
+            assert.deepStrictEqual(tr2.events.map((e: ethers.Event) => e.event), ["ProductDeleted"])
+            const tx3 = await marketplace.redeployProduct(id1) // -> productDeployed
+            const tr3 = await tx3.wait(1)
+            assert.deepStrictEqual(tr3.events.map((e: ethers.Event) => e.event), ["ProductRedeployed"])
+            const tx4 = await token.mint(wallet2.address, ethers.utils.parseEther("1000"))
+            const tr4 = await tx4.wait(1)
+            assert.deepStrictEqual(tr4.events.map((e: ethers.Event) => e.event), ["Mint", "Transfer"])
+            const tx5 = await token2.approve(marketplace.address, ethers.utils.parseEther("1000"))
+            const tr5 = await tx5.wait(1)
+            assert.deepStrictEqual(tr5.events.map((e: ethers.Event) => e.event), ["Approval"])
+            const tx6 = await marketplace2.buy(id1, 100) // -> subscribed
+            const tr6 = await tx6.wait(1)
+            assert.deepStrictEqual(tr6.events.map((e: ethers.Event) => e.event), ["NewSubscription", "Subscribed", undefined])  // 3rd event is token.Transfer
+            const tx7 = await marketplace2.buy(id1, 200) // -> subscribed
+            const tr7 = await tx7.wait(1)
+            assert.deepStrictEqual(tr7.events.map((e: ethers.Event) => e.event), ["SubscriptionExtended", "Subscribed", undefined])  // 3rd event is token.Transfer
+            const tx8 = await marketplace.updateProduct(id1, "updated-name", wallet.address, ethers.utils.parseEther("2"), MarketplaceEnums.Currency.DATA, 10) // -> productUpdated
+            const tr8 = await tx8.wait(1)
+            assert.deepStrictEqual(tr8.events.map((e: ethers.Event) => e.event), ["ProductUpdated"])
+            const tx9 = await marketplace.createProduct(id2, "playback-test-end", wallet.address, ethers.utils.parseEther("1"), MarketplaceEnums.Currency.DATA, 1) // -> productDeployed
+            const tr9 = await tx9.wait(1)
+            assert.deepStrictEqual(tr9.events.map((e: ethers.Event) => e.event), ["ProductCreated"])
+            await waitForWatcher()
+
+            const from = deployed.args[0][1].blockNumber
+            const to = deployed.args[2][1].blockNumber
             await watcher.playback(from, to)
-            assert.strictEqual(deployed.callCount, 3)
-            assert.strictEqual(undeployed.callCount, 1)
-            assert.strictEqual(updated.callCount, 1)
-            assert.strictEqual(subscribe.callCount, 2)
+            assert.strictEqual(deployed.callCount, 5, "deployed callCount")
+            assert.strictEqual(undeployed.callCount, 2, "undeployed callCount")
+            assert.strictEqual(updated.callCount, 1, "updated callCount")
+            assert.strictEqual(subscribe.callCount, 2, "subscribe callCount")
         }).timeout(60000)
     })
 })

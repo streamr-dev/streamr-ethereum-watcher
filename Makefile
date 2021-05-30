@@ -31,7 +31,7 @@ define npm
 endef
 define node
 	@$(eval node_args=$(1))
-	/bin/bash -e -o pipefail -l -c "source $(nvm_sh) && nvm exec $(node_version) node $(node_args)"
+	/bin/bash -e -o pipefail -l -c "source $(nvm_sh) && nvm exec $(node_version) node_modules/.bin/ts-node $(node_args)"
 endef
 
 node_modules: ## Run 'npm ci' if directory doesn't exist
@@ -47,7 +47,7 @@ test: lint ## Run npm run test
 
 .PHONY: run
 run: node_modules ## Run npm run start
-	$(call node, src/main.js)
+	$(call node, src/main.ts)
 
 .PHONY: docker-build
 docker-build: ## Build Docker dev container

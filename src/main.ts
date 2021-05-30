@@ -1,11 +1,11 @@
-const log = require("./log")
-const {getEnv} = require("./env")
-const LastBlockStore = require("./LastBlockStore")
-const StreamrClient = require("streamr-client")
-const ethers = require("ethers")
-const {throwIfNotContract} = require("./checkArguments")
-const Watcher = require("./watcher")
-const Informer = require("./informer")
+import log from "./log"
+import {getEnv} from "./env"
+import LastBlockStore from "./LastBlockStore"
+import StreamrClient from "streamr-client"
+import {ethers} from "ethers"
+import {throwIfNotContract} from "./checkArguments"
+import Watcher from "./watcher"
+import Informer from "./informer"
 const Marketplace = require("../lib/marketplace-contracts/build/contracts/Marketplace.json")
 
 const MARKETPLACE_ADDRESS = "MARKETPLACE_ADDRESS"
@@ -21,7 +21,7 @@ const devopsKey = getEnv(DEVOPS_KEY)
 const LAST_BLOCK_DIR = "LAST_BLOCK_DIR"
 const lastBlockDir = getEnv(LAST_BLOCK_DIR)
 
-async function getSessionToken() {
+async function getSessionToken(): Promise<string> {
     const client = new StreamrClient({
         auth: {
             privateKey: devopsKey
@@ -52,11 +52,15 @@ async function start() {
         process.exit(1)
     }
 
-    const network = await provider.getNetwork().catch(e => {
-        log.error(`Connecting to Ethereum failed, ${NETWORK_ID}=${networkId} ${ETHEREUM_SERVER_URL}=${ethereumServerURL}: ${e.message}`)
-        process.exit(1)
-    })
-    log.info("Connected to Ethereum network: ", JSON.stringify(network))
+    const network = provider.getNetwork()
+        .then((value: ethers.utils.Network): ethers.utils.Network => {
+            return value
+        })
+        .catch((e: Error): void => {
+            log.error(`Connecting to Ethereum failed, ${NETWORK_ID}=${networkId} ${ETHEREUM_SERVER_URL}=${ethereumServerURL}: ${e.message}`)
+            process.exit(1)
+        })
+    log.info("Connected to Ethereum network: " + JSON.stringify(network))
 
     // deployed using truffle, mainnet tx: https://etherscan.io/tx/0x868a6604e6c33ebc52a3fe5d020d970fdd0019e8eb595232599d67f91624d877
     const deployedMarketplaceAddress = Marketplace.networks[networkId] && Marketplace.networks[networkId].address
@@ -68,44 +72,69 @@ async function start() {
     }
     const marketAddress = await throwIfNotContract(provider, marketplaceAddress || deployedMarketplaceAddress)
 
-    const watcher = new Watcher(provider, marketAddress)
+    const market = new ethers.Contract(marketAddress, Marketplace.abi, provider)
+    const watcher = new Watcher(provider, Marketplace.abi, market)
     const informer = new Informer(streamrApiURL, getSessionToken)
 
-    watcher.on("productDeployed", (id, body) => {
+    watcher.on("error", (...args: any[]): Promise<any> => {
+        const e: any = args[0]
+        log.error(`Unexpected error on main: ${e}`)
+        // if it was because streamr backend couldn't find the product for set(Un)Deployed, just keep chugging
+        if (e.code === "ECONNREFUSED") {
+            return Promise.resolve()
+        }
+        return Promise.reject(e)
+    })
+    watcher.on("productDeployed", (...args: any[]): Promise<any> => {
+        const id: string = args[0]
+        const body: string = args[1]
         informer.setDeployed(id, body)
         log.info(`Product ${id} deployed ${JSON.stringify(body)}`)
+        return Promise.resolve()
     })
-    watcher.on("productUndeployed", (id, body) => {
+    watcher.on("productUndeployed", (...args: any[]): Promise<any> => {
+        const id: string = args[0]
+        const body: string = args[1]
         informer.setUndeployed(id, body)
         log.info(`Product ${id} UNdeployed ${JSON.stringify(body)}`)
+        return Promise.resolve()
     })
-    watcher.on("productUpdated", (id, body) => {
+    watcher.on("productUpdated", (...args: any[]): Promise<any> => {
+        const id: string = args[0]
+        const body: any = args[1]
         informer.productUpdated(id, body)
         log.info(`Product ${id} UPDATED ${JSON.stringify(body)}`)
+        return Promise.resolve()
     })
-    watcher.on("subscribed", (body) => {
+    watcher.on("subscribed", (...args: any[]): Promise<any> => {
+        const body: any = args[0]
         informer.subscribe(body)
         log.info(`Product ${body.product} subscribed ${JSON.stringify(body)}`)
+        return Promise.resolve()
     })
-    watcher.on("event", event => {
+    watcher.on("event", (...args: any[]): Promise<any> => {
+        const event: any = args[0]
         log.info(`Watcher detected event: ${JSON.stringify(event)}`)
+        return Promise.resolve()
     })
     await watcher.checkMarketplaceAddress()
 
     // write on disk how many blocks have been processed
     const store = new LastBlockStore(lastBlockDir)
-    watcher.on("eventSuccessfullyProcessed", event => {
+    watcher.on("eventSuccessfullyProcessed", (...args: any[]): Promise<any> => {
+        const event: any = args[0]
         store.write(event.blockNumber.toString())
+        return Promise.resolve()
     })
 
     // catch up the blocks that happened when we were gone
     let lastRecorded = store.read()
 
-    let lastActual = await provider.getBlockNumber()
+    let lastActual: number = await provider.getBlockNumber()
     while (lastRecorded < lastActual) {
         log.info(`Playing back blocks ${lastRecorded + 1}...${lastActual} (inclusive)`)
         await watcher.playback(lastRecorded + 1, lastActual)
-        store.write(lastActual.toString())
+        store.write(lastActual)
         lastRecorded = lastActual
         lastActual = await provider.getBlockNumber()
     }
@@ -114,20 +143,9 @@ async function start() {
     // report new blocks as they arrive
     await watcher.start()
 
-    return new Promise((done, fail) => {
-        watcher.on("error", e => {
-            log.error(`Unexpected error on main: ${e}`)
-            // if it was because streamr backend couldn't find the product for set(Un)Deployed, just keep chugging
-            if (e.code === "ECONNREFUSED") {
-                return
-            }
-
-            fail(e)
-        })
-    })
 }
 
-start().catch(e => {
+start().catch((e: Error): Promise<void> => {
     log.error(`Unexpected error: ${e.stack}`)
     process.exit(1)
 })

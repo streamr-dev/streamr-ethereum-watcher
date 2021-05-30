@@ -1,11 +1,11 @@
-module.exports = {
-    error(...messages) {
+export = {
+    error(...messages: string[]): void {
         console.error(...messages) // eslint-disable-line no-console
     },
-    warn(...messages) {
+    warn(...messages: string[]): void {
         console.warn(...messages) // eslint-disable-line no-console
     },
-    info(...messages) {
+    info(...messages: string[]): void {
         console.info(...messages) // eslint-disable-line no-console
     }
 }

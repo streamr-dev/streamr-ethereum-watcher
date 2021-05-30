@@ -1,9 +1,16 @@
-const ethers = require("ethers")
+import {ethers} from "ethers"
+const Token = require("../lib/marketplace-contracts/build/contracts/MintableToken.json")
 const OldMarketplace = require("../lib/marketplace-contracts/build/contracts/OldMarketplace.json")
 const Marketplace = require("../lib/marketplace-contracts/build/contracts/Marketplace.json")
-const Token = require("../lib/marketplace-contracts/build/contracts/MintableToken.json")
 
-module.exports = async wallet => {
+class TokenAndMarketplace {
+    constructor(
+        readonly token: ethers.Contract,
+        readonly marketplace: ethers.Contract) {
+    }
+}
+
+async function deploy(wallet: ethers.Wallet): Promise<TokenAndMarketplace> {
     const tokenDeployer = new ethers.ContractFactory(Token.abi, Token.bytecode, wallet)
     const token = await tokenDeployer.deploy()
     await token.deployed()
@@ -16,5 +23,10 @@ module.exports = async wallet => {
     const marketplace = await marketDeployer.deploy(token.address, wallet.address, oldMarketplace.address)
     await marketplace.deployed()
 
-    return { token, marketplace }
+    return Promise.resolve(new TokenAndMarketplace(token, marketplace))
+}
+
+export {
+    TokenAndMarketplace,
+    deploy,
 }
