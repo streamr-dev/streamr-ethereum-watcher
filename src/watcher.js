@@ -6,10 +6,10 @@ const {Marketplace: {currencySymbol}} = require("../lib/marketplace-contracts/sr
 
 const EE_PRICE_SCALE = new ethers.utils.BigNumber(1e9)  // scale price to "nanotokens"/token-gwei so that it fits into mysql and Java long
 // "warp" to this block; before this block there weren't (too many) events
-const playbackStartBlock = {
-    "1": 12359784,      // mainnet, start from 2021-05-03
-    "4": 1920000,       // rinkeby
-}
+const playbackStartBlock = Object.freeze({
+    "1": 12359784, // mainnet, start from 2021-05-03
+    "4": 1920000, // rinkeby
+})
 const playbackStep = 1000
 
 /**
@@ -39,7 +39,6 @@ class Watcher extends EventEmitter {
         super()
         this.provider = provider
         this.abi = Marketplace.abi
-        playbackStartBlock["1"] = 9814860
         this.market = new ethers.Contract(marketplaceAddress, this.abi, provider)
     }
 
