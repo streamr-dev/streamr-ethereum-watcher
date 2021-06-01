@@ -68,7 +68,8 @@ async function start() {
     }
     const marketAddress = await throwIfNotContract(provider, marketplaceAddress || deployedMarketplaceAddress)
 
-    const watcher = new Watcher(provider, marketAddress)
+    const marketplaceContract = new ethers.Contract(marketAddress, Marketplace.abi, provider)
+    const watcher = new Watcher(provider, Marketplace.abi, marketplaceContract)
     const apiClient = new CoreAPIClient(streamrApiURL, getSessionToken)
 
     watcher.on("productDeployed", (id, body) => {

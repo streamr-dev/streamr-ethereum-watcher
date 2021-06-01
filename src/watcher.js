@@ -1,7 +1,6 @@
 const log = require("./log")
 const EventEmitter = require("promise-events")
 const ethers = require("ethers")
-const Marketplace = require("../lib/marketplace-contracts/build/contracts/Marketplace.json")
 const {Marketplace: {currencySymbol}} = require("../lib/marketplace-contracts/src/contracts/enums")
 
 const EE_PRICE_SCALE = new ethers.utils.BigNumber(1e9)  // scale price to "nanotokens"/token-gwei so that it fits into mysql and Java long
@@ -35,11 +34,11 @@ const playbackStep = 1000
  *  event ExchangeRatesUpdated(uint timestamp, uint dataInUsd);
  */
 class Watcher extends EventEmitter {
-    constructor(provider, marketplaceAddress) {
+    constructor(provider, marketplaceAbi, marketplaceContract) {
         super()
         this.provider = provider
-        this.abi = Marketplace.abi
-        this.market = new ethers.Contract(marketplaceAddress, this.abi, provider)
+        this.abi = marketplaceAbi
+        this.market = marketplaceContract
     }
 
     /**
