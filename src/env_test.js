@@ -8,6 +8,6 @@ describe("OS environment variables", () => {
     })
     it("undefined variable is null", () => {
         process.env.TEST_VAR = undefined
-        assert.notStrictEqual(getEnv("TEST_VAR"), null)
+        assert.equal(getEnv("TEST_VAR"), "")
     })
 })
