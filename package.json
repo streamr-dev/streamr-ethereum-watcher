@@ -6,7 +6,7 @@
   "scripts": {
     "lint": "eslint src",
     "fmt": "eslint --fix src",
-    "test": "mocha --exit src/*_test.js"
+    "test": "mocha --color false --exit --timeout 60000 src/*_test.js"
   },
   "keywords": [
     "streamr",

@@ -8,7 +8,6 @@ const deploy = require("./deploy_marketplace_test")
 // If submodule changes, this test might catch violated assumptions in this project
 describe("Contracts", () => {
     it("create product + subscribe", async function() {
-        this.timeout(10000)
         const key1 = "0x1234567812345678123456781234567812345678123456781234567812345678"
         const key2 = "0x2234567812345678123456781234567812345678123456781234567812345679"
         const provider = new ethers.providers.Web3Provider(ganache.provider({

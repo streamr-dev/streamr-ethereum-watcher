@@ -12,7 +12,6 @@ describe("Watcher", () => {
     let token, marketplace, wallet
     let token2, marketplace2, wallet2
     before(async function() {
-        this.timeout(10000)
         const key1 = "0x1234567812345678123456781234567812345678123456781234567812345678"
         const key2 = "0x2234567812345678123456781234567812345678123456781234567812345679"
         provider = new ethers.providers.Web3Provider(ganache.provider({
@@ -72,7 +71,7 @@ describe("Watcher", () => {
             assert.equal(cb.args[0][1].minimumSubscriptionInSeconds, "1")
             assert.equal(cb.args[0][1].pricePerSecond, scaledPrice.toString())
             assert.equal(cb.args[0][1].priceCurrency, "DATA")
-        }).timeout(10000)
+        })
 
         it("catches product deletion", async () => {
             const cb = sinon.spy()
@@ -82,7 +81,7 @@ describe("Watcher", () => {
             await waitForWatcher()
             assert.equal(cb.callCount, 1)
             assert.equal(cb.args[0][0], productId)
-        }).timeout(10000)
+        })
 
         it("catches product re-deploy", async () => {
             const cb = sinon.spy()
@@ -97,7 +96,7 @@ describe("Watcher", () => {
             assert.equal(cb.args[0][1].minimumSubscriptionInSeconds, "1")
             assert.equal(cb.args[0][1].pricePerSecond, scaledPrice.toString())
             assert.equal(cb.args[0][1].priceCurrency, "DATA")
-        }).timeout(10000)
+        })
 
         // function updateProduct(bytes32 productId, string name, address beneficiary, uint pricePerSecond, Currency currency, uint minimumSubscriptionSeconds) public onlyProductOwner(productId) {
         it("catches product info update", async () => {
@@ -114,7 +113,7 @@ describe("Watcher", () => {
             assert.equal(cb.args[0][1].pricePerSecond, scaledPrice2.toString())
             assert.equal(cb.args[0][1].priceCurrency, "DATA")
             watcher.removeListener("productUpdated", cb)
-        }).timeout(10000)
+        })
 
         it("catches product ownership change", async () => {
             const cb = sinon.spy()
@@ -131,7 +130,7 @@ describe("Watcher", () => {
             assert.equal(cb.args[0][1].minimumSubscriptionInSeconds, "10")
             assert.equal(cb.args[0][1].pricePerSecond, scaledPrice2.toString())
             assert.equal(cb.args[0][1].priceCurrency, "DATA")
-        }).timeout(10000)
+        })
 
         it("catches subscription", async () => {
             const cb = sinon.spy()
@@ -149,7 +148,7 @@ describe("Watcher", () => {
             const diff = cb.args[0][0].endsAt - Date.now() / 1000
             assert(diff < 101)
             assert(diff > 90)
-        }).timeout(10000)
+        })
     })
 
     describe("playback", () => {
@@ -204,6 +203,6 @@ describe("Watcher", () => {
             assert.equal(undeployed.callCount, 1)
             assert.equal(updated.callCount, 1)
             assert.equal(subscribe.callCount, 2)
-        }).timeout(60000)
+        })
     })
 })
