@@ -77,15 +77,19 @@ jobs:
         uses: actions/cache@v2.1.4
         with:
           path: /tmp/.buildx-cache
-          key: linux-buildx-${{ github.sha }}
+          key: ${{ runner.os }}-buildx-${{ github.sha }}
           restore-keys: |
-            linux-buildx-
+            ${{ runner.os }}-buildx-
       - name: Docker meta
         id: docker_meta
-        uses: crazy-max/ghaction-docker-meta@v1.12.0
+        uses: docker/metadata-action@v3.3.0
         with:
           images: streamr/ethereum-watcher
-          tag-sha: true
+          tags: |
+            type=sha
+            type=ref,event=branch
+            type=semver,pattern=v{{version}}
+            type=raw,value=dev
       - name: Build local Docker image for running smoke tests
         uses: docker/build-push-action@v2.3.0
         with:
