@@ -1,6 +1,6 @@
 const assert = require("assert").strict
 const http = require("http")
-const Informer = require("./informer")
+const CoreAPIClient = require("./CoreAPIClient")
 
 const TEST_SERVER_PORT = 51843
 
@@ -8,9 +8,9 @@ async function getSessionToken() {
     return "YQoijTHJOwt4y8bPtPmLNFpbS2TT8C3SmL6WP9QCGJjlH7iyaxyTBKGJHG5KE8eu"
 }
 
-describe("Informer", () => {
+describe("CoreAPIClient", () => {
     let server
-    let informer
+    let apiClient
     let requests
 
     before((done) => {
@@ -42,11 +42,11 @@ describe("Informer", () => {
 
     beforeEach(() => {
         requests = []
-        informer = new Informer(`http://127.0.0.1:${TEST_SERVER_PORT}`, getSessionToken)
+        apiClient = new CoreAPIClient(`http://127.0.0.1:${TEST_SERVER_PORT}`, getSessionToken)
     })
 
     it("setDeployed causes expected POST request", async () => {
-        await informer.setDeployed("product-id", {
+        await apiClient.setDeployed("product-id", {
             blockNumber: 0,
             blockIndex: 0,
             ownerAddress: "0x0",
@@ -74,7 +74,7 @@ describe("Informer", () => {
     })
 
     it("setUndeployed causes expected POST request", async () => {
-        await informer.setUndeployed("product-id", {
+        await apiClient.setUndeployed("product-id", {
             blockNumber: 0,
             blockIndex: 0,
         })

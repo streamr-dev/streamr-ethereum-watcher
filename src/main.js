@@ -5,7 +5,7 @@ const StreamrClient = require("streamr-client")
 const ethers = require("ethers")
 const {throwIfNotContract} = require("./checkArguments")
 const Watcher = require("./watcher")
-const Informer = require("./informer")
+const CoreAPIClient = require("./CoreAPIClient")
 const Marketplace = require("../lib/marketplace-contracts/build/contracts/Marketplace.json")
 
 const MARKETPLACE_ADDRESS = "MARKETPLACE_ADDRESS"
@@ -69,22 +69,22 @@ async function start() {
     const marketAddress = await throwIfNotContract(provider, marketplaceAddress || deployedMarketplaceAddress)
 
     const watcher = new Watcher(provider, marketAddress)
-    const informer = new Informer(streamrApiURL, getSessionToken)
+    const apiClient = new CoreAPIClient(streamrApiURL, getSessionToken)
 
     watcher.on("productDeployed", (id, body) => {
-        informer.setDeployed(id, body)
+        apiClient.setDeployed(id, body)
         log.info(`Product ${id} deployed ${JSON.stringify(body)}`)
     })
     watcher.on("productUndeployed", (id, body) => {
-        informer.setUndeployed(id, body)
+        apiClient.setUndeployed(id, body)
         log.info(`Product ${id} UNdeployed ${JSON.stringify(body)}`)
     })
     watcher.on("productUpdated", (id, body) => {
-        informer.productUpdated(id, body)
+        apiClient.productUpdated(id, body)
         log.info(`Product ${id} UPDATED ${JSON.stringify(body)}`)
     })
     watcher.on("subscribed", (body) => {
-        informer.subscribe(body)
+        apiClient.subscribe(body)
         log.info(`Product ${body.product} subscribed ${JSON.stringify(body)}`)
     })
     watcher.on("event", event => {

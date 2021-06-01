@@ -1,7 +1,7 @@
 const log = require("./log")
 const fetch = require("node-fetch")
 
-class Informer {
+class CoreAPIClient {
     constructor(streamrUrl, sessionTokenGetterFunc) {
         if (!streamrUrl) {
             throw new Error("No streamUrl given")
@@ -39,7 +39,7 @@ class Informer {
         if (body) {
             logBody = JSON.stringify(body)
         }
-        log.info("Watcher/Informer > POST", apiUrl, logBody)
+        log.info("Watcher/CoreAPIClient > POST", apiUrl, logBody)
 
         return this.getSessionToken().then(sessionToken =>
             fetch(apiUrl, {
@@ -55,4 +55,4 @@ class Informer {
     }
 }
 
-module.exports = Informer
+module.exports = CoreAPIClient
