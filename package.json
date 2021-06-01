@@ -15,7 +15,7 @@
   "author": "Streamr Network AG",
   "license": "AGPL-3.0",
   "dependencies": {
-    "ethers": "4.0.48",
+    "ethers": "5.3.0",
     "node-fetch": "2.6.1",
     "promise-events": "0.2.4",
     "streamr-client": "5.4.1"
