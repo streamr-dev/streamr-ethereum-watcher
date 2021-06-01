@@ -1,7 +1,7 @@
 
 function getEnv(key) {
     const value = process.env[key]
-    if (value === 'undefined') {
+    if (value === "undefined") {
         return ""
     }
     return value

@@ -1,4 +1,4 @@
-const assert = require("assert")
+const assert = require("assert").strict
 const http = require("http")
 const Informer = require("./informer")
 
@@ -56,8 +56,8 @@ describe("Informer", () => {
             minimumSubscriptionInSeconds: 0
         })
 
-        assert.strictEqual(requests.length, 1)
-        assert.deepStrictEqual(requests[0], {
+        assert.equal(requests.length, 1)
+        assert.deepEqual(requests[0], {
             method: "POST",
             url: "/products/product-id/setDeployed",
             accessToken: "Bearer YQoijTHJOwt4y8bPtPmLNFpbS2TT8C3SmL6WP9QCGJjlH7iyaxyTBKGJHG5KE8eu",
@@ -79,8 +79,8 @@ describe("Informer", () => {
             blockIndex: 0,
         })
 
-        assert.strictEqual(requests.length, 1)
-        assert.deepStrictEqual(requests[0], {
+        assert.equal(requests.length, 1)
+        assert.deepEqual(requests[0], {
             method: "POST",
             url: "/products/product-id/setUndeployed",
             accessToken: "Bearer YQoijTHJOwt4y8bPtPmLNFpbS2TT8C3SmL6WP9QCGJjlH7iyaxyTBKGJHG5KE8eu",

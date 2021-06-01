@@ -1,4 +1,4 @@
-const assert = require("assert")
+const assert = require("assert").strict
 const ethers = require("ethers")
 const ganache = require("ganache-core")
 const { Marketplace: { Currency } } = require("../lib/marketplace-contracts/src/contracts/enums")
@@ -32,15 +32,15 @@ describe("Contracts", () => {
 
         const tx1 = await marketplace.createProduct(productIdBytes32, "Contract tester", wallet.address, 1, Currency.DATA, 1)
         const tr1 = await tx1.wait(0)
-        assert.deepStrictEqual(tr1.events.map(e => e.event), ["ProductCreated"])
+        assert.deepEqual(tr1.events.map(e => e.event), ["ProductCreated"])
         const tx2 = await token.mint(wallet2.address, 100000)
         const tr2 = await tx2.wait(0)
-        assert.deepStrictEqual(tr2.events.map(e => e.event), ["Mint", "Transfer"])
+        assert.deepEqual(tr2.events.map(e => e.event), ["Mint", "Transfer"])
         const tx3 = await token2.approve(marketplace.address, 10000)
         const tr3 = await tx3.wait(0)
-        assert.deepStrictEqual(tr3.events.map(e => e.event), ["Approval"])
+        assert.deepEqual(tr3.events.map(e => e.event), ["Approval"])
         const tx4 = await marketplace2.buy(productIdBytes32, 100)
         const tr4 = await tx4.wait(0)
-        assert.deepStrictEqual(tr4.events.map(e => e.event), ["NewSubscription", "Subscribed", undefined])  // 3rd event is token.Transfer
+        assert.deepEqual(tr4.events.map(e => e.event), ["NewSubscription", "Subscribed", undefined])  // 3rd event is token.Transfer
     })
 })
