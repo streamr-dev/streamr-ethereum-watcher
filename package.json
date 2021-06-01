@@ -4,9 +4,9 @@
   "description": "Watch Ethereum blocks as they come, send relevant info to Streamr",
   "main": "src/main.js",
   "scripts": {
-    "lint": "eslint src test",
+    "lint": "eslint src",
     "fmt": "eslint --fix src",
-    "test": "mocha --exit"
+    "test": "mocha --exit src/*_test.js"
   },
   "keywords": [
     "streamr",

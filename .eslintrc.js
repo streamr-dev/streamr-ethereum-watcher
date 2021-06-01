@@ -32,5 +32,21 @@ module.exports = {
         "keyword-spacing": "error",
         "func-call-spacing": "error",
         "space-infix-ops": "error"
-    }
+    },
+    "globals": {
+        "describe": "readonly",
+        "it": "readonly",
+        "before": "readonly",
+        "beforeEach": "readonly",
+        "after": "readonly",
+        "afterEach": "readonly",
+    },
+    "overrides": [
+        {
+            "files": ["src/*_test.js"],
+            "rules": {
+                "no-console": 0,
+            }
+        }
+    ]
 }

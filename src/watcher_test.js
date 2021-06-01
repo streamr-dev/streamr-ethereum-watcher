@@ -3,8 +3,8 @@ const assert = require("assert")
 const ethers = require("ethers")
 const ganache = require("ganache-core")
 const { Marketplace: { Currency } } = require("../lib/marketplace-contracts/src/contracts/enums")
-const deploy = require("./deploy_marketplace")
-const Watcher = require("../src/watcher")
+const deploy = require("./deploy_marketplace_test")
+const Watcher = require("./watcher")
 
 describe("Watcher", () => {
     let watcher, provider

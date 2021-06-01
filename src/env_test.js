@@ -1,5 +1,5 @@
 const assert = require("assert").strict
-const {getEnv} = require("../src/env")
+const {getEnv} = require("./env")
 
 describe("OS environment variables", () => {
     it("gets variable from environment", () => {

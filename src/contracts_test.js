@@ -2,7 +2,7 @@ const assert = require("assert")
 const ethers = require("ethers")
 const ganache = require("ganache-core")
 const { Marketplace: { Currency } } = require("../lib/marketplace-contracts/src/contracts/enums")
-const deploy = require("./deploy_marketplace")
+const deploy = require("./deploy_marketplace_test")
 
 // Just test the underlying contracts, to see they really work like we expect
 // If submodule changes, this test might catch violated assumptions in this project
