@@ -4,7 +4,7 @@ const CoreAPIClient = require("./CoreAPIClient")
 
 const TEST_SERVER_PORT = 51843
 
-async function getSessionToken() {
+async function getSessionToken(/*privateKey*/) {
     return "YQoijTHJOwt4y8bPtPmLNFpbS2TT8C3SmL6WP9QCGJjlH7iyaxyTBKGJHG5KE8eu"
 }
 
@@ -42,7 +42,8 @@ describe("CoreAPIClient", () => {
 
     beforeEach(() => {
         requests = []
-        apiClient = new CoreAPIClient(`http://127.0.0.1:${TEST_SERVER_PORT}`, getSessionToken)
+        const privateKey = "15f6a8f106f5438f975faf9b87772026a6fe047034e6b34577fc023a64909db3"
+        apiClient = new CoreAPIClient(`http://127.0.0.1:${TEST_SERVER_PORT}`, getSessionToken, privateKey)
     })
 
     it("setDeployed causes expected POST request", async () => {

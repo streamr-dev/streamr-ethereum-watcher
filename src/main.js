@@ -8,29 +8,29 @@ const Watcher = require("./watcher")
 const CoreAPIClient = require("./CoreAPIClient")
 const Marketplace = require("../lib/marketplace-contracts/build/contracts/Marketplace.json")
 
-const MARKETPLACE_ADDRESS = "MARKETPLACE_ADDRESS"
-const marketplaceAddress = getEnv(MARKETPLACE_ADDRESS)
-const NETWORK_ID = "NETWORK_ID"
-const networkId = getEnv(NETWORK_ID)
-const ETHEREUM_SERVER_URL = "ETHEREUM_SERVER_URL"
-const ethereumServerURL = getEnv(ETHEREUM_SERVER_URL)
-const STREAMR_API_URL = "STREAMR_API_URL"
-const streamrApiURL = getEnv(STREAMR_API_URL)
-const DEVOPS_KEY = "DEVOPS_KEY"
-const devopsKey = getEnv(DEVOPS_KEY)
-const LAST_BLOCK_DIR = "LAST_BLOCK_DIR"
-const lastBlockDir = getEnv(LAST_BLOCK_DIR)
-
-async function getSessionToken() {
+async function getSessionToken(privateKey) {
     const client = new StreamrClient({
         auth: {
-            privateKey: devopsKey
+            privateKey: privateKey,
         }
     })
     return client.session.getSessionToken()
 }
 
 async function start() {
+    const MARKETPLACE_ADDRESS = "MARKETPLACE_ADDRESS"
+    const marketplaceAddress = getEnv(MARKETPLACE_ADDRESS)
+    const NETWORK_ID = "NETWORK_ID"
+    const networkId = getEnv(NETWORK_ID)
+    const ETHEREUM_SERVER_URL = "ETHEREUM_SERVER_URL"
+    const ethereumServerURL = getEnv(ETHEREUM_SERVER_URL)
+    const STREAMR_API_URL = "STREAMR_API_URL"
+    const streamrApiURL = getEnv(STREAMR_API_URL)
+    const DEVOPS_KEY = "DEVOPS_KEY"
+    const devopsKey = getEnv(DEVOPS_KEY)
+    const LAST_BLOCK_DIR = "LAST_BLOCK_DIR"
+    const lastBlockDir = getEnv(LAST_BLOCK_DIR)
+
     try {
         new ethers.Wallet(devopsKey)
     } catch (e) {
@@ -70,7 +70,7 @@ async function start() {
 
     const marketplaceContract = new ethers.Contract(marketAddress, Marketplace.abi, provider)
     const watcher = new Watcher(provider, Marketplace.abi, marketplaceContract)
-    const apiClient = new CoreAPIClient(streamrApiURL, getSessionToken)
+    const apiClient = new CoreAPIClient(streamrApiURL, getSessionToken, devopsKey)
 
     watcher.on("productDeployed", (id, body) => {
         apiClient.setDeployed(id, body)

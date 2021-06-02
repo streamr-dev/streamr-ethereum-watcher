@@ -2,7 +2,7 @@ const log = require("./log")
 const fetch = require("node-fetch")
 
 class CoreAPIClient {
-    constructor(streamrUrl, sessionTokenGetterFunc) {
+    constructor(streamrUrl, sessionTokenGetterFunc, privateKey) {
         if (!streamrUrl) {
             throw new Error("No streamUrl given")
         }
@@ -12,6 +12,10 @@ class CoreAPIClient {
             this.streamrUrl = streamrUrl
         }
         this.getSessionToken = sessionTokenGetterFunc
+        if (!privateKey) {
+            throw new Error("No privateKey given")
+        }
+        this.privateKey = privateKey
     }
 
     setDeployed(id, body) {
@@ -41,17 +45,18 @@ class CoreAPIClient {
         }
         log.info("Watcher/CoreAPIClient > POST", apiUrl, logBody)
 
-        return this.getSessionToken().then(sessionToken =>
-            fetch(apiUrl, {
-                method: "POST",
-                body: JSON.stringify(body),
-                headers: {
-                    "Accept": "application/json",
-                    "Content-type": "application/json",
-                    "Authorization": `Bearer ${sessionToken}`
-                }
+        return this.getSessionToken(this.privateKey)
+            .then(sessionToken => {
+                return fetch(apiUrl, {
+                    method: "POST",
+                    body: JSON.stringify(body),
+                    headers: {
+                        "Accept": "application/json",
+                        "Content-type": "application/json",
+                        "Authorization": `Bearer ${sessionToken}`
+                    }
+                })
             })
-        )
     }
 }
 
