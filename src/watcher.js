@@ -54,6 +54,7 @@ class Watcher extends EventEmitter {
             msg += ` ${getterName}: ${value},`
         }
         log.info(`Watcher > Checking the Marketplace contract at ${this.market.address}: ${msg}`)
+        return null
     }
 
     /**
@@ -83,6 +84,7 @@ class Watcher extends EventEmitter {
         this.provider.on({address: this.market.address}, logEntry => {
             log.info("Watcher > Event logged at " + logEntry.blockNumber)
         })
+        return null
     }
 
     // for filter callback, see https://docs.ethers.io/ethers.js/html/api-contract.html#event-object
@@ -103,6 +105,7 @@ class Watcher extends EventEmitter {
     async logEvent(...args) {
         const eventObject = args.pop()
         log.warn(`Watcher > Event ignored: ${eventObject.event}, args: ${JSON.stringify(args.map(a => a.toString()))}`)
+        return null
     }
 
     // SYNCHRONOUSLY play back events one by one. Wait for promise to return before sending the next one
@@ -147,6 +150,7 @@ class Watcher extends EventEmitter {
                 throw e
             }
         }
+        return null
     }
 
     // playback in steps to avoid choking Infura
@@ -170,9 +174,10 @@ class Watcher extends EventEmitter {
             await this.emit("eventSuccessfullyProcessed", {blockNumber: b - 1})
         }
         await this.playbackStep(b, toBlock)
+        return null
     }
 
-    onDeployEvent(blockNumber, blockIndex, args) {
+    async onDeployEvent(blockNumber, blockIndex, args) {
         const productId = args.id.slice(2)    // remove "0x" from beginning
         return this.emit("productDeployed", productId, {
             blockNumber,
@@ -185,7 +190,7 @@ class Watcher extends EventEmitter {
         })
     }
 
-    onUpdateEvent(blockNumber, blockIndex, args) {
+    async onUpdateEvent(blockNumber, blockIndex, args) {
         const productId = args.id.slice(2)    // remove "0x" from beginning
         return this.emit("productUpdated", productId, {
             blockNumber,
@@ -198,7 +203,7 @@ class Watcher extends EventEmitter {
         })
     }
 
-    onUndeployEvent(blockNumber, blockIndex, args) {
+    async onUndeployEvent(blockNumber, blockIndex, args) {
         const productId = args.id.slice(2)    // remove "0x" from beginning
         return this.emit("productUndeployed", productId, {
             blockNumber,
@@ -206,7 +211,7 @@ class Watcher extends EventEmitter {
         })
     }
 
-    onSubscribeEvent(blockNumber, blockIndex, args) {
+    async onSubscribeEvent(blockNumber, blockIndex, args) {
         const productId = args.productId.slice(2)    // remove "0x" from beginning
         return this.emit("subscribed", {
             blockNumber,
@@ -229,6 +234,7 @@ class Watcher extends EventEmitter {
             priceCurrency: currencySymbol[product.currency],
             minimumSubscriptionInSeconds: product.minimumSubscriptionSeconds.toString(),
         })
+        return null
     }
 }
 

@@ -18,27 +18,27 @@ class CoreAPIClient {
         this.privateKey = privateKey
     }
 
-    setDeployed(id, body) {
+    async setDeployed(id, body) {
         const apiUrl = `${this.streamrUrl}/products/${id}/setDeployed`
         return this._post(apiUrl, body)
     }
 
-    setUndeployed(id, body) {
+    async setUndeployed(id, body) {
         const apiUrl = `${this.streamrUrl}/products/${id}/setUndeployed`
         return this._post(apiUrl, body)
     }
 
-    productUpdated(id, body) {
+    async productUpdated(id, body) {
         const apiUrl = `${this.streamrUrl}/products/${id}/setPricing`
         return this._post(apiUrl, body)
     }
 
-    subscribe(body) {
+    async subscribe(body) {
         const apiUrl = `${this.streamrUrl}/subscriptions`
         return this._post(apiUrl, body)
     }
 
-    _post(apiUrl, body) {
+    async _post(apiUrl, body) {
         let logBody = ""
         if (body) {
             logBody = JSON.stringify(body)
