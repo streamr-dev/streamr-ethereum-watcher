@@ -17,7 +17,7 @@ async function getSessionToken(privateKey) {
     return client.session.getSessionToken()
 }
 
-async function start() {
+async function main() {
     const MARKETPLACE_ADDRESS = "MARKETPLACE_ADDRESS"
     const marketplaceAddress = getEnv(MARKETPLACE_ADDRESS)
     const NETWORK_ID = "NETWORK_ID"
@@ -128,7 +128,7 @@ async function start() {
     })
 }
 
-start().catch(e => {
+main().catch(e => {
     log.error(`Unexpected error: ${e.stack}`)
     process.exit(1)
 })
