@@ -34,27 +34,10 @@ const playbackStep = 1000
  *  event ExchangeRatesUpdated(uint timestamp, uint dataInUsd);
  */
 class Watcher extends EventEmitter {
-    constructor(provider, marketplaceAbi, marketplaceContract) {
+    constructor(provider, marketplaceContract) {
         super()
         this.provider = provider
-        this.abi = marketplaceAbi
         this.market = marketplaceContract
-    }
-
-    /**
-     * Check this.market really looks like a Marketplace and not something funny
-     */
-    async checkMarketplaceAddress() {
-        const getterNames = this.abi
-            .filter(f => f.constant && f.inputs.length === 0)
-            .map(f => f.name)
-        let msg = ""
-        for (const getterName of getterNames) {
-            const value = await this.market[getterName]()
-            msg += ` ${getterName}: ${value},`
-        }
-        log.info(`Watcher > Checking the Marketplace contract at ${this.market.address}: ${msg}`)
-        return Promise.resolve()
     }
 
     /**

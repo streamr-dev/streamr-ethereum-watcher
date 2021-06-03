@@ -3,7 +3,6 @@ const assert = require("assert").strict
 const ethers = require("ethers")
 const ganache = require("ganache-core")
 const { Marketplace: { Currency } } = require("../lib/marketplace-contracts/src/contracts/enums")
-const Marketplace = require("../lib/marketplace-contracts/build/contracts/Marketplace.json")
 const deploy = require("./deploy_marketplace_test")
 const Watcher = require("./watcher")
 
@@ -33,7 +32,7 @@ describe("Watcher", () => {
         token2 = token.connect(wallet2)
         marketplace2 = marketplace.connect(wallet2)
 
-        watcher = new Watcher(provider, Marketplace.abi, marketplace)
+        watcher = new Watcher(provider, marketplace)
         await watcher.start()
     })
 

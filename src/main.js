@@ -17,6 +17,23 @@ async function getSessionToken(privateKey) {
     return client.session.getSessionToken()
 }
 
+
+/**
+ * Check this.market really looks like a Marketplace and not something funny
+ */
+async function checkMarketplaceAddress(abi, market) {
+    const getterNames = abi
+        .filter(f => f.constant && f.inputs.length === 0)
+        .map(f => f.name)
+    let msg = ""
+    for (const getterName of getterNames) {
+        const value = await market[getterName]()
+        msg += ` ${getterName}: ${value},`
+    }
+    log.info(`Watcher > Checking the Marketplace contract at ${market.address}: ${msg}`)
+    return Promise.resolve()
+}
+
 async function main() {
     const MARKETPLACE_ADDRESS = "MARKETPLACE_ADDRESS"
     const marketplaceAddress = getEnv(MARKETPLACE_ADDRESS)
@@ -69,8 +86,10 @@ async function main() {
     const marketAddress = await throwIfNotContract(provider, marketplaceAddress || deployedMarketplaceAddress)
 
     const marketplaceContract = new ethers.Contract(marketAddress, Marketplace.abi, provider)
-    const watcher = new Watcher(provider, Marketplace.abi, marketplaceContract)
+    const watcher = new Watcher(provider, marketplaceContract)
     const apiClient = new CoreAPIClient(streamrApiURL, getSessionToken, devopsKey)
+
+    await checkMarketplaceAddress(Marketplace.abi, marketplaceContract)
 
     watcher.on("productDeployed", (id, body) => {
         apiClient.setDeployed(id, body)
@@ -91,7 +110,6 @@ async function main() {
     watcher.on("event", event => {
         log.info(`Watcher detected event: ${JSON.stringify(event)}`)
     })
-    await watcher.checkMarketplaceAddress()
 
     // write on disk how many blocks have been processed
     const store = new LastBlockStore(lastBlockDir)
