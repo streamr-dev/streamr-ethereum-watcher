@@ -54,7 +54,7 @@ class Watcher extends EventEmitter {
             msg += ` ${getterName}: ${value},`
         }
         log.info(`Watcher > Checking the Marketplace contract at ${this.market.address}: ${msg}`)
-        return null
+        return Promise.resolve()
     }
 
     /**
@@ -84,7 +84,7 @@ class Watcher extends EventEmitter {
         this.provider.on({address: this.market.address}, logEntry => {
             log.info("Watcher > Event logged at " + logEntry.blockNumber)
         })
-        return null
+        return Promise.resolve()
     }
 
     // for filter callback, see https://docs.ethers.io/ethers.js/html/api-contract.html#event-object
@@ -105,7 +105,7 @@ class Watcher extends EventEmitter {
     async logEvent(...args) {
         const eventObject = args.pop()
         log.warn(`Watcher > Event ignored: ${eventObject.event}, args: ${JSON.stringify(args.map(a => a.toString()))}`)
-        return null
+        return Promise.resolve()
     }
 
     // SYNCHRONOUSLY play back events one by one. Wait for promise to return before sending the next one
@@ -150,7 +150,7 @@ class Watcher extends EventEmitter {
                 throw e
             }
         }
-        return null
+        return Promise.resolve()
     }
 
     // playback in steps to avoid choking Infura
@@ -174,7 +174,7 @@ class Watcher extends EventEmitter {
             await this.emit("eventSuccessfullyProcessed", {blockNumber: b - 1})
         }
         await this.playbackStep(b, toBlock)
-        return null
+        return Promise.resolve()
     }
 
     async onDeployEvent(blockNumber, blockIndex, args) {
@@ -234,7 +234,7 @@ class Watcher extends EventEmitter {
             priceCurrency: currencySymbol[product.currency],
             minimumSubscriptionInSeconds: product.minimumSubscriptionSeconds.toString(),
         })
-        return null
+        return Promise.resolve()
     }
 }
 
