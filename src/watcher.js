@@ -225,7 +225,7 @@ class Watcher extends EventEmitter {
     async onOwnershipUpdateEvent(blockNumber, blockIndex, args) {
         const productId = args.id.slice(2)    // remove "0x" from beginning
         const product = await this.market.getProduct(args.id)
-        await this.emit("productUpdated", productId, {
+        return this.emit("productUpdated", productId, {
             blockNumber,
             blockIndex,
             ownerAddress: product.owner,
@@ -234,7 +234,6 @@ class Watcher extends EventEmitter {
             priceCurrency: currencySymbol[product.currency],
             minimumSubscriptionInSeconds: product.minimumSubscriptionSeconds.toString(),
         })
-        return Promise.resolve()
     }
 }
 
