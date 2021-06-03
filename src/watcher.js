@@ -109,14 +109,7 @@ class Watcher extends EventEmitter {
     }
 
     // SYNCHRONOUSLY play back events one by one. Wait for promise to return before sending the next one
-    async playbackStep(fromBlock, toBlock) {
-        log.info(`Watcher > Getting events from blocks ${fromBlock}...${toBlock}`)
-        const filter = {
-            fromBlock,
-            toBlock,
-            address: this.market.address,
-        }
-        const events = await this.provider.getLogs(filter)
+    async playbackStep(events) {
         log.info(`Watcher > Playing back ${events.length} events`)
         for (let raw of events) {
             const event = this.market.interface.parseLog(raw)
@@ -153,6 +146,16 @@ class Watcher extends EventEmitter {
         return Promise.resolve()
     }
 
+    async loadEventsFormBlockchain(fromBlock, toBlock) {
+        log.info(`Watcher > Getting events from blocks ${fromBlock}...${toBlock}`)
+        const filter = {
+            fromBlock,
+            toBlock,
+            address: this.market.address,
+        }
+        return this.provider.getLogs(filter)
+    }
+
     // playback in steps to avoid choking Infura
     // see https://github.com/INFURA/infura/issues/54
     async playback(fromBlock, toBlock) {
@@ -162,18 +165,20 @@ class Watcher extends EventEmitter {
         }
         let b = fromBlock
 
-        // before start there weren't too many events to choke infura
         const start = playbackStartBlock[this.networkId] || 0
         if (fromBlock < start) {
-            await this.playbackStep(fromBlock, start - 1)
+            const events = await this.loadEventsFormBlockchain(fromBlock, start - 1)
+            await this.playbackStep(events)
             b = start
         }
         while (b < toBlock - playbackStep) {
-            await this.playbackStep(b, b + playbackStep)
+            const events = await this.loadEventsFormBlockchain(b, b + playbackStep)
+            await this.playbackStep(events)
             b += playbackStep
             await this.emit("eventSuccessfullyProcessed", {blockNumber: b - 1})
         }
-        await this.playbackStep(b, toBlock)
+        const events = await this.loadEventsFormBlockchain(b, toBlock)
+        await this.playbackStep(events)
         return Promise.resolve()
     }
 
