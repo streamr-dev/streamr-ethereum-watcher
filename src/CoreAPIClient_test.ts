@@ -3,10 +3,6 @@ import http from "http"
 import CoreAPIClient from "./CoreAPIClient"
 const TEST_SERVER_PORT = 51843
 
-async function getSessionToken(privateKey: string): Promise<string> {
-    return Promise.resolve("YQoijTHJOwt4y8bPtPmLNFpbS2TT8C3SmL6WP9QCGJjlH7iyaxyTBKGJHG5KE8eu")
-}
-
 describe("CoreAPIClient", () => {
     let server: http.Server
     let apiClient: CoreAPIClient
@@ -44,7 +40,16 @@ describe("CoreAPIClient", () => {
     beforeEach(() => {
         requests = []
         const privateKey = "15f6a8f106f5438f975faf9b87772026a6fe047034e6b34577fc023a64909db3"
-        apiClient = new CoreAPIClient(`http://127.0.0.1:${TEST_SERVER_PORT}`, getSessionToken, privateKey)
+
+        const getSessionToken = async function(privateKey: string): Promise<string> {
+            return Promise.resolve("YQoijTHJOwt4y8bPtPmLNFpbS2TT8C3SmL6WP9QCGJjlH7iyaxyTBKGJHG5KE8eu")
+        }
+
+        apiClient = new CoreAPIClient(
+            `http://127.0.0.1:${TEST_SERVER_PORT}`,
+            CoreAPIClient.DEFAULT_FETCH_FUNC,
+            getSessionToken,
+            privateKey)
     })
 
     it("setDeployed causes expected POST request", async () => {

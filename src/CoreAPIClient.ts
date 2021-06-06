@@ -1,11 +1,28 @@
 import log from "./log"
-import fetch, {Response} from "node-fetch"
+import fetch, {RequestInfo, RequestInit, Response} from "node-fetch"
+import StreamrClient from "streamr-client"
+
+const defaultGetSessionTokenFunc = async function (privateKey: string): Promise<string> {
+    const client = new StreamrClient({
+        auth: {
+            privateKey: privateKey,
+        }
+    })
+    return client.session.getSessionToken()
+}
+
+type getSessionTokenFunc = (privateKey: string) => Promise<string>
+
+type fetchFunc = (url: RequestInfo, init?: RequestInit) => Promise<Response>
 
 export default class CoreAPIClient {
+    public static DEFAULT_GET_SESSION_TOKEN_FUNC: getSessionTokenFunc = defaultGetSessionTokenFunc
+    public static DEFAULT_FETCH_FUNC: fetchFunc = fetch
     private readonly streamrUrl: string
 
     constructor(streamrUrl: string,
-                private readonly getSessionTokenFunc: (privateKey: string) => Promise<string>,
+                private readonly nodeFetch: fetchFunc,
+                private readonly getSessionTokenFunc: getSessionTokenFunc,
                 private readonly privateKey: string) {
         if (!streamrUrl) {
             throw new Error("No streamUrl given")
@@ -43,7 +60,7 @@ export default class CoreAPIClient {
         return this._post(apiUrl, body)
     }
 
-    async _post(apiUrl: string, body: any): Promise<Response> {
+    private async _post(apiUrl: string, body: any): Promise<Response> {
         let logBody = ""
         if (body) {
             logBody = JSON.stringify(body)
@@ -52,7 +69,7 @@ export default class CoreAPIClient {
 
         return this.getSessionTokenFunc(this.privateKey)
             .then(async (sessionToken: string): Promise<Response> => {
-                return fetch(apiUrl, {
+                return this.nodeFetch(apiUrl, {
                     method: "POST",
                     body: JSON.stringify(body),
                     headers: {

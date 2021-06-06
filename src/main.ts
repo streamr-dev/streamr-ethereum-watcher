@@ -1,21 +1,11 @@
 import log from "./log"
 import {getEnv} from "./env"
 import LastBlockStore from "./LastBlockStore"
-import StreamrClient from "streamr-client"
 import {ethers} from "ethers"
 import {throwIfNotContract} from "./checkArguments"
 import Watcher from "./watcher"
 import CoreAPIClient from "./CoreAPIClient"
 import MarketplaceJSON from "../lib/marketplace-contracts/build/contracts/Marketplace.json"
-
-async function getSessionToken(privateKey: string): Promise<string> {
-    const client = new StreamrClient({
-        auth: {
-            privateKey: privateKey,
-        }
-    })
-    return client.session.getSessionToken()
-}
 
 /**
  * Check this.market really looks like a Marketplace and not something funny
@@ -86,7 +76,12 @@ async function main(): Promise<void> {
 
     const marketplaceContract = new ethers.Contract(marketAddress, MarketplaceJSON.abi, provider)
     const watcher = new Watcher(provider, marketplaceContract)
-    const apiClient = new CoreAPIClient(streamrApiURL, getSessionToken, devopsKey)
+    const apiClient = new CoreAPIClient(
+        streamrApiURL,
+        CoreAPIClient.DEFAULT_FETCH_FUNC,
+        CoreAPIClient.DEFAULT_GET_SESSION_TOKEN_FUNC,
+        devopsKey,
+    )
 
     await checkMarketplaceAddress(MarketplaceJSON.abi, marketplaceContract)
 
