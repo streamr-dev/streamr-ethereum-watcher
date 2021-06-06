@@ -3,10 +3,9 @@ import fetch, {Response} from "node-fetch"
 
 export default class CoreAPIClient {
     private readonly streamrUrl: string
-    private readonly getSessionToken: (privateKey: string) => Promise<string>
 
     constructor(streamrUrl: string,
-        sessionTokenGetterFunc: (privateKey: string) => Promise<string>,
+                private readonly getSessionTokenFunc: (privateKey: string) => Promise<string>,
                 private readonly privateKey: string) {
         if (!streamrUrl) {
             throw new Error("No streamUrl given")
@@ -16,7 +15,9 @@ export default class CoreAPIClient {
         } else {
             this.streamrUrl = streamrUrl
         }
-        this.getSessionToken = sessionTokenGetterFunc
+        if (!getSessionTokenFunc) {
+            throw new Error("No getSessionToken() function given")
+        }
         if (!privateKey) {
             throw new Error("No privateKey given")
         }
@@ -49,7 +50,7 @@ export default class CoreAPIClient {
         }
         log.info("Watcher/CoreAPIClient > POST", apiUrl, logBody)
 
-        return this.getSessionToken(this.privateKey)
+        return this.getSessionTokenFunc(this.privateKey)
             .then(async (sessionToken: string): Promise<Response> => {
                 return fetch(apiUrl, {
                     method: "POST",
