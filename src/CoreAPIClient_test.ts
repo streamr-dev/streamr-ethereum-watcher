@@ -3,10 +3,23 @@ import http from "http"
 import CoreAPIClient from "./CoreAPIClient"
 const TEST_SERVER_PORT = 51843
 
+class HTTPRequest {
+    constructor(private readonly accessToken: string | undefined,
+                private readonly url: string | undefined,
+                private readonly method: string | undefined,
+                private readonly body: any) {
+        this.accessToken = accessToken
+        this.url = url
+        this.method = method
+        this.body = body
+    }
+}
+
 describe("CoreAPIClient", () => {
     let server: http.Server
     let apiClient: CoreAPIClient
-    let requests: Array<any>
+    let requests: Array<HTTPRequest>
+    const TOKEN = "YQoijTHJOwt4y8bPtPmLNFpbS2TT8C3SmL6WP9QCGJjlH7iyaxyTBKGJHG5KE8eu"
 
     before(() => {
         server = http.createServer((request: http.IncomingMessage, response: http.ServerResponse): void => {
@@ -15,12 +28,13 @@ describe("CoreAPIClient", () => {
                 body += chunk.toString()
             })
             request.on("end", (chunk: any): void => {
-                requests.push({
-                    accessToken: request.headers.authorization,
-                    url: request.url,
-                    method: request.method,
-                    body: JSON.parse(body)
-                })
+                requests.push(new HTTPRequest(
+                    request.headers.authorization,
+                    request.url,
+                    request.method,
+                    JSON.parse(body)
+                )
+                )
             })
             response.end()
         })
@@ -42,7 +56,7 @@ describe("CoreAPIClient", () => {
         const privateKey = "15f6a8f106f5438f975faf9b87772026a6fe047034e6b34577fc023a64909db3"
 
         const getSessionToken = async function(privateKey: string): Promise<string> {
-            return Promise.resolve("YQoijTHJOwt4y8bPtPmLNFpbS2TT8C3SmL6WP9QCGJjlH7iyaxyTBKGJHG5KE8eu")
+            return Promise.resolve(TOKEN)
         }
 
         apiClient = new CoreAPIClient(
@@ -64,11 +78,11 @@ describe("CoreAPIClient", () => {
         })
 
         assert.equal(requests.length, 1)
-        assert.deepEqual(requests[0], {
-            method: "POST",
-            url: "/products/product-id/setDeployed",
-            accessToken: "Bearer YQoijTHJOwt4y8bPtPmLNFpbS2TT8C3SmL6WP9QCGJjlH7iyaxyTBKGJHG5KE8eu",
-            body: {
+        assert.deepEqual(requests[0], new HTTPRequest(
+            "Bearer " + TOKEN,
+            "/products/product-id/setDeployed",
+            "POST",
+            {
                 blockNumber: 0,
                 blockIndex: 0,
                 ownerAddress: "0x0",
@@ -76,8 +90,8 @@ describe("CoreAPIClient", () => {
                 pricePerSecond: 5,
                 priceCurrency: "EUR",
                 minimumSubscriptionInSeconds: 0
-            }
-        })
+            })
+        )
     })
 
     it("setUndeployed causes expected POST request", async () => {
@@ -87,14 +101,14 @@ describe("CoreAPIClient", () => {
         })
 
         assert.equal(requests.length, 1)
-        assert.deepEqual(requests[0], {
-            method: "POST",
-            url: "/products/product-id/setUndeployed",
-            accessToken: "Bearer YQoijTHJOwt4y8bPtPmLNFpbS2TT8C3SmL6WP9QCGJjlH7iyaxyTBKGJHG5KE8eu",
-            body: {
+        assert.deepEqual(requests[0], new HTTPRequest(
+            "Bearer " + TOKEN,
+            "/products/product-id/setUndeployed",
+            "POST",
+            {
                 blockNumber: 0,
                 blockIndex: 0
             }
-        })
+        ))
     })
 })
