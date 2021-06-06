@@ -1,5 +1,5 @@
-const assert = require("assert").strict
-const {getEnv} = require("./env")
+import {strict as assert} from "assert"
+import {getEnv} from "./env"
 
 describe("OS environment variables", () => {
     it("gets variable from environment", () => {

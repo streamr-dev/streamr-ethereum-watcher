@@ -3,8 +3,17 @@ module.exports = {
         "node": true,
         "es6": true
     },
-    "extends": "eslint:recommended",
+    "parser": "@typescript-eslint/parser",
+    "plugins": [
+        "@typescript-eslint"
+    ],
+    "extends": [
+        "eslint:recommended",
+        "plugin:@typescript-eslint/eslint-recommended",
+        "plugin:@typescript-eslint/recommended"
+    ],
     "parserOptions": {
+        "project": "./tsconfig.json",
         "ecmaVersion": 2017
     },
     "rules": {
@@ -28,10 +37,33 @@ module.exports = {
             "error",
             "never"
         ],
-        "no-console": "warn",
+        "no-console": "error",
         "keyword-spacing": "error",
         "func-call-spacing": "error",
-        "space-infix-ops": "error"
+        "space-infix-ops": "error",
+        "no-throw-literal": "error",
+        "no-async-promise-executor": "error",
+        "no-promise-executor-return": "error",
+        "prefer-promise-reject-errors": "error",
+        "@typescript-eslint/no-unused-vars": [
+            "warn", //"error",
+            {
+                //"argsIgnorePattern": "^_",
+                //"caughtErrors": "all",
+                //"caughtErrorsIgnorePattern": "^ignore"
+            }
+        ],
+        "@typescript-eslint/no-floating-promises": ["error"],
+        "@typescript-eslint/promise-function-async": [
+            "error",
+            {
+                "allowedPromiseNames": ["Thenable"],
+                "checkArrowFunctions": true,
+                "checkFunctionDeclarations": true,
+                "checkFunctionExpressions": true,
+                "checkMethodDeclarations": true,
+            }
+        ],
     },
     "globals": {
         "describe": "readonly",
@@ -43,7 +75,7 @@ module.exports = {
     },
     "overrides": [
         {
-            "files": ["src/*_test.js"],
+            "files": ["src/*_test.ts"],
             "rules": {
                 "no-console": 0,
             }
