@@ -21,7 +21,7 @@
     "streamr-client": "5.4.1"
   },
   "devDependencies": {
-    "eslint": "7.27.0",
+    "eslint": "7.28.0",
     "ganache-cli": "6.12.2",
     "ganache-core": "2.13.2",
     "mocha": "8.4.0",
