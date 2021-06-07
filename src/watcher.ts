@@ -68,9 +68,11 @@ export default class Watcher extends EventEmitter {
         this.watchEvent("SubscriptionTransferred", this.logEvent)
         this.watchEvent("ExchangeRatesUpdated", this.logEvent)
 
-        this.provider.on({address: this.market.address}, logEntry => {
-            log.info("Watcher > Event logged at " + logEntry.blockNumber)
-        })
+        const listener = function (...args: Array<any>): void {
+            const logEntry = args.pop()
+            log.debug("Watcher > Event logged at " + logEntry.blockNumber)
+        }
+        this.provider.on({address: this.market.address}, listener)
         return Promise.resolve()
     }
 
