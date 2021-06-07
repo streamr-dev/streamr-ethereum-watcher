@@ -13,7 +13,7 @@ Environment="NODE_ENV=production"
 WorkingDirectory=/home/ubuntu/streamr-ethereum-watcher
 Type=simple
 User=ubuntu
-ExecStart=/home/ubuntu/.nvm/versions/node/v14.17.0/bin/node src/main.js
+ExecStart=/home/ubuntu/.nvm/versions/node/v14.17.0/bin/node src/main.ts
 Restart=always
 RestartSec=5
 

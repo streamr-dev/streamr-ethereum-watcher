@@ -1,8 +1,13 @@
-const log = require("./log")
-const fetch = require("node-fetch")
+import log from "./log"
+import fetch, {Response} from "node-fetch"
 
-class CoreAPIClient {
-    constructor(streamrUrl, sessionTokenGetterFunc, privateKey) {
+export default class CoreAPIClient {
+    private readonly streamrUrl: string
+    private readonly getSessionToken: (privateKey: string) => Promise<string>
+
+    constructor(streamrUrl: string,
+        sessionTokenGetterFunc: (privateKey: string) => Promise<string>,
+                private readonly privateKey: string) {
         if (!streamrUrl) {
             throw new Error("No streamUrl given")
         }
@@ -15,30 +20,29 @@ class CoreAPIClient {
         if (!privateKey) {
             throw new Error("No privateKey given")
         }
-        this.privateKey = privateKey
     }
 
-    async setDeployed(id, body) {
+    async setDeployed(id: string, body: any): Promise<Response> {
         const apiUrl = `${this.streamrUrl}/products/${id}/setDeployed`
         return this._post(apiUrl, body)
     }
 
-    async setUndeployed(id, body) {
+    async setUndeployed(id: string, body: any): Promise<Response> {
         const apiUrl = `${this.streamrUrl}/products/${id}/setUndeployed`
         return this._post(apiUrl, body)
     }
 
-    async productUpdated(id, body) {
+    async productUpdated(id: string, body: any): Promise<Response> {
         const apiUrl = `${this.streamrUrl}/products/${id}/setPricing`
         return this._post(apiUrl, body)
     }
 
-    async subscribe(body) {
+    async subscribe(body: any): Promise<Response> {
         const apiUrl = `${this.streamrUrl}/subscriptions`
         return this._post(apiUrl, body)
     }
 
-    async _post(apiUrl, body) {
+    async _post(apiUrl: string, body: any): Promise<Response> {
         let logBody = ""
         if (body) {
             logBody = JSON.stringify(body)
@@ -46,7 +50,7 @@ class CoreAPIClient {
         log.info("Watcher/CoreAPIClient > POST", apiUrl, logBody)
 
         return this.getSessionToken(this.privateKey)
-            .then(sessionToken => {
+            .then(async (sessionToken: string): Promise<Response> => {
                 return fetch(apiUrl, {
                     method: "POST",
                     body: JSON.stringify(body),
@@ -59,5 +63,3 @@ class CoreAPIClient {
             })
     }
 }
-
-module.exports = CoreAPIClient
