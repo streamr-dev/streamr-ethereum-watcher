@@ -1,14 +1,16 @@
-const log = require("./log")
-const EventEmitter = require("promise-events")
-const ethers = require("ethers")
-const {Marketplace: {currencySymbol}} = require("../lib/marketplace-contracts/src/contracts/enums")
+import log from "./log"
+import EventEmitter from "promise-events"
+import {ethers} from "ethers"
+import MarketplaceEnums from "../lib/marketplace-contracts/src/contracts/enums"
+import {Log} from "ethers/providers/abstract-provider"
 
+const currencySymbol = MarketplaceEnums.currencySymbol
 const EE_PRICE_SCALE = new ethers.utils.BigNumber(1e9)  // scale price to "nanotokens"/token-gwei so that it fits into mysql and Java long
 // "warp" to this block; before this block there weren't (too many) events
-const playbackStartBlock = Object.freeze({
-    "1": 12359784, // mainnet, start from 2021-05-03
-    "4": 1920000, // rinkeby
-})
+const playbackStartBlock = new Map<number, number>([
+    [1, 12359784], // mainnet, start from 2021-05-03
+    [4, 1920000], // rinkeby
+])
 const playbackStep = 1000
 
 /**
@@ -33,33 +35,19 @@ const playbackStep = 1000
  *  // currency events
  *  event ExchangeRatesUpdated(uint timestamp, uint dataInUsd);
  */
-class Watcher extends EventEmitter {
-    constructor(provider, marketplaceAbi, marketplaceContract) {
-        super()
-        this.provider = provider
-        this.abi = marketplaceAbi
-        this.market = marketplaceContract
-    }
+export default class Watcher extends EventEmitter {
+    private isRunning = false
+    private networkId = 1
 
-    /**
-     * Check this.market really looks like a Marketplace and not something funny
-     */
-    async checkMarketplaceAddress() {
-        const getterNames = this.abi
-            .filter(f => f.constant && f.inputs.length === 0)
-            .map(f => f.name)
-        let msg = ""
-        for (const getterName of getterNames) {
-            const value = await this.market[getterName]()
-            msg += ` ${getterName}: ${value},`
-        }
-        log.info(`Watcher > Checking the Marketplace contract at ${this.market.address}: ${msg}`)
+    constructor(private readonly provider: ethers.providers.Provider,
+                private readonly market: ethers.Contract) {
+        super()
     }
 
     /**
      * Start watching incoming blocks
      */
-    async start() {
+    async start(): Promise<void> {
         if (this.isRunning) {
             throw new Error("Already started!")
         }
@@ -83,39 +71,34 @@ class Watcher extends EventEmitter {
         this.provider.on({address: this.market.address}, logEntry => {
             log.info("Watcher > Event logged at " + logEntry.blockNumber)
         })
+        return Promise.resolve()
     }
 
     // for filter callback, see https://docs.ethers.io/ethers.js/html/api-contract.html#event-object
-    watchEvent(eventName, handler) {
+    watchEvent(eventName: string, handler: (...args: any[]) => Promise<any>): void {
         const filter = this.market.filters[eventName]()
-        const self = this
         this.market.on(filter, (...args) => {
             const event = args.pop()
             log.info(`Watcher > Event: ${event.event}, args: ${JSON.stringify(args.map(a => a.toString()))}`)
-            handler.call(self, event.blockNumber, event.transactionIndex, event.args)
+            handler.call(this, event.blockNumber, event.transactionIndex, event.args)
                 .catch(async (e) => {
-                    await self.emit("error", e)
+                    await this.emit("error", e)
                     log.error("Watcher > Error while sending event: " + e.stack)
                 })
         })
     }
 
-    async logEvent(...args) {
+    async logEvent(...args: any[]): Promise<void> {
         const eventObject = args.pop()
         log.warn(`Watcher > Event ignored: ${eventObject.event}, args: ${JSON.stringify(args.map(a => a.toString()))}`)
+        return Promise.resolve()
     }
 
     // SYNCHRONOUSLY play back events one by one. Wait for promise to return before sending the next one
-    async playbackStep(fromBlock, toBlock) {
-        log.info(`Watcher > Getting events from blocks ${fromBlock}...${toBlock}`)
-        const filter = {
-            fromBlock,
-            toBlock,
-            address: this.market.address,
-        }
-        const events = await this.provider.getLogs(filter)
+    async playbackStep(events: Array<Log>): Promise<void> {
         log.info(`Watcher > Playing back ${events.length} events`)
-        for (let raw of events) {
+        for (const raw of events) {
+
             const event = this.market.interface.parseLog(raw)
             try {
                 switch (event.name) {
@@ -147,32 +130,46 @@ class Watcher extends EventEmitter {
                 throw e
             }
         }
+        return Promise.resolve()
+    }
+
+    async loadEventsFormBlockchain(fromBlock: number, toBlock: number): Promise<Array<Log>> {
+        log.info(`Watcher > Getting events from blocks ${fromBlock}...${toBlock}`)
+        const filter = {
+            fromBlock,
+            toBlock,
+            address: this.market.address,
+        }
+        return this.provider.getLogs(filter)
     }
 
     // playback in steps to avoid choking Infura
     // see https://github.com/INFURA/infura/issues/54
-    async playback(fromBlock, toBlock) {
+    async playback(fromBlock: number, toBlock: number): Promise<void> {
         if (!this.networkId) {
             const network = await this.provider.getNetwork()
             this.networkId = network.chainId
         }
         let b = fromBlock
 
-        // before start there weren't too many events to choke infura
-        const start = playbackStartBlock[this.networkId] || 0
+        const start = playbackStartBlock.get(this.networkId) || 0
         if (fromBlock < start) {
-            await this.playbackStep(fromBlock, start - 1)
+            const events: Array<Log> = await this.loadEventsFormBlockchain(fromBlock, start - 1)
+            await this.playbackStep(events)
             b = start
         }
         while (b < toBlock - playbackStep) {
-            await this.playbackStep(b, b + playbackStep)
+            const events: Array<Log> = await this.loadEventsFormBlockchain(b, b + playbackStep)
+            await this.playbackStep(events)
             b += playbackStep
             await this.emit("eventSuccessfullyProcessed", {blockNumber: b - 1})
         }
-        await this.playbackStep(b, toBlock)
+        const events: Array<Log> = await this.loadEventsFormBlockchain(b, toBlock)
+        await this.playbackStep(events)
+        return Promise.resolve()
     }
 
-    onDeployEvent(blockNumber, blockIndex, args) {
+    async onDeployEvent(blockNumber: any, blockIndex: any, args: any): Promise<any> {
         const productId = args.id.slice(2)    // remove "0x" from beginning
         return this.emit("productDeployed", productId, {
             blockNumber,
@@ -185,7 +182,7 @@ class Watcher extends EventEmitter {
         })
     }
 
-    onUpdateEvent(blockNumber, blockIndex, args) {
+    async onUpdateEvent(blockNumber: any, blockIndex: any, args: any): Promise<any> {
         const productId = args.id.slice(2)    // remove "0x" from beginning
         return this.emit("productUpdated", productId, {
             blockNumber,
@@ -198,7 +195,7 @@ class Watcher extends EventEmitter {
         })
     }
 
-    onUndeployEvent(blockNumber, blockIndex, args) {
+    async onUndeployEvent(blockNumber: any, blockIndex: any, args: any): Promise<any> {
         const productId = args.id.slice(2)    // remove "0x" from beginning
         return this.emit("productUndeployed", productId, {
             blockNumber,
@@ -206,7 +203,7 @@ class Watcher extends EventEmitter {
         })
     }
 
-    onSubscribeEvent(blockNumber, blockIndex, args) {
+    async onSubscribeEvent(blockNumber: any, blockIndex: any, args: any): Promise<any> {
         const productId = args.productId.slice(2)    // remove "0x" from beginning
         return this.emit("subscribed", {
             blockNumber,
@@ -217,10 +214,10 @@ class Watcher extends EventEmitter {
         })
     }
 
-    async onOwnershipUpdateEvent(blockNumber, blockIndex, args) {
+    async onOwnershipUpdateEvent(blockNumber: any, blockIndex: any, args: any): Promise<any> {
         const productId = args.id.slice(2)    // remove "0x" from beginning
         const product = await this.market.getProduct(args.id)
-        await this.emit("productUpdated", productId, {
+        return this.emit("productUpdated", productId, {
             blockNumber,
             blockIndex,
             ownerAddress: product.owner,
@@ -231,5 +228,3 @@ class Watcher extends EventEmitter {
         })
     }
 }
-
-module.exports = Watcher
