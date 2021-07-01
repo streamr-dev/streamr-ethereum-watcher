@@ -37,7 +37,7 @@ const playbackStep = 1000
  */
 export default class Watcher extends EventEmitter {
     private isRunning = false
-    private networkId = 1
+    private networkId = -1
 
     constructor(private readonly provider: ethers.providers.Provider,
                 private readonly market: ethers.Contract) {
@@ -148,7 +148,7 @@ export default class Watcher extends EventEmitter {
     // playback in steps to avoid choking Infura
     // see https://github.com/INFURA/infura/issues/54
     async playback(fromBlock: number, toBlock: number): Promise<void> {
-        if (!this.networkId) {
+        if (this.networkId === -1) {
             const network = await this.provider.getNetwork()
             this.networkId = network.chainId
         }
