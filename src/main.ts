@@ -88,28 +88,36 @@ async function main(): Promise<void> {
     await watcher.on("productDeployed", async (...args: any[]): Promise<any> => {
         const id = args[0]
         const body = args[1]
-        await apiClient.setDeployed(id, body)
+        const response = await apiClient.setDeployed(id, body)
+        const responseJson = await response.json()
         log.info(`Product ${id} deployed ${JSON.stringify(body)}`)
+        log.info(`Response code ${response.status}: ${JSON.stringify(responseJson)}`)
         return Promise.resolve()
     })
     await watcher.on("productUndeployed", async (...args: any[]): Promise<any> => {
         const id = args[0]
         const body = args[1]
-        await apiClient.setUndeployed(id, body)
+        const response = await apiClient.setUndeployed(id, body)
+        const responseJson = await response.json()
         log.info(`Product ${id} UNdeployed ${JSON.stringify(body)}`)
+        log.info(`Response code ${response.status}: ${JSON.stringify(responseJson)}`)
         return Promise.resolve()
     })
     await watcher.on("productUpdated", async (...args: any[]): Promise<any> => {
         const id = args[0]
         const body = args[1]
-        await apiClient.productUpdated(id, body)
+        const response = await apiClient.productUpdated(id, body)
+        const responseJson = await response.json()
         log.info(`Product ${id} UPDATED ${JSON.stringify(body)}`)
+        log.info(`Response code ${response.status}: ${JSON.stringify(responseJson)}`)
         return Promise.resolve()
     })
     await watcher.on("subscribed", async (...args: any[]): Promise<any> => {
         const body = args[0]
-        await apiClient.subscribe(body)
+        const response = await apiClient.subscribe(body)
+        const responseJson = await response.json()
         log.info(`Product ${body.product} subscribed ${JSON.stringify(body)}`)
+        log.info(`Response code ${response.status}: ${JSON.stringify(responseJson)}`)
         return Promise.resolve()
     })
     await watcher.on("event", async (...args: any[]): Promise<any> => {
