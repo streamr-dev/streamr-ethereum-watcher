@@ -2,8 +2,9 @@ import log from "./log"
 import fetch, {RequestInfo, RequestInit, Response} from "node-fetch"
 import StreamrClient from "streamr-client"
 
-const defaultGetSessionTokenFunc = async function (privateKey: string): Promise<string> {
+const defaultGetSessionTokenFunc = async function (privateKey: string, streamrUrl: string): Promise<string> {
     const client = new StreamrClient({
+        restUrl: streamrUrl,
         auth: {
             privateKey: privateKey,
         }
@@ -11,7 +12,7 @@ const defaultGetSessionTokenFunc = async function (privateKey: string): Promise<
     return client.session.getSessionToken()
 }
 
-type getSessionTokenFunc = (privateKey: string) => Promise<string>
+type getSessionTokenFunc = (privateKey: string, streamrUrl: string) => Promise<string>
 
 type fetchFunc = (url: RequestInfo, init?: RequestInit) => Promise<Response>
 
@@ -67,7 +68,7 @@ export default class CoreAPIClient {
         }
         log.info("Watcher/CoreAPIClient > POST", apiUrl, logBody)
 
-        return this.getSessionTokenFunc(this.privateKey)
+        return this.getSessionTokenFunc(this.privateKey, this.streamrUrl)
             .then(async (sessionToken: string): Promise<Response> => {
                 return this.nodeFetch(apiUrl, {
                     method: "POST",
