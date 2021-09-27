@@ -1,6 +1,7 @@
-
+---
+#
 # https://docs.github.com/en/free-pro-team@latest/github/administering-a-repository/configuration-options-for-dependency-updates
-
+#
 version: 2
 updates:
   - package-ecosystem: "github-actions"
@@ -12,8 +13,11 @@ updates:
     commit-message:
       prefix: "ci"
       include: "scope"
-    reviewers:
+    labels:
+      - "ci"
+    assignees:
       - "kare"
+      - "jtakalai"
   - package-ecosystem: "npm"
     directory: "/"
     schedule:
@@ -23,6 +27,8 @@ updates:
     commit-message:
       prefix: "build"
       include: "scope"
-    reviewers:
+    labels:
+      - "build"
+    assignees:
       - "kare"
-
+      - "jtakalai"
