@@ -22,6 +22,11 @@ jobs:
         os:
           - ubuntu-18.04
           - ubuntu-20.04
+        experimental: [false]
+        include:
+          - node: 16
+            os: ubuntu-20.04
+            experimental: true
     steps:
       - uses: actions/checkout@v2.3.4
       - name: Node ${{ matrix.node_version }} - x64 on ${{ matrix.os }}
