@@ -15,11 +15,12 @@ export default class LastBlockStore {
     }
 
     write(blockNumber: number): void {
+        log.info(`LastBlockStore about to write ${blockNumber}`)
         try {
             fs.writeFileSync(this.lastBlockPath, blockNumber.toString())
             log.info(`Processed https://etherscan.io/block/${blockNumber}. Wrote ${this.lastBlockPath}.`)
         } catch (e) {
-            log.error(`Error while writing ${this.lastBlockPath} file: ${e.message}`)
+            log.error(`Error while writing ${this.lastBlockPath} file: ${e}`)
         }
     }
 
