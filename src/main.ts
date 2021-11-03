@@ -39,7 +39,7 @@ async function main(): Promise<void> {
 
     try {
         new ethers.Wallet(devopsKey)
-    } catch (e) {
+    } catch (e: any) {
         log.error(`Expected a valid Ethereum key for environment variable ${DEVOPS_KEY}="${devopsKey}".`)
         process.exit(1)
     }
