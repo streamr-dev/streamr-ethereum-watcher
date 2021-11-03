@@ -4,8 +4,5 @@ export function getEnv(key: string): string {
     if (typeof value === "undefined") {
         return ""
     }
-    if (value === "undefined") {
-        return ""
-    }
     return value
 }
