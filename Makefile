@@ -34,7 +34,7 @@ define node
 	/bin/bash -e -o pipefail -l -c "source $(nvm_sh) && nvm exec $(node_version) node_modules/.bin/ts-node $(node_args)"
 endef
 
-node_modules: ## Run 'npm ci' if directory doesn't exist
+node_modules: package-lock.json ## Run 'npm ci' if directory doesn't exist
 	$(call npm, ci)
 
 .PHONY: lint
