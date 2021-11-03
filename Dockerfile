@@ -1,5 +1,5 @@
 # TODO: always update to latest node LTS (see https://nodejs.org/en/about/releases/)
-FROM node:14-buster AS builder
+FROM node:16-buster AS builder
 RUN mkdir /app
 WORKDIR /app
 COPY package.json /app
@@ -8,7 +8,7 @@ RUN npm ci
 COPY . /app
 
 # TODO: always update to latest node LTS (see https://nodejs.org/en/about/releases/)
-FROM node:14-buster-slim
+FROM node:16-buster-slim
 WORKDIR /app
 COPY --from=builder /app/ .
 
