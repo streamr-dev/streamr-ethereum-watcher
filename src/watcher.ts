@@ -123,10 +123,10 @@ export default class Watcher extends EventEmitter {
                         await this.onSubscribeEvent(raw.blockNumber, raw.transactionIndex, event.values)
                         break
                 }
-            } catch (e) {
+            } catch (e: any) {
                 log.error(`Watcher > unexpected error: ${e}`)
                 // if it was because streamr backend couldn't find the product for set(Un)Deployed, just keep chugging
-                if (e.code === "ECONNREFUSED") {
+                if (e.code && e.code === "ECONNREFUSED") {
                     continue
                 }
                 throw e
