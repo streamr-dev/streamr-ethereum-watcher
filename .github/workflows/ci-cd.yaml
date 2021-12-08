@@ -17,14 +17,12 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        node_version:
-          - 16.x
         os:
           - ubuntu-20.04
         experimental: [false]
     steps:
       - uses: actions/checkout@v2.4.0
-      - name: Node ${{ matrix.node_version }} - x64 on ${{ matrix.os }}
+      - name: Node x64 on ${{ matrix.os }}
         uses: actions/setup-node@v2.5.0
         with:
           node-version-file: '.nvmrc'
