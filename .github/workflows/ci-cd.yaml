@@ -16,7 +16,7 @@ jobs:
     continue-on-error: false
     steps:
       - uses: actions/checkout@v2.4.0
-      - name: Node x64 on ${{ matrix.os }}
+      - name: Node x64 on Ubuntu-20.04
         uses: actions/setup-node@v2.5.0
         with:
           node-version-file: '.nvmrc'
