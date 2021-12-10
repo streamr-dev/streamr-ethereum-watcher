@@ -12,14 +12,8 @@ on:
 jobs:
   integration:
     name: CI
-    runs-on: ${{ matrix.os }}
+    runs-on: Ubuntu-20.04
     continue-on-error: false
-    strategy:
-      fail-fast: false
-      matrix:
-        os:
-          - ubuntu-20.04
-        experimental: [false]
     steps:
       - uses: actions/checkout@v2.4.0
       - name: Node x64 on ${{ matrix.os }}
