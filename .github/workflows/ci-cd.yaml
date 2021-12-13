@@ -12,11 +12,11 @@ on:
 jobs:
   integration:
     name: CI
-    runs-on: Ubuntu-20.04
+    runs-on: ubuntu-20.04
     continue-on-error: false
     steps:
       - uses: actions/checkout@v2.4.0
-      - name: Node x64 on Ubuntu-20.04
+      - name: Node v16.10.0 - x64 on ubuntu-20.04
         uses: actions/setup-node@v2.5.0
         with:
           node-version-file: '.nvmrc'
