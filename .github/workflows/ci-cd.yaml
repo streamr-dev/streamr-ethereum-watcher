@@ -12,22 +12,14 @@ on:
 jobs:
   integration:
     name: CI
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-20.04
     continue-on-error: false
-    strategy:
-      fail-fast: false
-      matrix:
-        node_version:
-          - 16.x
-        os:
-          - ubuntu-20.04
-        experimental: [false]
     steps:
       - uses: actions/checkout@v2.4.0
-      - name: Node ${{ matrix.node_version }} - x64 on ${{ matrix.os }}
-        uses: actions/setup-node@v2.4.1
+      - name: Node v16.10.0 - x64 on ubuntu-20.04
+        uses: actions/setup-node@v2.5.0
         with:
-          node-version: ${{ matrix.node_version }}
+          node-version-file: '.nvmrc'
       - uses: actions/cache@v2.1.7
         with:
           path: ~/.npm
