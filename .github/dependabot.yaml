@@ -16,8 +16,7 @@ updates:
     labels:
       - "ci"
     assignees:
-      - "kare"
-      - "jtakalai"
+      - DaisyDomergue
   - package-ecosystem: "npm"
     directory: "/"
     schedule:
