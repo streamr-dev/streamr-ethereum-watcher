@@ -17,7 +17,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2.4.0
       - name: Node v16.10.0 - x64 on ubuntu-20.04
-        uses: actions/setup-node@v2.5.0
+        uses: actions/setup-node@v2.5.1
         with:
           node-version-file: '.nvmrc'
       - uses: actions/cache@v2.1.7
