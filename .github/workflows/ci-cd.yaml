@@ -12,23 +12,15 @@ on:
 jobs:
   integration:
     name: CI
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-20.04
     continue-on-error: false
-    strategy:
-      fail-fast: false
-      matrix:
-        node_version:
-          - 16.x
-        os:
-          - ubuntu-20.04
-        experimental: [false]
     steps:
       - uses: actions/checkout@v2.4.0
-      - name: Node ${{ matrix.node_version }} - x64 on ${{ matrix.os }}
-        uses: actions/setup-node@v2.4.1
+      - name: Node v16.10.0 - x64 on ubuntu-20.04
+        uses: actions/setup-node@v2.5.1
         with:
-          node-version: ${{ matrix.node_version }}
-      - uses: actions/cache@v2.1.6
+          node-version-file: '.nvmrc'
+      - uses: actions/cache@v2.1.7
         with:
           path: ~/.npm
           key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
@@ -42,7 +34,7 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1.6.0
       - name: Cache Docker layers
-        uses: actions/cache@v2.1.6
+        uses: actions/cache@v2.1.7
         with:
           path: /tmp/.buildx-cache
           key: ${{ runner.os }}-buildx-${{ github.sha }}
@@ -75,7 +67,7 @@ jobs:
           driver-opts: |
             network=host
       - name: Cache Docker layers
-        uses: actions/cache@v2.1.6
+        uses: actions/cache@v2.1.7
         with:
           path: /tmp/.buildx-cache
           key: ${{ runner.os }}-buildx-${{ github.sha }}
@@ -83,7 +75,7 @@ jobs:
             ${{ runner.os }}-buildx-
       - name: Docker meta
         id: docker_meta
-        uses: docker/metadata-action@v3.6.0
+        uses: docker/metadata-action@v3.6.2
         with:
           images: streamr/ethereum-watcher
           tags: |
@@ -126,7 +118,7 @@ jobs:
 #          set -e
 #          grep -q "Connected to Ethereum network" out.txt
       - name: Login to GitHub Container Registry
-        uses: docker/login-action@v1.10.0
+        uses: docker/login-action@v1.12.0
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
