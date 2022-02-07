@@ -6,8 +6,9 @@ describe("OS environment variables", () => {
         process.env.TEST_VAR = "hello"
         assert.equal(getEnv("TEST_VAR"), "hello")
     })
-    it("undefined variable is null", () => {
-        process.env.TEST_VAR = undefined
+    it("undefined variable returns empty string", () => {
+        delete process.env.TEST_VAR
+        assert.equal(process.env.TEST_VAR, undefined)
         assert.equal(getEnv("TEST_VAR"), "")
     })
 })
