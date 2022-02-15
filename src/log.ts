@@ -1,17 +1,17 @@
 
-function error(...messages: string[]): void {
+function error(...messages: any[]): void {
     console.error(...messages) // eslint-disable-line no-console
 }
 
-function warn(...messages: string[]): void {
+function warn(...messages: any[]): void {
     console.warn(...messages) // eslint-disable-line no-console
 }
 
-function info(...messages: string[]): void {
+function info(...messages: any[]): void {
     console.info(...messages) // eslint-disable-line no-console
 }
 
-function debug(...messages: string[]): void {
+function debug(...messages: any[]): void {
     console.debug(...messages) // eslint-disable-line no-console
 }
 
