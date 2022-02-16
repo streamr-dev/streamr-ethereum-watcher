@@ -10,7 +10,6 @@ import CoreAPIClient from "./CoreAPIClient"
 import MarketplaceJSON from "../lib/marketplace-contracts/build/contracts/Marketplace.json"
 import StreamRegistryJSON from "../lib/streamregistry/StreamRegistryV3.json"
 
-import StreamrClient, { StreamPermission } from "streamr-client"
 import { TransactionReceipt } from "ethers/providers"
 
 type EthereumAddress = string
@@ -81,6 +80,7 @@ async function main(): Promise<void> {
     log.info("Connected to Ethereum network: ", JSON.stringify(network))
 
     const maticProvider = new ethers.providers.JsonRpcProvider(maticServerURL)
+    const maticWallet = new ethers.Wallet(devopsKey, maticProvider)
 
     // deployed using truffle, mainnet tx: https://etherscan.io/tx/0x868a6604e6c33ebc52a3fe5d020d970fdd0019e8eb595232599d67f91624d877
     const deployedMarketplaceAddress = "0x2b3F2887c697B3f4f8D9F818c95482e1a3A759A5"
@@ -95,7 +95,7 @@ async function main(): Promise<void> {
     const marketAddress = await throwIfNotContract(provider, marketplaceAddress || deployedMarketplaceAddress)
     const registryAddress = await throwIfNotContract(maticProvider, streamRegistryAddress || deployedRegistryAddress)
 
-    const registryContract = new ethers.Contract(registryAddress, StreamRegistryJSON.abi, maticProvider)
+    const registryContract = new ethers.Contract(registryAddress, StreamRegistryJSON.abi, maticWallet)
     const marketplaceContract = new ethers.Contract(marketAddress, MarketplaceJSON.abi, provider)
     const watcher = new Watcher(provider, marketplaceContract)
     const apiClient = new CoreAPIClient(
@@ -129,6 +129,7 @@ async function main(): Promise<void> {
         const product: { streams: string[] } = await apiClient.getProduct(productId)
 
         // first find the existing permissions, then augment the subscribe expiration period
+        const streams = []
         const permissions = []
         for (const streamId of product.streams) {
             const permission: Permission = await registryContract.getDirectPermissionsForUser(streamId, address)
@@ -136,23 +137,28 @@ async function main(): Promise<void> {
             if (permission.subscribeExpiration.lt(subscriptionEndTimestamp)) {
                 permission.subscribeExpiration = subscriptionEndTimestamp
                 log.info("Watcher > new permission for stream %s: %o", streamId, permission)
+                streams.push(streamId)
+                permissions.push(permission)
             }
-            permissions.push(permission)
         }
 
-        // function trustedSetPermissions(string[] calldata streamids, address[] calldata users, Permission[] calldata permissions)
-        const tx = await registryContract.trustedSetPermissions(
-            product.streams,
-            product.streams.map(() => address),
-            permissions,
-        )
-        await tx.wait()
-            .then((tr: TransactionReceipt) => {
-                log.info("Watcher > trustedSetPermissions receipt: %o", tr)
-            }).catch((e: Error) => {
-                log.info("Watcher > failed to set permissions: %o", e)
-                log.error(e)
-            })
+        if (streams.length > 0) {
+            // function trustedSetPermissions(string[] calldata streamids, address[] calldata users, Permission[] calldata permissions)
+            const tx = await registryContract.trustedSetPermissions(
+                streams,
+                streams.map(() => address),
+                permissions,
+            )
+            await tx.wait()
+                .then((tr: TransactionReceipt) => {
+                    log.info("Watcher > trustedSetPermissions receipt: %o", tr)
+                }).catch((e: Error) => {
+                    log.info("Watcher > failed to set permissions: %o", e)
+                    log.error(e)
+                })
+        } else {
+            log.info("No permission changes needed")
+        }
     })
 
     // write on disk how many blocks have been processed
