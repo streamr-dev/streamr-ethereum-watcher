@@ -16,16 +16,10 @@ jobs:
     continue-on-error: false
     steps:
       - uses: actions/checkout@v2.4.0
-      - name: Node v16.10.0 - x64 on ubuntu-20.04
-        uses: actions/setup-node@v2.5.1
+      - uses: actions/setup-node@v2.5.1
         with:
-          node-version-file: '.nvmrc'
-      - uses: actions/cache@v2.1.7
-        with:
-          path: ~/.npm
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
+          node-version-file: .nvmrc
+          cache: npm
       - name: Test
         run: |
           npm ci
@@ -96,28 +90,7 @@ jobs:
           builder: ${{ steps.buildx.outputs.name }}
           cache-from: type=local,src=/tmp/.buildx-cache
           cache-to: type=local,dest=/tmp/.buildx-cache
-#      - name: Start Streamr Docker Stack
-#        uses: streamr-dev/streamr-docker-dev-action@v1.0.0-alpha.3
-#        with:
-#          services-to-start: "core-api nginx ethereum-watcher"
-#      - name: Run Smoke test
-#        run: |
-#          wait_time=10;
-#          for (( i=0; i < 5; i=i+1 )); do
-#            docker logs streamr-dev-ethereum-watcher > out.txt
-#            grep -q "Connected to Ethereum network" out.txt
-#            res=$?
-#            if test "$res" != "0"; then
-#              echo "Attempting to connect to Ethereum-Watcher retrying in $wait_time seconds"
-#              sleep $wait_time
-#              wait_time=$(( 2*wait_time ))
-#            else
-#              break
-#            fi
-#          done
-#          set -e
-#          grep -q "Connected to Ethereum network" out.txt
-      - name: Login to GitHub Container Registry
+      - name: Login to Docker Hub Container Registry
         uses: docker/login-action@v1.12.0
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
