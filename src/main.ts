@@ -125,20 +125,25 @@ async function main(): Promise<void> {
         log.info("Watcher > subscribed event at block %s index %s: until %s", blockNumber, blockIndex, endsAt)
 
         const subscriptionEndTimestamp = new BigNumber(endsAt)
+        const now = new BigNumber(Date.now().toString().slice(0, -3)) // remove milliseconds
 
         const product: { streams: string[] } = await apiClient.getProduct(productId)
 
-        // first find the existing permissions, then augment the subscribe expiration period
-        const streams = []
-        const permissions = []
+        // first find the existing permissions, then augment the subscribe expiration period (if still relevant)
+        const streams: string[] = []
+        const permissions: Permission[] = []
         for (const streamId of product.streams) {
-            const permission: Permission = await registryContract.getDirectPermissionsForUser(streamId, address)
-            log.info("Watcher > old permission for stream %s: %o", streamId, permission)
-            if (permission.subscribeExpiration.lt(subscriptionEndTimestamp)) {
-                permission.subscribeExpiration = subscriptionEndTimestamp
-                log.info("Watcher > new permission for stream %s: %o", streamId, permission)
-                streams.push(streamId)
-                permissions.push(permission)
+            try {
+                const permission: Permission = await registryContract.getDirectPermissionsForUser(streamId, address)
+                log.info("Watcher > old permission for stream %s: %o", streamId, permission)
+                if (subscriptionEndTimestamp.gt(permission.subscribeExpiration) && subscriptionEndTimestamp.gt(now)) {
+                    permission.subscribeExpiration = subscriptionEndTimestamp
+                    log.info("Watcher > new permission for stream %s: %o", streamId, permission)
+                    streams.push(streamId)
+                    permissions.push(permission)
+                }
+            } catch (e) {
+                log.error("Watcher > failed to get permissions for stream %s: %o", streamId, e)
             }
         }
 
