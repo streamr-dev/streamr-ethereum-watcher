@@ -190,7 +190,7 @@ async function main(): Promise<void> {
     if (process.env["CI"]) {
         store.write(12340000)
     }
-    await watcher.on("eventSuccessfullyProcessed", (event: any) => {
+    await watcher.on("eventSuccessfullyProcessed", async (event: any) => {
         store.write(event.blockNumber.toString())
     })
 
