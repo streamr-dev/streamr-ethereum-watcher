@@ -166,15 +166,32 @@ async function main(): Promise<void> {
         }
     })
 
+    await watcher.on("productDeployed", async (id: string, body: any) => {
+        const response = await apiClient.setDeployed(id, body)
+        const responseJson = await response.json()
+        log.info(`Product ${id} deployed ${JSON.stringify(body)}`)
+        log.info(`Response code ${response.status}: ${JSON.stringify(responseJson)}`)
+    })
+    await watcher.on("productUndeployed", async (id: string, body: any) => {
+        const response = await apiClient.setUndeployed(id, body)
+        const responseJson = await response.json()
+        log.info(`Product ${id} UNdeployed ${JSON.stringify(body)}`)
+        log.info(`Response code ${response.status}: ${JSON.stringify(responseJson)}`)
+    })
+    await watcher.on("productUpdated", async (id: string, body: any) => {
+        const response = await apiClient.productUpdated(id, body)
+        const responseJson = await response.json()
+        log.info(`Product ${id} UPDATED ${JSON.stringify(body)}`)
+        log.info(`Response code ${response.status}: ${JSON.stringify(responseJson)}`)
+    })
+
     // write on disk how many blocks have been processed
     const store = new LastBlockStore(lastBlockDir)
     if (process.env["CI"]) {
         store.write(12340000)
     }
-    await watcher.on("eventSuccessfullyProcessed", async (...args: any[]): Promise<any> => {
-        const event = args[0]
+    await watcher.on("eventSuccessfullyProcessed", (event: any) => {
         store.write(event.blockNumber.toString())
-        return Promise.resolve()
     })
 
     // catch up the blocks that happened when we were gone
