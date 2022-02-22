@@ -56,7 +56,7 @@ export default class CoreAPIClient {
         return this._post(apiUrl, body)
     }
 
-    async getProduct(id: string): Promise<any> {
+    async getProduct(id: string): Promise<Response> {
         const apiUrl = `${this.streamrUrl}/products/${id}`
         return this._get(apiUrl)
     }
@@ -82,21 +82,19 @@ export default class CoreAPIClient {
             })
     }
 
-    private async _get(apiUrl: string): Promise<any> {
+    private async _get(apiUrl: string): Promise<Response> {
         log.info("Watcher/CoreAPIClient > GET %s", apiUrl)
 
-        const sessionToken = await this.getSessionTokenFunc(this.privateKey, this.streamrUrl)
-        const responseObject = await this.nodeFetch(apiUrl, {
-            method: "GET",
-            headers: {
-                "Accept": "application/json",
-                "Content-type": "application/json",
-                "Authorization": `Bearer ${sessionToken}`
-            }
-        })
-        const response = await responseObject.json()
-
-        log.info("Response: %o", response)
-        return response
+        return this.getSessionTokenFunc(this.privateKey, this.streamrUrl)
+            .then(async (sessionToken: string): Promise<Response> => {
+                return this.nodeFetch(apiUrl, {
+                    method: "GET",
+                    headers: {
+                        "Accept": "application/json",
+                        "Content-type": "application/json",
+                        "Authorization": `Bearer ${sessionToken}`
+                    }
+                })
+            })
     }
 }
