@@ -55,7 +55,7 @@ async function main(): Promise<void> {
 
     try {
         new ethers.Wallet(devopsKey)
-    } catch (e: any) {
+    } catch (e: unknown) {
         log.error(`Expected a valid Ethereum key for environment variable ${DEVOPS_KEY}="${devopsKey}".`)
         process.exit(1)
     }
@@ -142,7 +142,7 @@ async function main(): Promise<void> {
                     streams.push(streamId)
                     permissions.push(permission)
                 }
-            } catch (e) {
+            } catch (e: unknown) {
                 log.error("Watcher > failed to get permissions for stream %s: %o", streamId, e)
             }
         }
@@ -212,9 +212,7 @@ async function main(): Promise<void> {
 }
 
 main()
-    .catch((e: any): void => {
+    .catch((e: Error): void => {
         log.error(`Unexpected error: ${e.stack}`)
         process.exit(1)
     })
-
-log.error("Unexpected restart.")
