@@ -56,11 +56,6 @@ export default class CoreAPIClient {
         return this._post(apiUrl, body)
     }
 
-    async subscribe(body: any): Promise<Response> {
-        const apiUrl = `${this.streamrUrl}/subscriptions`
-        return this._post(apiUrl, body)
-    }
-
     async getProduct(id: string): Promise<any> {
         const apiUrl = `${this.streamrUrl}/products/${id}`
         return this._get(apiUrl)
