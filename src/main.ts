@@ -158,7 +158,7 @@ async function main(): Promise<void> {
                 .then((tr: TransactionReceipt) => {
                     log.info("Watcher > trustedSetPermissions receipt: %o", tr)
                 }).catch((e: Error) => {
-                    log.info("Watcher > failed to set permissions: %o", e)
+                    log.error("Watcher > failed to set permissions: %o", e)
                     log.error(e)
                 })
         } else {
