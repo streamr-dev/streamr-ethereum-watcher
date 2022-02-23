@@ -1,22 +1,27 @@
 
+function dateFormatted(): string {
+    const now = new Date()
+    return now.toISOString()
+}
+
 /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
 function error(...messages: any[]): void {
-    console.error(...messages) // eslint-disable-line no-console
+    console.error(dateFormatted(), ...messages) // eslint-disable-line no-console
 }
 
 /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
 function warn(...messages: any[]): void {
-    console.warn(...messages) // eslint-disable-line no-console
+    console.warn(dateFormatted(), ...messages) // eslint-disable-line no-console
 }
 
 /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
 function info(...messages: any[]): void {
-    console.info(...messages) // eslint-disable-line no-console
+    console.info(dateFormatted(), ...messages) // eslint-disable-line no-console
 }
 
 /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
 function debug(...messages: any[]): void {
-    console.debug(...messages) // eslint-disable-line no-console
+    console.debug(dateFormatted(), ...messages) // eslint-disable-line no-console
 }
 
 const log = {
