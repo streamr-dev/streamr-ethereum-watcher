@@ -1,5 +1,5 @@
 # TODO: always update to latest node LTS (see https://nodejs.org/en/about/releases/)
-FROM node:16-bullseye AS builder
+FROM node:16.14-bullseye AS builder
 # Python is required for Npn/Node/Gyp build
 RUN apt-get update && apt-get --assume-yes --no-install-recommends install python2=2.7.18-3
 WORKDIR /app
@@ -9,7 +9,7 @@ RUN npm ci
 COPY . /app
 
 # TODO: always update to latest node LTS (see https://nodejs.org/en/about/releases/)
-FROM node:16-bullseye-slim
+FROM node:16.14-bullseye-slim
 WORKDIR /app
 COPY --from=builder /app/ .
 
