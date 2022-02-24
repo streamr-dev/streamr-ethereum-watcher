@@ -7,6 +7,7 @@ class HTTPRequest {
     constructor(private readonly accessToken: string | undefined,
                 private readonly url: string | undefined,
                 private readonly method: string | undefined,
+                /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
                 private readonly body: any) {
         this.accessToken = accessToken
         this.url = url
@@ -24,10 +25,11 @@ describe("CoreAPIClient", () => {
     before(() => {
         server = http.createServer((request: http.IncomingMessage, response: http.ServerResponse): void => {
             let body = ""
+            /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
             request.on("data", (chunk: any): void => {
                 body += chunk.toString()
             })
-            request.on("end", (chunk: any): void => {
+            request.on("end", (chunk: any[]): void => { // eslint-disable-line @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any
                 requests.push(new HTTPRequest(
                     request.headers.authorization,
                     request.url,
@@ -55,6 +57,7 @@ describe("CoreAPIClient", () => {
         requests = []
         const privateKey = "15f6a8f106f5438f975faf9b87772026a6fe047034e6b34577fc023a64909db3"
 
+        /* eslint-disable-next-line @typescript-eslint/no-unused-vars */
         const getSessionToken = async function(privateKey: string): Promise<string> {
             return Promise.resolve(TOKEN)
         }

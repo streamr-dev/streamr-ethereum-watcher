@@ -1,18 +1,27 @@
 
-function error(...messages: string[]): void {
-    console.error(...messages) // eslint-disable-line no-console
+function dateFormatted(): string {
+    const now = new Date()
+    return now.toISOString()
 }
 
-function warn(...messages: string[]): void {
-    console.warn(...messages) // eslint-disable-line no-console
+/* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+function error(...messages: any[]): void {
+    console.error(dateFormatted(), ...messages) // eslint-disable-line no-console
 }
 
-function info(...messages: string[]): void {
-    console.info(...messages) // eslint-disable-line no-console
+/* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+function warn(...messages: any[]): void {
+    console.warn(dateFormatted(), ...messages) // eslint-disable-line no-console
 }
 
-function debug(...messages: string[]): void {
-    console.debug(...messages) // eslint-disable-line no-console
+/* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+function info(...messages: any[]): void {
+    console.info(dateFormatted(), ...messages) // eslint-disable-line no-console
+}
+
+/* eslint-disable-next-line @typescript-eslint/no-explicit-any */
+function debug(...messages: any[]): void {
+    console.debug(dateFormatted(), ...messages) // eslint-disable-line no-console
 }
 
 const log = {

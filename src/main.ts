@@ -1,11 +1,25 @@
 import log from "./log"
-import {getEnv} from "./env"
+import { getEnv } from "./env"
 import LastBlockStore from "./LastBlockStore"
-import {ethers} from "ethers"
-import {throwIfNotContract} from "./checkArguments"
+import { ethers } from "ethers"
+import { BigNumber } from "ethers/utils"
+import { throwIfNotContract } from "./checkArguments"
 import Watcher from "./watcher"
 import CoreAPIClient from "./CoreAPIClient"
+
 import MarketplaceJSON from "../lib/marketplace-contracts/build/contracts/Marketplace.json"
+import StreamRegistryJSON from "../lib/streamregistry/StreamRegistryV3.json"
+
+import { TransactionReceipt } from "ethers/providers"
+
+type EthereumAddress = string
+type Permission = {
+    canEdit: boolean
+    canDelete: boolean
+    publishExpiration: BigNumber
+    subscribeExpiration: BigNumber
+    canGrant: boolean
+}
 
 /**
  * Check this.market really looks like a Marketplace and not something funny
@@ -26,10 +40,12 @@ async function checkMarketplaceAddress(abi: any, market: ethers.Contract): Promi
 async function main(): Promise<void> {
     const MARKETPLACE_ADDRESS = "MARKETPLACE_ADDRESS"
     const marketplaceAddress: string = getEnv(MARKETPLACE_ADDRESS)
+    const streamRegistryAddress = getEnv("STREAM_REGISTRY_ADDRESS")
     const NETWORK_ID = "NETWORK_ID"
     const networkId: string = getEnv(NETWORK_ID)
     const ETHEREUM_SERVER_URL = "ETHEREUM_SERVER_URL"
     const ethereumServerURL: string = getEnv(ETHEREUM_SERVER_URL)
+    const maticServerURL: string = getEnv("MATIC_SERVER_URL")
     const STREAMR_API_URL = "STREAMR_API_URL"
     const streamrApiURL: string = getEnv(STREAMR_API_URL)
     const DEVOPS_KEY = "DEVOPS_KEY"
@@ -39,11 +55,11 @@ async function main(): Promise<void> {
 
     try {
         new ethers.Wallet(devopsKey)
-    } catch (e: any) {
+    } catch (e: unknown) {
         log.error(`Expected a valid Ethereum key for environment variable ${DEVOPS_KEY}="${devopsKey}".`)
         process.exit(1)
     }
-    let provider = null
+    let provider: ethers.providers.Provider
     if (networkId) {
         if (ethereumServerURL) {
             provider = new ethers.providers.JsonRpcProvider(ethereumServerURL)
@@ -52,8 +68,7 @@ async function main(): Promise<void> {
         }
     } else if (ethereumServerURL) {
         provider = new ethers.providers.JsonRpcProvider(ethereumServerURL)
-    }
-    if (!provider) {
+    } else {
         log.error(`Requires ${ETHEREUM_SERVER_URL} or ${NETWORK_ID} environment variables!`)
         process.exit(1)
     }
@@ -64,8 +79,13 @@ async function main(): Promise<void> {
     })
     log.info("Connected to Ethereum network: ", JSON.stringify(network))
 
+    const maticProvider = new ethers.providers.JsonRpcProvider(maticServerURL)
+    const maticWallet = new ethers.Wallet(devopsKey, maticProvider)
+
     // deployed using truffle, mainnet tx: https://etherscan.io/tx/0x868a6604e6c33ebc52a3fe5d020d970fdd0019e8eb595232599d67f91624d877
     const deployedMarketplaceAddress = "0x2b3F2887c697B3f4f8D9F818c95482e1a3A759A5"
+
+    const deployedRegistryAddress = "0x0D483E10612F327FC11965Fc82E90dC19b141641"
 
     const addr = marketplaceAddress || deployedMarketplaceAddress
     if (!addr) {
@@ -73,7 +93,9 @@ async function main(): Promise<void> {
         process.exit(1)
     }
     const marketAddress = await throwIfNotContract(provider, marketplaceAddress || deployedMarketplaceAddress)
+    const registryAddress = await throwIfNotContract(maticProvider, streamRegistryAddress || deployedRegistryAddress)
 
+    const registryContract = new ethers.Contract(registryAddress, StreamRegistryJSON.abi, maticWallet)
     const marketplaceContract = new ethers.Contract(marketAddress, MarketplaceJSON.abi, provider)
     const watcher = new Watcher(provider, marketplaceContract)
     const apiClient = new CoreAPIClient(
@@ -85,56 +107,90 @@ async function main(): Promise<void> {
 
     await checkMarketplaceAddress(MarketplaceJSON.abi, marketplaceContract)
 
-    await watcher.on("productDeployed", async (...args: any[]): Promise<any> => {
-        const id = args[0]
-        const body = args[1]
+
+    await watcher.on("subscribed", async (args: {
+            blockNumber: number,
+            blockIndex: number,
+            product: string,
+            address: EthereumAddress,
+            endsAt: string,
+    }) => {
+        const {
+            blockNumber,
+            blockIndex,
+            product: productId,
+            address,
+            endsAt,
+        } = args
+        log.info("Watcher > subscribed event at block %s index %s: until %s", blockNumber, blockIndex, endsAt)
+
+        const subscriptionEndTimestamp = new BigNumber(endsAt)
+        const now = new BigNumber(Date.now().toString().slice(0, -3)) // remove milliseconds
+
+        const productResponse = await apiClient.getProduct(productId)
+        const response = await productResponse.json()
+        const product: { streams: string[] } = response.json()
+
+        // first find the existing permissions, then augment the subscribe expiration period (if still relevant)
+        const streams: string[] = []
+        const permissions: Permission[] = []
+        for (const streamId of product.streams) {
+            try {
+                const permission: Permission = await registryContract.getDirectPermissionsForUser(streamId, address)
+                log.info("Watcher > old permission for stream %s: %o", streamId, permission)
+                if (subscriptionEndTimestamp.gt(permission.subscribeExpiration) && subscriptionEndTimestamp.gt(now)) {
+                    permission.subscribeExpiration = subscriptionEndTimestamp
+                    log.info("Watcher > new permission for stream %s: %o", streamId, permission)
+                    streams.push(streamId)
+                    permissions.push(permission)
+                }
+            } catch (e: unknown) {
+                log.error("Watcher > failed to get permissions for stream %s: %o", streamId, e)
+            }
+        }
+
+        if (streams.length > 0) {
+            // function trustedSetPermissions(string[] calldata streamids, address[] calldata users, Permission[] calldata permissions)
+            const tx = await registryContract.trustedSetPermissions(
+                streams,
+                streams.map(() => address),
+                permissions,
+            )
+            await tx.wait()
+                .then((tr: TransactionReceipt) => {
+                    log.info("Watcher > trustedSetPermissions receipt: %o", tr)
+                }).catch((e: Error) => {
+                    log.error("Watcher > failed to set permissions: %o", e)
+                    log.error(e)
+                })
+        } else {
+            log.info("No permission changes needed")
+        }
+    })
+
+    await watcher.on("productDeployed", async (id: string, body: any) => {
         const response = await apiClient.setDeployed(id, body)
         const responseJson = await response.json()
         log.info(`Product ${id} deployed ${JSON.stringify(body)}`)
         log.info(`Response code ${response.status}: ${JSON.stringify(responseJson)}`)
-        return Promise.resolve()
     })
-    await watcher.on("productUndeployed", async (...args: any[]): Promise<any> => {
-        const id = args[0]
-        const body = args[1]
+    await watcher.on("productUndeployed", async (id: string, body: any) => {
         const response = await apiClient.setUndeployed(id, body)
         const responseJson = await response.json()
         log.info(`Product ${id} UNdeployed ${JSON.stringify(body)}`)
         log.info(`Response code ${response.status}: ${JSON.stringify(responseJson)}`)
-        return Promise.resolve()
     })
-    await watcher.on("productUpdated", async (...args: any[]): Promise<any> => {
-        const id = args[0]
-        const body = args[1]
+    await watcher.on("productUpdated", async (id: string, body: any) => {
         const response = await apiClient.productUpdated(id, body)
         const responseJson = await response.json()
         log.info(`Product ${id} UPDATED ${JSON.stringify(body)}`)
         log.info(`Response code ${response.status}: ${JSON.stringify(responseJson)}`)
-        return Promise.resolve()
-    })
-    await watcher.on("subscribed", async (...args: any[]): Promise<any> => {
-        const body = args[0]
-        const response = await apiClient.subscribe(body)
-        const responseJson = await response.json()
-        log.info(`Product ${body.product} subscribed ${JSON.stringify(body)}`)
-        log.info(`Response code ${response.status}: ${JSON.stringify(responseJson)}`)
-        return Promise.resolve()
-    })
-    await watcher.on("event", async (...args: any[]): Promise<any> => {
-        const event = args[0]
-        log.info(`Watcher detected event: ${JSON.stringify(event)}`)
-        return Promise.resolve()
     })
 
     // write on disk how many blocks have been processed
     const store = new LastBlockStore(lastBlockDir)
-    if (process.env["CI"]) {
-        store.write(12340000)
-    }
-    await watcher.on("eventSuccessfullyProcessed", async (...args: any[]): Promise<any> => {
-        const event = args[0]
+    await watcher.on("eventSuccessfullyProcessed", async (event: any) => {
         store.write(event.blockNumber.toString())
-        return Promise.resolve()
     })
 
     // catch up the blocks that happened when we were gone
@@ -155,9 +211,7 @@ async function main(): Promise<void> {
 }
 
 main()
-    .catch((e: any): void => {
+    .catch((e: Error): void => {
         log.error(`Unexpected error: ${e.stack}`)
         process.exit(1)
     })
-
-log.error("Unexpected restart.")
