@@ -128,8 +128,7 @@ async function main(): Promise<void> {
         const now = new BigNumber(Date.now().toString().slice(0, -3)) // remove milliseconds
 
         const productResponse = await apiClient.getProduct(productId)
-        const response = await productResponse.json()
-        const product: { streams: string[] } = response.json()
+        const product: { streams: string[] } = await productResponse.json()
 
         // first find the existing permissions, then augment the subscribe expiration period (if still relevant)
         const streams: string[] = []
