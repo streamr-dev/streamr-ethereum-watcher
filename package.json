@@ -2,7 +2,7 @@
   "name": "streamr-ethereum-watcher",
   "version": "2.0.2",
   "description": "Watch Ethereum blocks as they come, send relevant info to Streamr",
-  "main": "src/main.ts",
+  "main": "dist/src/main.js",
   "scripts": {
     "build": "tsc --project tsconfig.json",
     "lint": "eslint src",
