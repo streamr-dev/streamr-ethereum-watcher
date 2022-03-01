@@ -8,7 +8,7 @@ const currencySymbol = MarketplaceEnums.currencySymbol
 const EE_PRICE_SCALE = new ethers.utils.BigNumber(1e9)  // scale price to "nanotokens"/token-gwei so that it fits into mysql and Java long
 // "warp" to this block; before this block there weren't (too many) events
 const playbackStartBlock = new Map<number, number>([
-    [1, 12359784], // mainnet, start from 2021-05-03
+    [1, 14140263], // mainnet, start from 2022-02
     [4, 1920000], // rinkeby
 ])
 const playbackStep = 1000
