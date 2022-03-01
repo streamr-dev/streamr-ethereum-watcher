@@ -4,6 +4,7 @@
   "description": "Watch Ethereum blocks as they come, send relevant info to Streamr",
   "main": "src/main.ts",
   "scripts": {
+    "build": "tsc --project tsconfig.json",
     "lint": "eslint src",
     "fmt": "eslint --fix src",
     "test": "mocha --config mocharc.json"
