@@ -122,7 +122,7 @@ async function main(): Promise<void> {
             address,
             endsAt,
         } = args
-        log.info("Watcher > subscribed event at block %s index %s: until %s", blockNumber, blockIndex, endsAt)
+        log.info(`Watcher > subscribed event at block ${blockNumber} index: ${blockIndex}, until ${endsAt}`)
 
         const subscriptionEndTimestamp = new BigNumber(endsAt)
         const now = new BigNumber(Date.now().toString().slice(0, -3)) // remove milliseconds
