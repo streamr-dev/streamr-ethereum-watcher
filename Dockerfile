@@ -1,6 +1,4 @@
 FROM node:16.14-bullseye AS builder
-# Python is required for Npn/Node/Gyp build
-RUN apt-get update && apt-get --assume-yes --no-install-recommends install python2=2.7.18-3
 WORKDIR /app
 COPY . /app
 RUN npm ci && npm run build
