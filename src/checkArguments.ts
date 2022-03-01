@@ -10,7 +10,7 @@ export async function throwIfNotContract(provider: ethers.providers.Provider, ad
     let addr = null
     try {
         addr = ethers.utils.getAddress(address)
-    } catch (e: any) {
+    } catch (e: unknown) {
         throw new Error(`Error: Bad Ethereum address ${address}: ${e}`)
     }
     if (await provider.getCode(addr) === "0x") {
