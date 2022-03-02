@@ -19,7 +19,7 @@ export default class LastBlockStore {
         try {
             fs.writeFileSync(this.lastBlockPath, blockNumber.toString())
             log.info(`Processed https://etherscan.io/block/${blockNumber}. Wrote ${this.lastBlockPath}.`)
-        } catch (e: any) {
+        } catch (e: unknown) {
             log.error(`Error while writing ${this.lastBlockPath} file: ${e}`)
         }
     }
@@ -29,7 +29,7 @@ export default class LastBlockStore {
         try {
             const buffer = fs.readFileSync(this.lastBlockPath)
             blockNumber = parseInt(buffer.toString())
-        } catch (e: any) {
+        } catch (e: unknown) {
             log.info(`No ${this.lastBlockPath} file found. Start from block zero.`)
             return 0
         }

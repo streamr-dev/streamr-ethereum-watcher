@@ -83,7 +83,7 @@ export default class CoreAPIClient {
     }
 
     private async _get(apiUrl: string): Promise<Response> {
-        log.info("Watcher/CoreAPIClient > GET %s", apiUrl)
+        log.info("Watcher/CoreAPIClient > GET ", apiUrl)
 
         return this.getSessionTokenFunc(this.privateKey, this.streamrUrl)
             .then(async (sessionToken: string): Promise<Response> => {

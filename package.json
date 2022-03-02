@@ -2,8 +2,9 @@
   "name": "streamr-ethereum-watcher",
   "version": "2.0.2",
   "description": "Watch Ethereum blocks as they come, send relevant info to Streamr",
-  "main": "src/main.ts",
+  "main": "dist/src/main.js",
   "scripts": {
+    "build": "tsc --project tsconfig.json",
     "lint": "eslint src",
     "fmt": "eslint --fix src",
     "test": "mocha --config mocharc.json"
@@ -18,7 +19,7 @@
     "ethers": "4.0.49",
     "node-fetch": "2.6.1",
     "promise-events": "0.2.4",
-    "streamr-client": "5.5.7"
+    "streamr-client": "6.0.1"
   },
   "devDependencies": {
     "@typechain/ethers-v4": "6.0.0",
