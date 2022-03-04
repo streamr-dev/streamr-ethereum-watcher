@@ -17,6 +17,8 @@ updates:
       - "ci"
     assignees:
       - DaisyDomergue
+    reviewers:
+      - kare
   - package-ecosystem: "npm"
     directory: "/"
     schedule:
