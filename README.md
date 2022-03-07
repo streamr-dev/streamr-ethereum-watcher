@@ -24,9 +24,31 @@ If you are developing this service in particular, or are otherwise inclined, you
 ## Publishing
 The project is automatically tested and built using GitHub Actions. If and when all tests pass, a [Docker image](https://hub.docker.com/r/streamr/ethereum-watcher/) is built and pushed to DockerHub by GitHub Actions.
 
+## Updating Brubeck Production
+Runs on integrations.streamr.network.
+
+Systemd service file:
+```
+/lib/systemd/system/ethereum-watcher-brubeck-mainnet.service
+```
+If Systemd service files are updated run: `sudo systemctl daemon-reload`
+
+Commands to exercise:
+```
+sudo journalctl -f -u ethereum-watcher-brubeck-mainnet
+
+sudo systemctl show ethereum-watcher-brubeck-mainnet
+sudo systemctl status ethereum-watcher-brubeck-mainnet
+sudo systemctl stop ethereum-watcher-brubeck-mainnet
+sudo systemctl start ethereum-watcher-brubeck-mainnet
+
+docker logs -f ethereum-watcher-brubeck-mainnet
+docker inspect ethereum-watcher-brubeck-mainnet
+```
+
 ## Updating Corea Production
 
-Run
+Run on streamr.com:
 ```
 cd ~/streamr-ethereum-watcher
 git pull
