@@ -125,7 +125,7 @@ async function main(): Promise<void> {
         log.info(`Watcher > subscribed event at block ${blockNumber} index: ${blockIndex}, until ${endsAt}`)
 
         const subscriptionEndTimestamp = new BigNumber(endsAt)
-        const now = new BigNumber(Date.now().toString().slice(0, -3)) // remove milliseconds
+        const now = new BigNumber(Math.floor(Date.now() / 1000).toString()) // remove milliseconds
 
         const productResponse = await apiClient.getProduct(productId)
         const product: { streams?: string[] } = await productResponse.json().catch((e: Error) => {
@@ -143,13 +143,12 @@ async function main(): Promise<void> {
         const permissions: Permission[] = []
         for (const streamId of product.streams) {
             try {
-                const permission: Permission = await registryContract.getDirectPermissionsForUser(streamId, address)
-                log.info("Watcher > old permission for stream %s: %o", streamId, permission)
-                if (subscriptionEndTimestamp.gt(permission.subscribeExpiration) && subscriptionEndTimestamp.gt(now)) {
-                    permission.subscribeExpiration = subscriptionEndTimestamp
-                    log.info("Watcher > new permission for stream %s: %o", streamId, permission)
+                const { canEdit, canDelete, publishExpiration, subscribeExpiration, canGrant }: Permission = await registryContract.getDirectPermissionsForUser(streamId, address)
+                log.info("Watcher > old permission for stream %s: expires at %s (subscribe until %s)", streamId, subscribeExpiration.toString(), subscriptionEndTimestamp.toString())
+                if (subscriptionEndTimestamp.gt(subscribeExpiration) && subscriptionEndTimestamp.gt(now)) {
+                    log.info("Watcher > new permission for stream %s: expires at %s", subscriptionEndTimestamp.toString())
                     streams.push(streamId)
-                    permissions.push(permission)
+                    permissions.push({ canEdit, canDelete, publishExpiration, subscribeExpiration: subscriptionEndTimestamp, canGrant })
                 }
             } catch (e: unknown) {
                 log.error("Watcher > failed to get permissions for stream %s: %o", streamId, e)

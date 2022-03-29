@@ -5,23 +5,23 @@ function dateFormatted(): string {
 }
 
 /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
-function error(...messages: any[]): void {
-    console.error(dateFormatted(), ...messages) // eslint-disable-line no-console
+function error(format: string, ...messages: any[]): void {
+    console.error(dateFormatted() + " " + format, ...messages) // eslint-disable-line no-console
 }
 
 /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
-function warn(...messages: any[]): void {
-    console.warn(dateFormatted(), ...messages) // eslint-disable-line no-console
+function warn(format: string, ...messages: any[]): void {
+    console.warn(dateFormatted() + " " + format, ...messages) // eslint-disable-line no-console
 }
 
 /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
-function info(...messages: any[]): void {
-    console.info(dateFormatted(), ...messages) // eslint-disable-line no-console
+function info(format: string, ...messages: any[]): void {
+    console.info(dateFormatted() + " " + format, ...messages) // eslint-disable-line no-console
 }
 
 /* eslint-disable-next-line @typescript-eslint/no-explicit-any */
-function debug(...messages: any[]): void {
-    console.debug(dateFormatted(), ...messages) // eslint-disable-line no-console
+function debug(format: string, ...messages: any[]): void {
+    console.debug(dateFormatted() + " " + format, ...messages) // eslint-disable-line no-console
 }
 
 const log = {
