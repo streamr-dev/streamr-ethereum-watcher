@@ -1,0 +1,15 @@
+{
+    "globals": {
+        "describe": "readonly",
+        "it": "readonly",
+        "before": "readonly",
+        "beforeEach": "readonly",
+        "after": "readonly",
+        "afterEach": "readonly"
+    },
+    "rules": {
+        "no-console": "warn",
+        "@typescript-eslint/ban-ts-comment": "off",
+        "@typescript-eslint/no-non-null-assertion": "off"
+    }
+}
