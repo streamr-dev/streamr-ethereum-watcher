@@ -96,7 +96,7 @@ const trustedApiClient = new CoreAPIClient(
  * @param {RegExp} regex to use for matching
  * @returns {Match} the regex match object
  */
-async function untilStreamMatches(stream: NodeJS.ReadableStream, regex: RegExp) {
+async function untilStreamMatches(stream: NodeJS.ReadableStream, regex: RegExp): Promise<RegExpMatchArray | null> {
     return new Promise((resolve) => {
         function check(buffer: Buffer) {
             const data = buffer.toString()
