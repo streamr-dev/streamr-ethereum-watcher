@@ -43,7 +43,7 @@ const DEVOPS_KEY = "0x628acb12df34bb30a0b2f95ec2e6a743b386c5d4f63aa9f338bec6f613
 const adminKey = "0x5e98cce00cff5dea6b454889f359a4ec06b9fa6b88e9d69b86de8e1c81887da0" // 0xa3d1f77acff0060f7213d7bf3c7fec78df847de1
 const prefundedKey = "0xe5af7834455b7239881b85be89d905d6881dcb4751063897f12be1b0dd546bdb"
 
-const STREAMR_API_URL = "http://localhost/api/v2"
+const STREAMR_API_URL = "http://10.200.10.1/api/v2"
 
 const watcherEnv: NodeJS.ProcessEnv = {
     STREAM_REGISTRY_ADDRESS,
