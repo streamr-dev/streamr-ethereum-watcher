@@ -32,6 +32,7 @@ jobs:
         env:
           DEBUG: '*'
           TEST_TIMEOUT: '600000'
+          NODE_ENV: 'development'
         run: npm run integration-test
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1.6.0
