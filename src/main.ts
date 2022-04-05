@@ -33,7 +33,7 @@ async function checkMarketplaceAddress(abi: any, market: ethers.Contract): Promi
         const value = await market[getterName]()
         msg += ` ${getterName}: ${value},`
     }
-    log.info(`Watcher > Checking the Marketplace contract at ${market.address}: ${msg}`)
+    log.info(`Checking the Marketplace contract at ${market.address}: ${msg}`)
     return Promise.resolve()
 }
 
@@ -122,7 +122,7 @@ async function main(): Promise<void> {
             address,
             endsAt,
         } = args
-        log.info(`Watcher > subscribed event at block ${blockNumber} index: ${blockIndex}, until ${endsAt}`)
+        log.info(`Subscribed event at block ${blockNumber} index: ${blockIndex}, until ${endsAt}`)
 
         const subscriptionEndTimestamp = new BigNumber(endsAt)
         const now = new BigNumber(Math.floor(Date.now() / 1000).toString()) // remove milliseconds
@@ -134,7 +134,7 @@ async function main(): Promise<void> {
         })
 
         if (!product.streams) {
-            log.error(`Watcher > No streams found for product ${productId}`)
+            log.error(`No streams found for product ${productId}`)
             return
         }
 
@@ -144,14 +144,14 @@ async function main(): Promise<void> {
         for (const streamId of product.streams) {
             try {
                 const { canEdit, canDelete, publishExpiration, subscribeExpiration, canGrant }: Permission = await registryContract.getDirectPermissionsForUser(streamId, address)
-                log.info("Watcher > old permission for stream %s: expires at %s (subscribe until %s)", streamId, subscribeExpiration.toString(), subscriptionEndTimestamp.toString())
+                log.info("Old permission for stream %s: expires at %s (subscribe until %s)", streamId, subscribeExpiration.toString(), subscriptionEndTimestamp.toString())
                 if (subscriptionEndTimestamp.gt(subscribeExpiration) && subscriptionEndTimestamp.gt(now)) {
-                    log.info("Watcher > new permission for stream %s: expires at %s", subscriptionEndTimestamp.toString())
+                    log.info("New permission for stream %s: expires at %s", streamId, subscriptionEndTimestamp.toString())
                     streams.push(streamId)
                     permissions.push({ canEdit, canDelete, publishExpiration, subscribeExpiration: subscriptionEndTimestamp, canGrant })
                 }
             } catch (e: unknown) {
-                log.error("Watcher > failed to get permissions for stream %s: %o", streamId, e)
+                log.error("Failed to get permissions for stream %s: %o", streamId, e)
             }
         }
 
@@ -175,7 +175,7 @@ async function main(): Promise<void> {
                     log.info("Got trustedSetPermissions receipt: %o", summary)
                     log.info("PermissionUpdated event: %o", tr.events?.find(e => e.event === "PermissionUpdated"))
                 }).catch((e: Error) => {
-                    log.error("Watcher > failed to set permissions: %o", e)
+                    log.error("Failed to set permissions: %o", e)
                     log.error(e.message)
                 })
         } else {
