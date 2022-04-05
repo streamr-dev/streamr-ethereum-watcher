@@ -3,6 +3,7 @@ import { getEnv } from "./env"
 import LastBlockStore from "./LastBlockStore"
 import { ethers } from "ethers"
 import { BigNumber } from "ethers/utils"
+import { ContractReceipt } from "ethers/contract"
 import { throwIfNotContract } from "./checkArguments"
 import Watcher from "./watcher"
 import CoreAPIClient from "./CoreAPIClient"
@@ -10,7 +11,6 @@ import CoreAPIClient from "./CoreAPIClient"
 import MarketplaceJSON from "../lib/marketplace-contracts/build/contracts/Marketplace.json"
 import StreamRegistryJSON from "../lib/streamregistry/StreamRegistryV3.json"
 
-import { TransactionReceipt } from "ethers/providers"
 
 type EthereumAddress = string
 type Permission = {
@@ -163,8 +163,17 @@ async function main(): Promise<void> {
                 permissions,
             )
             await tx.wait()
-                .then((tr: TransactionReceipt) => {
-                    log.info("Watcher > trustedSetPermissions receipt: %o", tr)
+                .then((tr: ContractReceipt) => {
+                    const summary = {
+                        to: tr.to,
+                        from: tr.from,
+                        gasUsed: tr.gasUsed?.toString(),
+                        blockHash: tr.blockHash,
+                        transactionHash: tr.transactionHash,
+                        events: tr?.events?.map(e => e.event),
+                    }
+                    log.info("Got trustedSetPermissions receipt: %o", summary)
+                    log.info("PermissionUpdated event: %o", tr.events?.find(e => e.event === "PermissionUpdated"))
                 }).catch((e: Error) => {
                     log.error("Watcher > failed to set permissions: %o", e)
                     log.error(e.message)

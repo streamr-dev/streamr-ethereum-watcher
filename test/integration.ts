@@ -108,6 +108,12 @@ async function untilStreamMatches(stream: NodeJS.ReadableStream, regex: RegExp):
     })
 }
 
+async function sleep(time: number): Promise<void> {
+    return new Promise((resolve) => {
+        setTimeout(resolve, time)
+    })
+}
+
 describe("Watcher", () => {
 
     let productId: string
@@ -222,13 +228,18 @@ describe("Watcher", () => {
         log("Adding approval")
         const approveTx = await token.connect(buyerWallet).approve(market.address, parseEther("100"))
         await approveTx.wait()
-        const buyTx = await market.connect(buyerWallet).buy(productIdBytes, "10")
-        log("Sending market.buy(%s, %s) from %s", productId, "10", buyerWallet.address)
-        const [buyTr] = await Promise.all([
-            buyTx.wait(),
-            untilStreamMatches(watcherProcess.stdout, /trustedSetPermissions receipt/)]
-        )
-        assert.equal(buyTr.events[0].event, "NewSubscription")
-        assert.equal(buyTr.events[1].event, "Subscribed")
+
+        // execute many purchases: In production, I've had first buy get noticed, and subsequent one(s) fail.
+        for (let i = 0; i < 5; i++) {
+            const buyTx = await market.connect(buyerWallet).buy(productIdBytes, "3")
+            log("Sending %s/10: market.buy(%s, %s) from %s", i + 1, productId, "3", buyerWallet.address)
+            const [buyTr] = await Promise.all([
+                buyTx.wait(),
+                untilStreamMatches(watcherProcess.stdout, /trustedSetPermissions receipt/)]
+            )
+            assert.equal(buyTr.events[0].event, "NewSubscription")
+            assert.equal(buyTr.events[1].event, "Subscribed")
+            await sleep(5000) // should sleep long enough that the subscription expires
+        }
     })
 })
