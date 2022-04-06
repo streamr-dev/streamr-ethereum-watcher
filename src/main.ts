@@ -144,7 +144,7 @@ async function main(): Promise<void> {
         for (const streamId of product.streams) {
             try {
                 const { canEdit, canDelete, publishExpiration, subscribeExpiration, canGrant }: Permission = await registryContract.getDirectPermissionsForUser(streamId, address)
-                log.info("Old permission for stream %s: expires at %s (subscribe until %s)", streamId, subscribeExpiration.toString(), subscriptionEndTimestamp.toString())
+                log.info("Old permission for stream %s: expires at %s, now is %s (subscribe until %s)", streamId, subscribeExpiration.toString(), now.toString(), subscriptionEndTimestamp.toString())
                 if (subscriptionEndTimestamp.gt(subscribeExpiration) && subscriptionEndTimestamp.gt(now)) {
                     log.info("New permission for stream %s: expires at %s", streamId, subscriptionEndTimestamp.toString())
                     streams.push(streamId)
