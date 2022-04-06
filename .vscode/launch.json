@@ -37,7 +37,7 @@
             ],
             "cwd": "${workspaceFolder}",
             "env": {
-                "DEVOPS_KEY": "0x5e98cce00cff5dea6b454889f359a4ec06b9fa6b88e9d69b86de8e1c81887da0",
+                "DEVOPS_KEY": "0x628acb12df34bb30a0b2f95ec2e6a743b386c5d4f63aa9f338bec6f613160e78",
                 "ETHEREUM_SERVER_UR L": "",
                 "MATIC_SERVER_URL": "http://10.200.10.1:8546",
                 "STREAMR_API_URL": "http://localhost:8081/streamr-core/api/v2",
