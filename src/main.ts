@@ -172,7 +172,25 @@ async function main(): Promise<void> {
                         events: tr?.events?.map(e => e.event),
                     }
                     log.info("Got trustedSetPermissions receipt: %o", summary)
-                    log.info("PermissionUpdated event: %o", tr.events?.find(e => e.event === "PermissionUpdated"))
+                    const updateEvent = tr.events?.find(e => e.event === "PermissionUpdated")
+                    if (!updateEvent) {
+                        log.warn("No PermissionUpdated event found!")
+                        return
+                    }
+                    log.info("PermissionUpdated event: %o", {
+                        streamId: updateEvent.args?.[0],
+                        user: updateEvent.args?.[1],
+                        canEdit: updateEvent.args?.[2],
+                        canDelete: updateEvent.args?.[3],
+                        publishExpiration: updateEvent.args?.[4].toString(),
+                        publishExpirationDate: new Date(updateEvent.args?.[4] * 1000),
+                        subscribeExpiration: updateEvent.args?.[5].toString(),
+                        subscribeExpirationDate: new Date(updateEvent.args?.[5] * 1000),
+                        canGrant: updateEvent.args?.[6],
+                        blockNumber: updateEvent.blockNumber,
+                        transactionIndex: updateEvent.transactionIndex,
+                        transactionLogIndex: updateEvent.transactionLogIndex,
+                    })
                 }).catch((e: Error) => {
                     log.error("Failed to set permissions: %o", e)
                     log.error(e.message)
