@@ -4,7 +4,7 @@ import type { ChildProcess } from "child_process"
 import { Contract, Wallet } from "ethers"
 import { JsonRpcProvider } from "ethers/providers"
 import { ContractReceipt } from "ethers/contract"
-import { getAddress, parseEther } from "ethers/utils"
+import { getAddress, parseEther, formatEther } from "ethers/utils"
 
 import TokenJson from "../lib/marketplace-contracts/build/contracts/MintableToken.json"
 import MarketplaceJson from "../lib/marketplace-contracts/build/contracts/Marketplace.json"
@@ -15,6 +15,7 @@ import type { StreamRegistryV3 } from "../lib/types/StreamRegistryV3"
 import CoreAPIClient from "../src/CoreAPIClient"
 
 const { log } = console
+enum PermissionType { Edit, Delete, Publish, Subscribe, Grant }
 
 import { Chains } from "@streamr/config"
 import assert from "assert"
@@ -128,14 +129,14 @@ describe("Watcher", () => {
             value: parseEther("1000")
         })
         await fundTx1.wait()
-        log("Watcher balance mainnet: %s", (await watcherWallet.getBalance()).toString())
+        log("Watcher balance mainnet: %s", formatEther(await watcherWallet.getBalance()))
 
         const fundTx2 = await sidechainWallet.sendTransaction({
             to: watcherWallet.address,
             value: parseEther("1000")
         })
         await fundTx2.wait()
-        log("Watcher balance sidechain: %s", (await sidechainProvider.getBalance(watcherWallet.address)).toString())
+        log("Watcher balance sidechain: %s", formatEther(await sidechainProvider.getBalance(watcherWallet.address)))
 
         const streamTx = await registry.createStream(streamIdPath, "{}")
         log("Creating stream %s", streamId)
@@ -219,7 +220,7 @@ describe("Watcher", () => {
     })
 
     it("notices a purchase on the docker-dev Marketplace", async function () {
-        this.timeout(30000)
+        this.timeout(300000)
         if (!watcherProcess?.stdout) { throw new Error("Watcher process not initialized yet") }
 
         const buyerWallet = new Wallet(prefundedKey, provider)
@@ -232,20 +233,20 @@ describe("Watcher", () => {
 
         // this has to be long enough that the event gets registered by the watcher,
         //   otherwise no update will be done because "already old" subscriptions aren't sent to registry
-        const seconds = "10"
+        const seconds = 10
 
         // execute many purchases: In production, I've had first buy get noticed, and subsequent one(s) fail.
         for (let i = 0; i < 5; i++) {
-            const buyTx = await market.connect(buyerWallet).buy(productIdBytes, seconds)
+            const buyTx = await market.connect(buyerWallet).buy(productIdBytes, seconds.toString())
             log("Sending %s/10: market.buy(%s, %s) from %s", i + 1, productId, seconds, buyerWallet.address)
             const [buyTr] = await Promise.all([
                 buyTx.wait(),
                 untilStreamMatches(watcherProcess.stdout, /trustedSetPermissions receipt/)]
             ) as [ContractReceipt, any]
             const buyEvents = buyTr?.events?.map((e) => e?.event || "").filter(x => x !== "") || []
-            log("Got events: %o", buyEvents)
+            log("Buy transaction emitted events: %o", buyEvents)
             assert.deepStrictEqual(buyEvents, ["NewSubscription", "Subscribed"])
-            await sleep(5000) // should sleep long enough that the subscription expires
+            await sleep(seconds * 1500) // should sleep long enough that the subscription expires
         }
     })
 })
