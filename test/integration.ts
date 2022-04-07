@@ -3,11 +3,12 @@ import type { ChildProcess } from "child_process"
 
 import { Contract, Wallet } from "ethers"
 import { JsonRpcProvider } from "ethers/providers"
+import { ContractReceipt } from "ethers/contract"
+import { getAddress, parseEther } from "ethers/utils"
 
 import TokenJson from "../lib/marketplace-contracts/build/contracts/MintableToken.json"
 import MarketplaceJson from "../lib/marketplace-contracts/build/contracts/Marketplace.json"
 import StreamRegistryJson from "../lib/streamregistry/StreamRegistryV3.json"
-import { getAddress, parseEther } from "ethers/utils"
 
 import type { StreamRegistryV3 } from "../lib/types/StreamRegistryV3"
 
@@ -124,14 +125,14 @@ describe("Watcher", () => {
         // fund the devops key
         const fundTx1 = await wallet.sendTransaction({
             to: watcherWallet.address,
-            value: parseEther("10")
+            value: parseEther("1000")
         })
         await fundTx1.wait()
         log("Watcher balance mainnet: %s", (await watcherWallet.getBalance()).toString())
 
         const fundTx2 = await sidechainWallet.sendTransaction({
             to: watcherWallet.address,
-            value: parseEther("10")
+            value: parseEther("1000")
         })
         await fundTx2.wait()
         log("Watcher balance sidechain: %s", (await sidechainProvider.getBalance(watcherWallet.address)).toString())
@@ -229,16 +230,21 @@ describe("Watcher", () => {
         const approveTx = await token.connect(buyerWallet).approve(market.address, parseEther("100"))
         await approveTx.wait()
 
+        // this has to be long enough that the event gets registered by the watcher,
+        //   otherwise no update will be done because "already old" subscriptions aren't sent to registry
+        const seconds = "10"
+
         // execute many purchases: In production, I've had first buy get noticed, and subsequent one(s) fail.
         for (let i = 0; i < 5; i++) {
-            const buyTx = await market.connect(buyerWallet).buy(productIdBytes, "3")
-            log("Sending %s/10: market.buy(%s, %s) from %s", i + 1, productId, "3", buyerWallet.address)
+            const buyTx = await market.connect(buyerWallet).buy(productIdBytes, seconds)
+            log("Sending %s/10: market.buy(%s, %s) from %s", i + 1, productId, seconds, buyerWallet.address)
             const [buyTr] = await Promise.all([
                 buyTx.wait(),
                 untilStreamMatches(watcherProcess.stdout, /trustedSetPermissions receipt/)]
-            )
-            assert.equal(buyTr.events[0].event, "NewSubscription")
-            assert.equal(buyTr.events[1].event, "Subscribed")
+            ) as [ContractReceipt, any]
+            const buyEvents = buyTr?.events?.map((e) => e?.event || "").filter(x => x !== "") || []
+            log("Got events: %o", buyEvents)
+            assert.deepStrictEqual(buyEvents, ["NewSubscription", "Subscribed"])
             await sleep(5000) // should sleep long enough that the subscription expires
         }
     })

@@ -107,7 +107,6 @@ async function main(): Promise<void> {
 
     await checkMarketplaceAddress(MarketplaceJSON.abi, marketplaceContract)
 
-
     await watcher.on("subscribed", async (args: {
             blockNumber: number,
             blockIndex: number,
