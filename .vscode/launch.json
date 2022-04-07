@@ -4,10 +4,11 @@
     // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
     "version": "0.2.0",
     "configurations": [
+
         {
             "type": "node",
             "request": "launch",
-            "name": "Run watcher (Docker dev)",
+            "name": "Docker dev watcher",
             "runtimeExecutable": "${workspaceFolder}/node_modules/.bin/ts-node",
             "runtimeArgs": [
                 "src/main.ts"
@@ -25,6 +26,42 @@
                 "NODE_ENV": "development",
                 "DEBUG": "Streamr*"
             }
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Mainnet mp + docker registry",
+            "runtimeExecutable": "${workspaceFolder}/node_modules/.bin/ts-node",
+            "runtimeArgs": [
+                "src/main.ts"
+            ],
+            "cwd": "${workspaceFolder}",
+            "env": {
+                "DEVOPS_KEY": "0x628acb12df34bb30a0b2f95ec2e6a743b386c5d4f63aa9f338bec6f613160e78",
+                "ETHEREUM_SERVER_UR L": "",
+                "MATIC_SERVER_URL": "http://10.200.10.1:8546",
+                "STREAMR_API_URL": "http://localhost:8081/streamr-core/api/v2",
+                "NETWORK_ID": "homestead",
+                "MARKETPLACE_ADDRESS": "0xdc8d23092b93f9bb7416f45dea36f55996f34867",
+                "STREAM_REGISTRY_ADDRESS": "0x6cCdd5d866ea766f6DF5965aA98DeCCD629ff222",
+                "LAST_BLOCK_DIR": ".",
+                "NODE_ENV": "development",
+                "DEBUG": "Streamr*"
+            }
+        },
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "TS-mocha test this file",
+            "env": {
+                "DEBUG": "*,-mocha:*"
+            },
+            "runtimeExecutable": "${workspaceFolder}/node_modules/.bin/ts-mocha",
+            "runtimeArgs": [
+                "${file}",
+                "--exit"
+            ],
+            "internalConsoleOptions": "openOnSessionStart"
         }
     ]
 }

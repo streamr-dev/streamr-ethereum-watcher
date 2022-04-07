@@ -61,7 +61,7 @@ export default class CoreAPIClient {
         return this._get(apiUrl)
     }
 
-    private async _post(apiUrl: string, body: any): Promise<Response> {
+    private async _post(apiUrl: string, body: any, method = "POST"): Promise<Response> {
         let logBody = ""
         if (body) {
             logBody = JSON.stringify(body)
@@ -71,7 +71,7 @@ export default class CoreAPIClient {
         return this.getSessionTokenFunc(this.privateKey, this.streamrUrl)
             .then(async (sessionToken: string): Promise<Response> => {
                 return this.nodeFetch(apiUrl, {
-                    method: "POST",
+                    method,
                     body: JSON.stringify(body),
                     headers: {
                         "Accept": "application/json",

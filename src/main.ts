@@ -3,6 +3,7 @@ import { getEnv } from "./env"
 import LastBlockStore from "./LastBlockStore"
 import { ethers } from "ethers"
 import { BigNumber } from "ethers/utils"
+import { ContractReceipt } from "ethers/contract"
 import { throwIfNotContract } from "./checkArguments"
 import Watcher from "./watcher"
 import CoreAPIClient from "./CoreAPIClient"
@@ -10,7 +11,6 @@ import CoreAPIClient from "./CoreAPIClient"
 import MarketplaceJSON from "../lib/marketplace-contracts/build/contracts/Marketplace.json"
 import StreamRegistryJSON from "../lib/streamregistry/StreamRegistryV3.json"
 
-import { TransactionReceipt } from "ethers/providers"
 
 type EthereumAddress = string
 type Permission = {
@@ -33,7 +33,7 @@ async function checkMarketplaceAddress(abi: any, market: ethers.Contract): Promi
         const value = await market[getterName]()
         msg += ` ${getterName}: ${value},`
     }
-    log.info(`Watcher > Checking the Marketplace contract at ${market.address}: ${msg}`)
+    log.info(`Checking the Marketplace contract at ${market.address}: ${msg}`)
     return Promise.resolve()
 }
 
@@ -107,7 +107,6 @@ async function main(): Promise<void> {
 
     await checkMarketplaceAddress(MarketplaceJSON.abi, marketplaceContract)
 
-
     await watcher.on("subscribed", async (args: {
             blockNumber: number,
             blockIndex: number,
@@ -122,10 +121,10 @@ async function main(): Promise<void> {
             address,
             endsAt,
         } = args
-        log.info(`Watcher > subscribed event at block ${blockNumber} index: ${blockIndex}, until ${endsAt}`)
+        log.info(`Subscribed event at block ${blockNumber} index: ${blockIndex}, until ${endsAt}`)
 
         const subscriptionEndTimestamp = new BigNumber(endsAt)
-        const now = new BigNumber(Date.now().toString().slice(0, -3)) // remove milliseconds
+        const now = new BigNumber(Math.floor(Date.now() / 1000).toString()) // remove milliseconds
 
         const productResponse = await apiClient.getProduct(productId)
         const product: { streams?: string[] } = await productResponse.json().catch((e: Error) => {
@@ -134,7 +133,7 @@ async function main(): Promise<void> {
         })
 
         if (!product.streams) {
-            log.error(`Watcher > No streams found for product ${productId}`)
+            log.error(`No streams found for product ${productId}`)
             return
         }
 
@@ -143,16 +142,15 @@ async function main(): Promise<void> {
         const permissions: Permission[] = []
         for (const streamId of product.streams) {
             try {
-                const permission: Permission = await registryContract.getDirectPermissionsForUser(streamId, address)
-                log.info("Watcher > old permission for stream %s: %o", streamId, permission)
-                if (subscriptionEndTimestamp.gt(permission.subscribeExpiration) && subscriptionEndTimestamp.gt(now)) {
-                    permission.subscribeExpiration = subscriptionEndTimestamp
-                    log.info("Watcher > new permission for stream %s: %o", streamId, permission)
+                const { canEdit, canDelete, publishExpiration, subscribeExpiration, canGrant }: Permission = await registryContract.getDirectPermissionsForUser(streamId, address)
+                log.info("Old permission for stream %s: expires at %s, now is %s (subscribe until %s)", streamId, subscribeExpiration.toString(), now.toString(), subscriptionEndTimestamp.toString())
+                if (subscriptionEndTimestamp.gt(subscribeExpiration) && subscriptionEndTimestamp.gt(now)) {
+                    log.info("New permission for stream %s: expires at %s", streamId, subscriptionEndTimestamp.toString())
                     streams.push(streamId)
-                    permissions.push(permission)
+                    permissions.push({ canEdit, canDelete, publishExpiration, subscribeExpiration: subscriptionEndTimestamp, canGrant })
                 }
             } catch (e: unknown) {
-                log.error("Watcher > failed to get permissions for stream %s: %o", streamId, e)
+                log.error("Failed to get permissions for stream %s: %o", streamId, e)
             }
         }
 
@@ -164,10 +162,37 @@ async function main(): Promise<void> {
                 permissions,
             )
             await tx.wait()
-                .then((tr: TransactionReceipt) => {
-                    log.info("Watcher > trustedSetPermissions receipt: %o", tr)
+                .then((tr: ContractReceipt) => {
+                    const summary = {
+                        to: tr.to,
+                        from: tr.from,
+                        gasUsed: tr.gasUsed?.toString(),
+                        blockHash: tr.blockHash,
+                        transactionHash: tr.transactionHash,
+                        events: tr?.events?.map(e => e.event),
+                    }
+                    log.info("Got trustedSetPermissions receipt: %o", summary)
+                    const updateEvent = tr.events?.find(e => e.event === "PermissionUpdated")
+                    if (!updateEvent) {
+                        log.warn("No PermissionUpdated event found!")
+                        return
+                    }
+                    log.info("PermissionUpdated event: %o", {
+                        streamId: updateEvent.args?.[0],
+                        user: updateEvent.args?.[1],
+                        canEdit: updateEvent.args?.[2],
+                        canDelete: updateEvent.args?.[3],
+                        publishExpiration: updateEvent.args?.[4].toString(),
+                        publishExpirationDate: new Date(updateEvent.args?.[4] * 1000),
+                        subscribeExpiration: updateEvent.args?.[5].toString(),
+                        subscribeExpirationDate: new Date(updateEvent.args?.[5] * 1000),
+                        canGrant: updateEvent.args?.[6],
+                        blockNumber: updateEvent.blockNumber,
+                        transactionIndex: updateEvent.transactionIndex,
+                        transactionLogIndex: updateEvent.transactionLogIndex,
+                    })
                 }).catch((e: Error) => {
-                    log.error("Watcher > failed to set permissions: %o", e)
+                    log.error("Failed to set permissions: %o", e)
                     log.error(e.message)
                 })
         } else {
