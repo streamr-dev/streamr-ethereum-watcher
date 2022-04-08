@@ -231,6 +231,7 @@ async function main(): Promise<void> {
     // playback the blocks that happened since the last catchUp
     const catchUp = async function(): Promise<void> {
         let lastRecorded = store.read()
+        log.info("Playing back blocks since %d", lastRecorded)
 
         let lastActual = await provider.getBlockNumber()
         while (lastRecorded < lastActual) {
@@ -240,9 +241,9 @@ async function main(): Promise<void> {
             lastRecorded = lastActual
             lastActual = await provider.getBlockNumber()
         }
-        log.info("Playback done. Starting watcher...")
     }
     await catchUp()
+    log.info("Playback done. Starting watcher...")
 
     // report new blocks as they arrive
     await watcher.start()
@@ -253,7 +254,9 @@ async function main(): Promise<void> {
     // fallback just to redundantly play back recent blocks
     const redundantPlayback = async function(): Promise<void> {
         const currentBlock = await provider.getBlockNumber()
-        await watcher.playback(currentBlock - redundantPlaybackBlocks, currentBlock)
+        const fromBlock = currentBlock - redundantPlaybackBlocks
+        log.info("Redundant playback %d...%d", fromBlock, currentBlock)
+        await watcher.playback(fromBlock, currentBlock)
     }
     setInterval(redundantPlayback, redundantPlaybackMs)
 }
