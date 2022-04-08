@@ -52,6 +52,9 @@ async function main(): Promise<void> {
     const devopsKey: string = getEnv(DEVOPS_KEY)
     const LAST_BLOCK_DIR = "LAST_BLOCK_DIR"
     const lastBlockDir: string = getEnv(LAST_BLOCK_DIR)
+    const fallbackCatchUpIntervalMs = parseInt(getEnv("FALLBACK_CATCH_UP_INTERVAL_MS") || "3600000")
+    const redundantPlaybackBlocks = parseInt(getEnv("REDUNDANT_PLAYBACK_BLOCKS") || "50")
+    const redundantPlaybackMs = parseInt(getEnv("REDUNDANT_PLAYBACK_MS") || "600000")
 
     try {
         new ethers.Wallet(devopsKey)
@@ -225,21 +228,37 @@ async function main(): Promise<void> {
         store.write(event.blockNumber.toString())
     })
 
-    // catch up the blocks that happened when we were gone
-    let lastRecorded = store.read()
+    // playback the blocks that happened since the last catchUp
+    const catchUp = async function(): Promise<void> {
+        let lastRecorded = store.read()
+        log.info("Playing back blocks since %d", lastRecorded)
 
-    let lastActual = await provider.getBlockNumber()
-    while (lastRecorded < lastActual) {
-        log.info(`Playing back blocks ${lastRecorded + 1}...${lastActual} (inclusive)`)
-        await watcher.playback(lastRecorded + 1, lastActual)
-        store.write(lastActual)
-        lastRecorded = lastActual
-        lastActual = await provider.getBlockNumber()
+        let lastActual = await provider.getBlockNumber()
+        while (lastRecorded < lastActual) {
+            log.info(`Playing back blocks ${lastRecorded + 1}...${lastActual} (inclusive)`)
+            await watcher.playback(lastRecorded + 1, lastActual)
+            store.write(lastActual)
+            lastRecorded = lastActual
+            lastActual = await provider.getBlockNumber()
+        }
     }
+    await catchUp()
     log.info("Playback done. Starting watcher...")
 
     // report new blocks as they arrive
     await watcher.start()
+
+    // fallback in case watcher doesn't notice blocks: regular catchUps
+    setInterval(catchUp, fallbackCatchUpIntervalMs)
+
+    // fallback just to redundantly play back recent blocks
+    const redundantPlayback = async function(): Promise<void> {
+        const currentBlock = await provider.getBlockNumber()
+        const fromBlock = currentBlock - redundantPlaybackBlocks
+        log.info("Redundant playback %d...%d", fromBlock, currentBlock)
+        await watcher.playback(fromBlock, currentBlock)
+    }
+    setInterval(redundantPlayback, redundantPlaybackMs)
 }
 
 main()
