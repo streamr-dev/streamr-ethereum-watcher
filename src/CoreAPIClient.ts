@@ -1,6 +1,13 @@
-import log from "./log"
-import fetch, {RequestInfo, RequestInit, Response} from "node-fetch"
+import fetch from "node-fetch"
+import type { RequestInfo, RequestInit, Response } from "node-fetch"
 import StreamrClient from "streamr-client"
+import debug from "debug"
+
+import Pino from "pino"
+const log = Pino({
+    name: "core-api-client",
+    level: "info"
+})
 
 const defaultGetSessionTokenFunc = async function (privateKey: string, streamrUrl: string): Promise<string> {
     const client = new StreamrClient({
@@ -56,9 +63,19 @@ export default class CoreAPIClient {
         return this._post(apiUrl, body)
     }
 
-    async getProduct(id: string): Promise<Response> {
+    async getProductStreams(id: string): Promise<string[]> {
         const apiUrl = `${this.streamrUrl}/products/${id}`
-        return this._get(apiUrl)
+        const productResponse = await this._get(apiUrl)
+        const product: { streams?: string[] } = await productResponse.json().catch((e: Error) => {
+            throw new Error(`Failed to parse product ${id}: ${e.message}`)
+        })
+
+        if (!product.streams) {
+            log.warn(`getProductStreams: No streams found for product ${id}`)
+            return []
+        }
+
+        return product.streams
     }
 
     private async _post(apiUrl: string, body: any, method = "POST"): Promise<Response> {

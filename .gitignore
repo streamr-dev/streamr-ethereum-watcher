@@ -1,8 +1,13 @@
-/lastBlock
-/dist
-
-# npm
 node_modules
+.env
+coverage
+coverage.json
+typechain
+dist
+
+#Hardhat files
+cache
+artifacts
 
 # IntelliJ IDEA
 .idea/google-java-format.xml

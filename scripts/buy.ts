@@ -8,13 +8,16 @@
 
 const productIdBytes = "0xf640d5322ae246ac8abc19e722c8c26dd5b8a53ea36848e7b6e8fff1f121b58e"
 
-import { Contract, Wallet } from "ethers"
-import { JsonRpcProvider } from "ethers/providers"
-import { BigNumber, parseEther } from "ethers/utils"
+import { Contract, Wallet, providers, BigNumber, utils } from "ethers"
 
-import MarketplaceJson from "../lib/marketplace-contracts/build/contracts/Marketplace.json"
-import TokenJson from "../lib/marketplace-contracts/build/contracts/MintableToken.json"
+import IMarketplaceJson from "../artifacts/contracts/IMarketplace.sol/IMarketplace.json"
+import { IMarketplace } from "../typechain/IMarketplace"
 
+import DATAv2json from "../artifacts/contracts/token/DATAv2.sol/DATAv2.json"
+import { DATAv2 } from "../typechain/DATAv2"
+
+const { JsonRpcProvider } = providers
+const { parseEther } = utils
 const { log } = console
 
 import { Chains } from "@streamr/config"
@@ -38,11 +41,11 @@ const provider = new JsonRpcProvider(ETHEREUM_SERVER_URL)
 const wallet = new Wallet(prefundedKey, provider)
 const adminWallet = new Wallet(adminKey, provider)
 
-const token = new Contract(dataTokenAddress, TokenJson.abi, adminWallet)
-const market = new Contract(MARKETPLACE_ADDRESS, MarketplaceJson.abi, wallet)
+const token = new Contract(dataTokenAddress, DATAv2json.abi, adminWallet) as DATAv2
+const market = new Contract(MARKETPLACE_ADDRESS, IMarketplaceJson.abi, wallet) as IMarketplace
 
 async function main() {
-    if (new BigNumber("0").eq(await token.allowance(wallet.address, market.address))) {
+    if (BigNumber.from("0").eq(await token.allowance(wallet.address, market.address))) {
         log("Minting tokens")
         const mintTx = await token.mint(wallet.address, parseEther("10000"))
         await mintTx.wait()

@@ -1,6 +1,6 @@
 import {strict as assert} from "assert"
 import http from "http"
-import CoreAPIClient from "./CoreAPIClient"
+import CoreAPIClient from "../../src/CoreAPIClient"
 const TEST_SERVER_PORT = 51843
 
 class HTTPRequest {
@@ -35,8 +35,7 @@ describe("CoreAPIClient", () => {
                     request.url,
                     request.method,
                     JSON.parse(body)
-                )
-                )
+                ))
             })
             response.end()
         })

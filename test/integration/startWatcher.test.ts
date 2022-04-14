@@ -1,24 +1,25 @@
 import { spawn } from "child_process"
 import type { ChildProcess } from "child_process"
 
-import { Contract, Wallet } from "ethers"
-import { JsonRpcProvider } from "ethers/providers"
-import { ContractReceipt } from "ethers/contract"
-import { getAddress, parseEther, formatEther } from "ethers/utils"
+import { Contract, Wallet, providers, utils as ethersUtils, ContractReceipt } from "ethers"
 
-import TokenJson from "../lib/marketplace-contracts/build/contracts/MintableToken.json"
-import MarketplaceJson from "../lib/marketplace-contracts/build/contracts/Marketplace.json"
-import StreamRegistryJson from "../lib/streamregistry/StreamRegistryV3.json"
+import IMarketplaceJson from "../../artifacts/contracts/IMarketplace.sol/IMarketplace.json"
+import { IMarketplace } from "../../typechain/IMarketplace"
 
-import type { StreamRegistryV3 } from "../lib/types/StreamRegistryV3"
+import DATAv2json from "../../artifacts/contracts/token/DATAv2.sol/DATAv2.json"
+import { DATAv2 } from "../../typechain/DATAv2"
 
-import CoreAPIClient from "../src/CoreAPIClient"
-
-const { log } = console
-enum PermissionType { Edit, Delete, Publish, Subscribe, Grant }
+import IStreamRegistryJson from "../../artifacts/contracts/IStreamRegistry.sol/IStreamRegistry.json"
+import { IStreamRegistry } from "../../typechain/IStreamRegistry"
 
 import { Chains } from "@streamr/config"
 import assert from "assert"
+
+import CoreAPIClient from "../../src/CoreAPIClient"
+
+const { log } = console
+const { JsonRpcProvider } = providers
+const { getAddress, parseEther } = ethersUtils
 
 const {
     ethereum: {
@@ -45,7 +46,7 @@ const DEVOPS_KEY = "0x628acb12df34bb30a0b2f95ec2e6a743b386c5d4f63aa9f338bec6f613
 const adminKey = "0x5e98cce00cff5dea6b454889f359a4ec06b9fa6b88e9d69b86de8e1c81887da0" // 0xa3d1f77acff0060f7213d7bf3c7fec78df847de1
 const prefundedKey = "0xe5af7834455b7239881b85be89d905d6881dcb4751063897f12be1b0dd546bdb"
 
-const STREAMR_API_URL = "http://10.200.10.1/api/v2"
+const STREAMR_API_URL = "http://localhost/api/v2"
 
 const watcherEnv: NodeJS.ProcessEnv = {
     STREAM_REGISTRY_ADDRESS,
@@ -70,9 +71,9 @@ const tokenAddress = getAddress(dataTokenAddress)
 const marketAddress = getAddress(MARKETPLACE_ADDRESS)
 const registryAddress = getAddress(STREAM_REGISTRY_ADDRESS)
 
-const token = new Contract(tokenAddress, TokenJson.abi, wallet)
-const market = new Contract(marketAddress, MarketplaceJson.abi, wallet)
-const registry = new Contract(registryAddress, StreamRegistryJson.abi, sidechainWallet) as unknown as StreamRegistryV3
+const token = new Contract(tokenAddress, DATAv2json.abi, wallet) as DATAv2
+const market = new Contract(marketAddress, IMarketplaceJson.abi, wallet) as IMarketplace
+const registry = new Contract(registryAddress, IStreamRegistryJson.abi, sidechainWallet) as IStreamRegistry
 
 const streamIdPath = "/test" + Date.now()
 const streamId = wallet.address.toLowerCase() + streamIdPath
@@ -126,17 +127,17 @@ describe("Watcher", () => {
         // fund the devops key
         const fundTx1 = await wallet.sendTransaction({
             to: watcherWallet.address,
-            value: parseEther("1000")
+            value: parseEther("10")
         })
         await fundTx1.wait()
-        log("Watcher balance mainnet: %s", formatEther(await watcherWallet.getBalance()))
+        log("Watcher balance mainnet: %s", (await watcherWallet.getBalance()).toString())
 
         const fundTx2 = await sidechainWallet.sendTransaction({
             to: watcherWallet.address,
-            value: parseEther("1000")
+            value: parseEther("10")
         })
         await fundTx2.wait()
-        log("Watcher balance sidechain: %s", formatEther(await sidechainProvider.getBalance(watcherWallet.address)))
+        log("Watcher balance sidechain: %s", (await sidechainProvider.getBalance(watcherWallet.address)).toString())
 
         const streamTx = await registry.createStream(streamIdPath, "{}")
         log("Creating stream %s", streamId)
@@ -220,7 +221,7 @@ describe("Watcher", () => {
     })
 
     it("notices a purchase on the docker-dev Marketplace", async function () {
-        this.timeout(300000)
+        this.timeout(30000)
         if (!watcherProcess?.stdout) { throw new Error("Watcher process not initialized yet") }
 
         const buyerWallet = new Wallet(prefundedKey, provider)

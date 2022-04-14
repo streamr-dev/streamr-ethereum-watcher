@@ -1,16 +1,18 @@
 // for manual testing: create a stream and add it to a product
 // Usage: first set watcher running (src/main.ts), then run this
 
-import { Contract, Wallet } from "ethers"
-import { JsonRpcProvider } from "ethers/providers"
+import { Contract, Wallet, providers, utils } from "ethers"
 
-import MarketplaceJson from "../lib/marketplace-contracts/build/contracts/Marketplace.json"
-import StreamRegistryJson from "../lib/streamregistry/StreamRegistryV3.json"
-import { getAddress } from "ethers/utils"
+import { IMarketplace } from "../typechain/IMarketplace"
+import IMarketplaceJson from "../artifacts/contracts/IMarketplace.sol/IMarketplace.json"
 
-import type { StreamRegistryV3 } from "../lib/types/StreamRegistryV3"
+import IStreamRegistryJson from "../artifacts/contracts/IStreamRegistry.sol/IStreamRegistry.json"
+import { IStreamRegistry } from "../typechain/IStreamRegistry"
 
 import CoreAPIClient from "../src/CoreAPIClient"
+
+const { JsonRpcProvider } = providers
+const { getAddress } = utils
 
 const { log } = console
 
@@ -50,8 +52,8 @@ const sidechainWallet = new Wallet(adminKey, sidechainProvider)
 const marketAddress = getAddress(MARKETPLACE_ADDRESS)
 const registryAddress = getAddress(STREAM_REGISTRY_ADDRESS)
 
-const market = new Contract(marketAddress, MarketplaceJson.abi, wallet)
-const registry = new Contract(registryAddress, StreamRegistryJson.abi, sidechainWallet) as unknown as StreamRegistryV3
+const market = new Contract(marketAddress, IMarketplaceJson.abi, wallet) as IMarketplace
+const registry = new Contract(registryAddress, IStreamRegistryJson.abi, wallet) as IStreamRegistry
 
 const streamIdPath = "/test" + Date.now()
 const streamId = wallet.address.toLowerCase() + streamIdPath

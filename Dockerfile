@@ -18,4 +18,4 @@ ENV NODE_ENV="development"
 ENV MATIC_SERVER_URL="http://10.200.10.1:8546"
 ENV STREAM_REGISTRY_ADDRESS="0x6cCdd5d866ea766f6DF5965aA98DeCCD629ff222"
 
-ENTRYPOINT ["node", "/app/dist/src/main.js"]
+ENTRYPOINT ["node", "/app/dist/src/startWatcher.js"]

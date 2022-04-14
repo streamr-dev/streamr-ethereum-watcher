@@ -1,10 +1,11 @@
-import { Wallet, utils } from "ethers"
-import { JsonRpcProvider } from "ethers/providers"
+import { Wallet, providers, utils } from "ethers"
 
-const { log } = console
+const { JsonRpcProvider } = providers
 const { parseEther } = utils
 
 import { Chains } from "@streamr/config"
+
+const { log } = console
 
 const {
     ethereum: {
