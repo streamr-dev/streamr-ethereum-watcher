@@ -1,9 +1,12 @@
-import log from "./log"
-import { getEnv } from "./env"
-import LastBlockStore from "./LastBlockStore"
+
+import dotenv from "dotenv"
 import { ethers } from "ethers"
 import { BigNumber } from "ethers/utils"
 import { ContractReceipt } from "ethers/contract"
+
+import log from "./log"
+import { getEnv } from "./env"
+import LastBlockStore from "./LastBlockStore"
 import { throwIfNotContract } from "./checkArguments"
 import Watcher from "./watcher"
 import CoreAPIClient from "./CoreAPIClient"
@@ -11,6 +14,7 @@ import CoreAPIClient from "./CoreAPIClient"
 import MarketplaceJSON from "../lib/marketplace-contracts/build/contracts/Marketplace.json"
 import StreamRegistryJSON from "../lib/streamregistry/StreamRegistryV3.json"
 
+dotenv.config() // load .env file
 
 type EthereumAddress = string
 type Permission = {

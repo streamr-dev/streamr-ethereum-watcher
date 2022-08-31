@@ -4,6 +4,7 @@
   "description": "Watch Ethereum blocks as they come, send relevant info to Streamr",
   "main": "dist/src/main.js",
   "scripts": {
+    "start": "ts-node src/main.ts",
     "build": "tsc --project tsconfig.json",
     "lint": "eslint src",
     "fmt": "eslint --fix src",
@@ -18,6 +19,7 @@
   "license": "AGPL-3.0",
   "dependencies": {
     "@streamr/config": "0.0.3",
+    "dotenv": "16.0.2",
     "ethers": "4.0.49",
     "node-fetch": "2.6.1",
     "promise-events": "0.2.4",
@@ -37,8 +39,8 @@
     "ganache-core": "2.13.2",
     "mocha": "9.1.3",
     "sinon": "12.0.1",
-    "ts-node": "10.5.0",
     "ts-mocha": "9.0.2",
+    "ts-node": "10.5.0",
     "typescript": "4.5.4"
   }
 }
