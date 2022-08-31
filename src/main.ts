@@ -100,7 +100,7 @@ async function main(): Promise<void> {
 
     const addr = marketplaceAddress || deployedMarketplaceAddress
     if (!addr) {
-        log.error(`MARKETPLACE_ADDRESS environment variable not set!`)
+        log.error("MARKETPLACE_ADDRESS environment variable not set!")
         process.exit(1)
     }
     const marketAddress = await throwIfNotContract(provider, marketplaceAddress || deployedMarketplaceAddress)
