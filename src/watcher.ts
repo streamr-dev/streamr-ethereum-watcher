@@ -66,7 +66,6 @@ export default class Watcher extends EventEmitter {
         this.watchEvent("NewSubscription", this.logEvent)
         this.watchEvent("SubscriptionExtended", this.logEvent)
         this.watchEvent("SubscriptionTransferred", this.logEvent)
-        this.watchEvent("ExchangeRatesUpdated", this.logEvent)
 
         const listener = function (...args: Array<any>): void {
             const logEntry = args.pop()
@@ -173,26 +172,28 @@ export default class Watcher extends EventEmitter {
 
     async onDeployEvent(blockNumber: any, blockIndex: any, args: any): Promise<any> {
         const productId = args.id.slice(2)    // remove "0x" from beginning
+        // args.pricingTokenAddress ignored because core-api doesn't know it
         return this.emit("productDeployed", productId, {
             blockNumber,
             blockIndex,
             ownerAddress: args.owner,
             beneficiaryAddress: args.beneficiary,
             pricePerSecond: args.pricePerSecond.div(EE_PRICE_SCALE).toString(),
-            priceCurrency: currencySymbol[args.currency],
+            priceCurrency: "DATA",
             minimumSubscriptionInSeconds: args.minimumSubscriptionSeconds.toString(),
         })
     }
 
     async onUpdateEvent(blockNumber: any, blockIndex: any, args: any): Promise<any> {
         const productId = args.id.slice(2)    // remove "0x" from beginning
+        // args.pricingTokenAddress ignored because core-api doesn't know it
         return this.emit("productUpdated", productId, {
             blockNumber,
             blockIndex,
             ownerAddress: args.owner,
             beneficiaryAddress: args.beneficiary,
             pricePerSecond: args.pricePerSecond.div(EE_PRICE_SCALE).toString(),
-            priceCurrency: currencySymbol[args.currency],
+            priceCurrency: "DATA",
             minimumSubscriptionInSeconds: args.minimumSubscriptionSeconds.toString(),
         })
     }
@@ -219,13 +220,14 @@ export default class Watcher extends EventEmitter {
     async onOwnershipUpdateEvent(blockNumber: any, blockIndex: any, args: any): Promise<any> {
         const productId = args.id.slice(2)    // remove "0x" from beginning
         const product = await this.market.getProduct(args.id)
+        // args.pricingTokenAddress ignored because core-api doesn't know it
         return this.emit("productUpdated", productId, {
             blockNumber,
             blockIndex,
             ownerAddress: product.owner,
             beneficiaryAddress: product.beneficiary,
             pricePerSecond: product.pricePerSecond.div(EE_PRICE_SCALE).toString(),
-            priceCurrency: currencySymbol[product.currency],
+            priceCurrency: "DATA",
             minimumSubscriptionInSeconds: product.minimumSubscriptionSeconds.toString(),
         })
     }

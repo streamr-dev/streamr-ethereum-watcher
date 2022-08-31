@@ -4,7 +4,7 @@
 import { Contract, Wallet } from "ethers"
 import { JsonRpcProvider } from "ethers/providers"
 
-import MarketplaceJson from "../lib/marketplace-contracts/build/contracts/Marketplace.json"
+import MarketplaceJson from "../lib/marketplace-contracts/build/contracts/MarketplaceV3.json"
 import StreamRegistryJson from "../lib/streamregistry/StreamRegistryV3.json"
 import { getAddress } from "ethers/utils"
 
@@ -14,18 +14,19 @@ import CoreAPIClient from "../src/CoreAPIClient"
 
 const { log } = console
 
-import { Chains } from "@streamr/config"
+import { networks } from "@streamr/config"
 
 const {
-    ethereum: {
+    dev0: {
         rpcEndpoints: [{
             url: ETHEREUM_SERVER_URL,
         }],
         contracts: {
-            "Marketplace": MARKETPLACE_ADDRESS,
+            "DATA": TOKEN_ADDRESS,
+            "MarketplaceV3": MARKETPLACE_ADDRESS,
         }
     },
-    streamr: {
+    dev1: {
         rpcEndpoints: [{
             url: MATIC_SERVER_URL,
         }],
@@ -33,7 +34,7 @@ const {
             "StreamRegistry": STREAM_REGISTRY_ADDRESS,
         }
     }
-} = Chains.load("development")
+} = networks
 
 const DEVOPS_KEY = "0x628acb12df34bb30a0b2f95ec2e6a743b386c5d4f63aa9f338bec6f613160e78" // 0xa12Ccb60CaD03Ce838aC22EaF2Ce9850736F154f
 const adminKey = "0x5e98cce00cff5dea6b454889f359a4ec06b9fa6b88e9d69b86de8e1c81887da0" // 0xa3d1f77acff0060f7213d7bf3c7fec78df847de1
@@ -92,13 +93,13 @@ async function main() {
         status = addRes.status
     } while (status !== 204)
 
-    // createProduct(bytes32 id, string memory name, address beneficiary, uint pricePerSecond, Currency currency, uint minimumSubscriptionSeconds) public whenNotHalted {
+    // function createProduct(bytes32 id, string memory name, address beneficiary, uint pricePerSecond, address pricingToken, uint minimumSubscriptionSeconds)
     const createTx = await market.createProduct(
         productIdBytes,
         "End-to-end tester",
         watcherWallet.address,
         1,  // pricePerSecond
-        0,  // DATA
+        TOKEN_ADDRESS,
         1   // minimumSubscriptionSeconds
     )
     log("Creating product %s", productId)
