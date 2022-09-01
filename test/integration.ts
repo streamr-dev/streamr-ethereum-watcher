@@ -233,12 +233,12 @@ describe("Watcher", () => {
 
         // this has to be long enough that the event gets registered by the watcher,
         //   otherwise no update will be done because "already old" subscriptions aren't sent to registry
-        const seconds = 10
+        const subscriptionSeconds = 10
 
         // execute many purchases: In production, I've had first buy get noticed, and subsequent one(s) fail.
         for (let i = 0; i < 5; i++) {
-            const buyTx = await market.connect(buyerWallet).buy(productIdBytes, seconds.toString())
-            log("Sending %s/10: market.buy(%s, %s) from %s", i + 1, productId, seconds, buyerWallet.address)
+            const buyTx = await market.connect(buyerWallet).buy(productIdBytes, subscriptionSeconds.toString())
+            log("Sending %s/10: market.buy(%s, %s) from %s", i + 1, productId, subscriptionSeconds, buyerWallet.address)
             const [buyTr] = await Promise.all([
                 buyTx.wait(),
                 untilStreamMatches(watcherProcess.stdout, /trustedSetPermissions receipt/)]
@@ -246,7 +246,7 @@ describe("Watcher", () => {
             const buyEvents = buyTr?.events?.map((e) => e?.event || "").filter(x => x !== "") || []
             log("Buy transaction emitted events: %o", buyEvents)
             assert.deepStrictEqual(buyEvents, ["NewSubscription", "Subscribed"])
-            await sleep(seconds * 1500) // should sleep long enough that the subscription expires
+            await sleep(subscriptionSeconds * 1500) // should sleep long enough that the subscription expires
         }
     })
 })
