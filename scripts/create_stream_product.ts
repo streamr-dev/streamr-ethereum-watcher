@@ -22,8 +22,8 @@ const {
             url: ETHEREUM_SERVER_URL,
         }],
         contracts: {
-            "DATA": TOKEN_ADDRESS,
-            "MarketplaceV3": MARKETPLACE_ADDRESS,
+            DATA: TOKEN_ADDRESS,
+            MarketplaceV3: MARKETPLACE_ADDRESS,
         }
     },
     dev1: {
@@ -31,7 +31,7 @@ const {
             url: MATIC_SERVER_URL,
         }],
         contracts: {
-            "StreamRegistry": STREAM_REGISTRY_ADDRESS,
+            StreamRegistry: STREAM_REGISTRY_ADDRESS,
         }
     }
 } = networks

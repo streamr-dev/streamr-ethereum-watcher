@@ -13,7 +13,7 @@ import CoreAPIClient from "../src/CoreAPIClient"
 
 const { log } = console
 
-import { Chains } from "@streamr/config"
+import { networks } from "@streamr/config"
 
 const {
     polygon: {
@@ -21,11 +21,11 @@ const {
             url: MATIC_SERVER_URL,
         }],
         contracts: {
-            "Marketplace": MARKETPLACE_ADDRESS = "0x058fbb3cf628ee51ce8864c9ee8350f81e495a7d",
-            "StreamRegistry": STREAM_REGISTRY_ADDRESS,
+            MarketplaceV3: MARKETPLACE_ADDRESS = "0x058fbb3cf628ee51ce8864c9ee8350f81e495a7d",
+            StreamRegistry: STREAM_REGISTRY_ADDRESS,
         }
     }
-} = Chains.load("production")
+} = networks
 
 const key = "0x5e98cce00cff5dea6b454889f359a4ec06b9fa6b88e9d69b86de8e1c81887da0"
 

@@ -1,3 +1,4 @@
+import assert from "assert"
 import { spawn } from "child_process"
 import type { ChildProcess } from "child_process"
 
@@ -5,6 +6,8 @@ import { Contract, Wallet } from "ethers"
 import { JsonRpcProvider } from "ethers/providers"
 import { ContractReceipt } from "ethers/contract"
 import { getAddress, parseEther, formatEther } from "ethers/utils"
+
+import { networks } from "@streamr/config"
 
 import TokenJson from "../lib/marketplace-contracts/build/contracts/MintableToken.json"
 import MarketplaceJson from "../lib/marketplace-contracts/build/contracts/Marketplace.json"
@@ -15,31 +18,28 @@ import type { StreamRegistryV3 } from "../lib/types/StreamRegistryV3"
 import CoreAPIClient from "../src/CoreAPIClient"
 
 const { log } = console
-enum PermissionType { Edit, Delete, Publish, Subscribe, Grant }
-
-import { Chains } from "@streamr/config"
-import assert from "assert"
+// enum PermissionType { Edit, Delete, Publish, Subscribe, Grant }
 
 const {
-    ethereum: {
+    dev0: {
         id: networkId,
         rpcEndpoints: [{
             url: ETHEREUM_SERVER_URL,
         }],
         contracts: {
-            "DATA-token": dataTokenAddress,
-            "Marketplace": MARKETPLACE_ADDRESS,
+            DATA: dataTokenAddress,
+            Marketplace: MARKETPLACE_ADDRESS,
         }
     },
-    streamr: {
+    dev1: {
         rpcEndpoints: [{
             url: MATIC_SERVER_URL,
         }],
         contracts: {
-            "StreamRegistry": STREAM_REGISTRY_ADDRESS,
+            StreamRegistry: STREAM_REGISTRY_ADDRESS,
         }
     }
-} = Chains.load("development")
+} = networks
 
 const DEVOPS_KEY = "0x628acb12df34bb30a0b2f95ec2e6a743b386c5d4f63aa9f338bec6f613160e78" // 0xa12Ccb60CaD03Ce838aC22EaF2Ce9850736F154f
 const adminKey = "0x5e98cce00cff5dea6b454889f359a4ec06b9fa6b88e9d69b86de8e1c81887da0" // 0xa3d1f77acff0060f7213d7bf3c7fec78df847de1
