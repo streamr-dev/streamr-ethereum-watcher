@@ -101,6 +101,7 @@ export default class Watcher extends EventEmitter {
         for (const raw of events) {
 
             const event = this.market.interface.parseLog(raw)
+            if (!event || !event.name || !event.values) { continue }
             try {
                 switch (event.name) {
                     case "ProductCreated":
@@ -131,7 +132,6 @@ export default class Watcher extends EventEmitter {
                 throw e
             }
         }
-        return Promise.resolve()
     }
 
     async loadEventsFormBlockchain(fromBlock: number, toBlock: number): Promise<Array<Log>> {
