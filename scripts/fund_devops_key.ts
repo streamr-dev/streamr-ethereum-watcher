@@ -4,20 +4,20 @@ import { JsonRpcProvider } from "ethers/providers"
 const { log } = console
 const { parseEther } = utils
 
-import { Chains } from "@streamr/config"
+import { networks } from "@streamr/config"
 
 const {
-    ethereum: {
+    dev0: {
         rpcEndpoints: [{
             url: ETHEREUM_SERVER_URL,
         }],
     },
-    streamr: {
+    dev1: {
         rpcEndpoints: [{
             url: maticServerURL,
         }],
     },
-} = Chains.load("development")
+} = networks
 
 const prefundedKey = "0x5e98cce00cff5dea6b454889f359a4ec06b9fa6b88e9d69b86de8e1c81887da0" // 0xa3d1f77acff0060f7213d7bf3c7fec78df847de1
 const DEVOPS_KEY = "0x628acb12df34bb30a0b2f95ec2e6a743b386c5d4f63aa9f338bec6f613160e78" // 0xa12Ccb60CaD03Ce838aC22EaF2Ce9850736F154f

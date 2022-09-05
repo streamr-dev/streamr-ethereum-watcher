@@ -1,16 +1,20 @@
-import log from "./log"
-import { getEnv } from "./env"
-import LastBlockStore from "./LastBlockStore"
+
+import dotenv from "dotenv"
 import { ethers } from "ethers"
 import { BigNumber } from "ethers/utils"
 import { ContractReceipt } from "ethers/contract"
+
+import log from "./log"
+import { getEnv } from "./env"
+import LastBlockStore from "./LastBlockStore"
 import { throwIfNotContract } from "./checkArguments"
 import Watcher from "./watcher"
 import CoreAPIClient from "./CoreAPIClient"
 
-import MarketplaceJSON from "../lib/marketplace-contracts/build/contracts/Marketplace.json"
+import MarketplaceJSON from "../lib/marketplace-contracts/build/contracts/MarketplaceV3.json"
 import StreamRegistryJSON from "../lib/streamregistry/StreamRegistryV3.json"
 
+dotenv.config() // load .env file
 
 type EthereumAddress = string
 type Permission = {
@@ -26,15 +30,19 @@ type Permission = {
  */
 async function checkMarketplaceAddress(abi: any, market: ethers.Contract): Promise<void> {
     const getterNames: string = abi
-        .filter((f: any) => f.constant && f.inputs.length === 0)
+        .filter((f: any) => (f.constant || f.stateMutability === "view") && f.inputs.length === 0)
         .map((f: any) => f.name)
+    log.info(`Checking the Marketplace contract at ${market.address}`)
     let msg = ""
     for (const getterName of getterNames) {
-        const value = await market[getterName]()
-        msg += ` ${getterName}: ${value},`
+        try {
+            const value = await market[getterName]()
+            msg += ` ${getterName}: ${value},\n`
+        } catch (e) {
+            msg += ` ${getterName}: NOT FOUND!,\n`
+        }
     }
-    log.info(`Checking the Marketplace contract at ${market.address}: ${msg}`)
-    return Promise.resolve()
+    log.info(msg)
 }
 
 async function main(): Promise<void> {
@@ -92,7 +100,7 @@ async function main(): Promise<void> {
 
     const addr = marketplaceAddress || deployedMarketplaceAddress
     if (!addr) {
-        log.error(`Requires ${MARKETPLACE_ADDRESS} or ${NETWORK_ID} one of ` + Object.keys(MarketplaceJSON.networks).join(", "))
+        log.error("MARKETPLACE_ADDRESS environment variable not set!")
         process.exit(1)
     }
     const marketAddress = await throwIfNotContract(provider, marketplaceAddress || deployedMarketplaceAddress)
