@@ -21,7 +21,7 @@ const {
             url: MATIC_SERVER_URL,
         }],
         contracts: {
-            MarketplaceV3: MARKETPLACE_ADDRESS = "0x058fbb3cf628ee51ce8864c9ee8350f81e495a7d",
+            MarketplaceV3: MARKETPLACE_ADDRESS,
             StreamRegistry: STREAM_REGISTRY_ADDRESS,
         }
     }
