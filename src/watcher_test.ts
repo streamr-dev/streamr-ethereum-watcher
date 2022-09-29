@@ -63,8 +63,6 @@ describe("Watcher", () => {
         const productId = productIdBytes32.slice(2)
         const price = ethers.utils.parseEther("1")
         const price2 = ethers.utils.parseEther("2")
-        const scaledPrice = ethers.utils.parseUnits("1", "gwei")
-        const scaledPrice2 = ethers.utils.parseUnits("2", "gwei").toString()
 
         it("catches product creation", async () => {
             const cb = sinon.spy()
@@ -77,7 +75,7 @@ describe("Watcher", () => {
             assert.equal(cb.args[0][1].ownerAddress, wallet.address)
             assert.equal(cb.args[0][1].beneficiaryAddress, wallet.address)
             assert.equal(cb.args[0][1].minimumSubscriptionInSeconds, "1")
-            assert.equal(cb.args[0][1].pricePerSecond, scaledPrice.toString())
+            assert.equal(cb.args[0][1].pricePerSecond, price.toString())
             assert.equal(cb.args[0][1].priceCurrency, "DATA")
         })
 
@@ -102,7 +100,7 @@ describe("Watcher", () => {
             assert.equal(cb.args[0][1].ownerAddress, wallet.address)
             assert.equal(cb.args[0][1].beneficiaryAddress, wallet.address)
             assert.equal(cb.args[0][1].minimumSubscriptionInSeconds, "1")
-            assert.equal(cb.args[0][1].pricePerSecond, scaledPrice.toString())
+            assert.equal(cb.args[0][1].pricePerSecond, price.toString())
             assert.equal(cb.args[0][1].priceCurrency, "DATA")
         })
 
@@ -118,7 +116,7 @@ describe("Watcher", () => {
             assert.equal(cb.args[0][1].ownerAddress, wallet.address)
             assert.equal(cb.args[0][1].beneficiaryAddress, wallet2.address)
             assert.equal(cb.args[0][1].minimumSubscriptionInSeconds, "10")
-            assert.equal(cb.args[0][1].pricePerSecond, scaledPrice2.toString())
+            assert.equal(cb.args[0][1].pricePerSecond, price2.toString())
             assert.equal(cb.args[0][1].priceCurrency, "DATA")
             await watcher.removeListener("productUpdated", cb)
         })
@@ -136,7 +134,7 @@ describe("Watcher", () => {
             assert.equal(cb.args[0][1].ownerAddress, wallet2.address)
             assert.equal(cb.args[0][1].beneficiaryAddress, wallet2.address)
             assert.equal(cb.args[0][1].minimumSubscriptionInSeconds, "10")
-            assert.equal(cb.args[0][1].pricePerSecond, scaledPrice2.toString())
+            assert.equal(cb.args[0][1].pricePerSecond, price2.toString())
             assert.equal(cb.args[0][1].priceCurrency, "DATA")
         })
 
