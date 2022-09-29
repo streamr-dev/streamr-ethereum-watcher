@@ -1,11 +1,8 @@
 import log from "./log"
 import EventEmitter from "promise-events"
-import {ethers} from "ethers"
-import MarketplaceEnums from "../lib/marketplace-contracts/src/contracts/enums"
-import {Log} from "ethers/providers/abstract-provider"
+import { ethers } from "ethers"
+import { Log } from "ethers/providers/abstract-provider"
 
-const currencySymbol = MarketplaceEnums.currencySymbol
-const EE_PRICE_SCALE = new ethers.utils.BigNumber(1e9)  // scale price to "nanotokens"/token-gwei so that it fits into mysql and Java long
 // "warp" to this block; before this block there weren't (too many) events
 const playbackStartBlock = new Map<number, number>([
     [1, 14140263], // mainnet, start from 2022-02
@@ -178,7 +175,7 @@ export default class Watcher extends EventEmitter {
             blockIndex,
             ownerAddress: args.owner,
             beneficiaryAddress: args.beneficiary,
-            pricePerSecond: args.pricePerSecond.div(EE_PRICE_SCALE).toString(),
+            pricePerSecond: args.pricePerSecond.toString(),
             priceCurrency: "DATA",
             minimumSubscriptionInSeconds: args.minimumSubscriptionSeconds.toString(),
         })
@@ -192,7 +189,7 @@ export default class Watcher extends EventEmitter {
             blockIndex,
             ownerAddress: args.owner,
             beneficiaryAddress: args.beneficiary,
-            pricePerSecond: args.pricePerSecond.div(EE_PRICE_SCALE).toString(),
+            pricePerSecond: args.pricePerSecond.toString(),
             priceCurrency: "DATA",
             minimumSubscriptionInSeconds: args.minimumSubscriptionSeconds.toString(),
         })
@@ -226,7 +223,7 @@ export default class Watcher extends EventEmitter {
             blockIndex,
             ownerAddress: product.owner,
             beneficiaryAddress: product.beneficiary,
-            pricePerSecond: product.pricePerSecond.div(EE_PRICE_SCALE).toString(),
+            pricePerSecond: product.pricePerSecond.toString(),
             priceCurrency: "DATA",
             minimumSubscriptionInSeconds: product.minimumSubscriptionSeconds.toString(),
         })
