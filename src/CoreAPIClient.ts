@@ -61,6 +61,11 @@ export default class CoreAPIClient {
         return this._get(apiUrl)
     }
 
+    async subscribe(body: any): Promise<Response> {
+        const apiUrl = `${this.streamrUrl}/subscriptions`
+        return this._post(apiUrl, body)
+    }
+
     private async _post(apiUrl: string, body: any, method = "POST"): Promise<Response> {
         let logBody = ""
         if (body) {

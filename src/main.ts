@@ -119,11 +119,11 @@ async function main(): Promise<void> {
     await checkMarketplaceAddress(MarketplaceJSON.abi, marketplaceContract)
 
     await watcher.on("subscribed", async (args: {
-            blockNumber: number,
-            blockIndex: number,
-            product: string,
-            address: EthereumAddress,
-            endsAt: string,
+        blockNumber: number,
+        blockIndex: number,
+        product: string,
+        address: EthereumAddress,
+        endsAt: string,
     }) => {
         const {
             blockNumber,
@@ -209,6 +209,12 @@ async function main(): Promise<void> {
         } else {
             log.info("No permission changes needed")
         }
+
+        // notify core-api too, to make core-frontend subscription listing work
+        const response = await apiClient.subscribe(args)
+        const responseJson = await response.json()
+        log.info(`Product ${product} subscribed ${JSON.stringify(args)}`)
+        log.info(`Response code ${response.status}: ${JSON.stringify(responseJson)}`)
     })
 
     await watcher.on("productDeployed", async (id: string, body: any) => {
