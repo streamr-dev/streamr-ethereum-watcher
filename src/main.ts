@@ -212,9 +212,8 @@ async function main(): Promise<void> {
 
         // notify core-api too, to make core-frontend subscription listing work
         const response = await apiClient.subscribe(args)
-        const responseJson = await response.json()
         log.info(`Product ${product} subscribed ${JSON.stringify(args)}`)
-        log.info(`Response code ${response.status}: ${JSON.stringify(responseJson)}`)
+        log.info(`Response code ${response.status}`) // expecting 204, no body
     })
 
     await watcher.on("productDeployed", async (id: string, body: any) => {
