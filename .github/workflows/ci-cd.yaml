@@ -84,7 +84,7 @@ jobs:
             ${{ runner.os }}-buildx-
       - name: Docker meta
         id: docker_meta
-        uses: docker/metadata-action@v4.4.0
+        uses: docker/metadata-action@v4.5.0
         with:
           images: streamr/ethereum-watcher
           tags: |
